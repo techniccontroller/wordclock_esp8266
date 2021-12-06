@@ -1,4 +1,5 @@
-
+const int8_t dx[] = {1, -1, 0, 0};
+const int8_t dy[] = {0, 0, -1, 1};
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
@@ -40,15 +41,26 @@ void setupMatrix()
     randomSeed(analogRead(0));
 }
 
-// turn on the minutes indicator leds with the provided pattern (binary encoded)
+//! turn on the minutes indicator leds with the provided pattern (binary encoded)
+/*!
+ * \param pattern the binary encoded pattern of the minute indicator
+ * \param color color to be displayed
+ */
 void setMinIndicator(uint8_t pattern, uint32_t color){
+  // pattern:
+  // 15 -> 1111
+  // 14 -> 1110
+  // (...)
+  //  2 -> 0010
+  //  1 -> 0001
+  //  0 -> 0000
   if(pattern & 1){
     matrix.drawPixel(width - 1, height, color);
   }
   if(pattern >> 1 & 1){
     matrix.drawPixel(width - 2, height, color);
   }
-  if(pattern >> 2& 1){
+  if(pattern >> 2 & 1){
     matrix.drawPixel(width - 3, height, color);
   }
   if(pattern >> 3 & 1){
@@ -57,10 +69,15 @@ void setMinIndicator(uint8_t pattern, uint32_t color){
   matrix.show();
 }
 
-int spiral(bool init, bool empty){
-  static int dx;
-  static int dy;               // Veränderung
-  static direction dir1;        // aktuelle Richtung
+//! Function to draw a spiral step (from center)
+/*! 
+ * \param init marks if call is the initial step of the spiral
+ * \param empty marks if the spiral should 'draw' empty leds
+ * \param size the size of the spiral in leds
+ * \return 1 if end is reached, else 0
+ */
+int spiral(bool init, bool empty, uint8_t size){
+  static direction dir1;   // current direction
   static int x;
   static int y;
   static int counter1;
@@ -70,10 +87,9 @@ int spiral(bool init, bool empty){
   static bool breiter ;
   static int randNum;
   if(init){
-    dx = 0, dy = 1;               // Veränderung
-    dir1 = down;        // aktuelle Richtung
-    x = 5;
-    y = 5;
+    dir1 = down;          // current direction
+    x = width/2;
+    y = width/2;
     if(!empty)matrix.fillScreen(0);
     counter1 = 0;
     countStep = 0;
@@ -83,7 +99,7 @@ int spiral(bool init, bool empty){
     randNum = random(255);
   }
 
-  if (countStep == 81){
+  if (countStep == size*size){
     // End reached return 1
     return 1;
   }
@@ -104,25 +120,6 @@ int spiral(bool init, bool empty){
     }
     if(counter1 >= countEdge){
       dir1 = nextDir(dir1, LEFT);
-
-      switch(dir1){
-        case right: 
-          dx = 1;
-          dy = 0;
-          break;
-        case left:
-          dx = -1;
-          dy = 0;
-          break;
-        case up:
-          dx = 0;
-          dy = -1;
-          break;
-        case down:
-          dx = 0;
-          dy = 1;
-          break; 
-      }
       counter1 = 0;
       countCorner++;
     }
@@ -132,8 +129,8 @@ int spiral(bool init, bool empty){
       breiter = true;
     }
     
-    x += dx;
-    y += dy;
+    x += dx[dir1];
+    y += dy[dir1];
     logger.logString("x: " + String(x) + ", y: " + String(y) + "\n");
     counter1++;
     countStep++;
@@ -141,6 +138,13 @@ int spiral(bool init, bool empty){
   return 0;
 }
 
+
+//! calc the next direction for led movement (snake and spiral)
+/*!
+ * \param dir direction of the current led movement
+ * \param d action to be executed
+ * \return next direction
+ */
 direction nextDir(direction dir, int d){
   // d = 0 -> continue straight on
   // d = 1 -> turn LEFT

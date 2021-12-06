@@ -1,7 +1,7 @@
 /**
- * SmartDeskLamp - SmartDeskLamp
+ * Wordclock 2.0 - Wordclock with ESP8266 and NTP time
  * 
- * created by techniccontroller 04.11.2021
+ * created by techniccontroller 04.12.2021
  * 
  * components:
  * - ESP8266 (ESP-01)
@@ -31,6 +31,7 @@
 #define RIGHT 2
 #define LINE 10
 #define RECT 5
+
 // own datatype for matrix movement (snake and spiral)
 enum direction {right, left, up, down};
 
@@ -149,7 +150,7 @@ void setup() {
       delay(50); 
     }
   }
-  spiral(true, sprialDir);
+  spiral(true, sprialDir, width-2);
   matrix.show();
   delay(200);
 }
@@ -167,10 +168,10 @@ void loop() {
   }
 
   if(millis() - lastStep > 100){
-    int res = spiral(false, sprialDir);
+    int res = spiral(false, sprialDir, width-2);
     if(res){
       sprialDir = !sprialDir;
-      spiral(true, sprialDir);
+      spiral(true, sprialDir, width-2);
     }
     matrix.show();
     lastStep = millis();
