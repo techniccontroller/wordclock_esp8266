@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html lang="de">
+	<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+	
+	body{
+		background-color: #222222;
+		font-family: -apple-system, 
+			BlinkMacSystemFont, 
+			"Segoe UI", 
+			Roboto, 
+			Oxygen-Sans, 
+			Ubuntu, 
+			Cantarell, 
+			"Helvetica Neue", 
+			sans-serif;
+	}
+	
+	h1 {
+	  font-weight: normal;
+	  letter-spacing: .125rem;
+	  text-transform: uppercase;
+	  color: white;
+	  text-align: center;
+	}
+	
+	.buttonClass {
+	  font-size:15px;
+	  font-family:Arial;
+	  width:70px;
+	  height:70px;
+	  color:#fff;
+	  font-weight:bold;
+	  border-top-left-radius:28px;
+	  border-top-right-radius:28px;
+	  border-bottom-left-radius:28px;
+	  border-bottom-right-radius:28px;
+	  text-shadow: 1px 1px 0px #2f6627;
+	}
+
+	.buttonClass:hover {
+	  opacity: 0.7;
+	}
+	
+	.grid-container {
+	  font-size:15px;
+	  font-family:Arial;
+	  display: grid;
+	  grid-column-gap: 50px;
+	  grid-row-gap: 50px;
+	  grid-template-columns: auto auto auto;
+	  padding: 10px;
+	}
+	.grid-item {
+	  border-radius: 50%;
+	  text-align: center;
+	  display: inline-block;
+	  text-align: center;
+	}
+	.dot {
+		border-radius: 50%;
+		display: flex;
+		justify-content: center; /* align horizontal */
+		align-items: center; /* align vertical */
+	}
+	</style>
+	<title>SMART DESK LAMP</title>
+	</head>
+
+	<body>
+		<h1 id="headline">Smart Desk Lamp</h1>
+	
+		<div class="grid-container">
+			<div class="grid-item"><span class="dot"><a href="c.php?led=255-0-0-" class="buttonClass" style="background:rgb(255,0,0);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=255-0-128-" class="buttonClass" style="background:rgb(255,0,128);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=255-0-255-" class="buttonClass" style="background:rgb(255,0,255);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=128-0-255-" class="buttonClass" style="background:rgb(128,0,255);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=0-0-255-" class="buttonClass" style="background:rgb(0,0,255);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=0-128-255-" class="buttonClass" style="background:rgb(0,128,255);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=0-255-255-" class="buttonClass" style="background:rgb(0,255,255);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=0-255-128-" class="buttonClass" style="background:rgb(0,255,128);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=0-255-0-" class="buttonClass" style="background:rgb(0,255,0);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=128-255-0-" class="buttonClass" style="background:rgb(128,255,0);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=255-255-0-" class="buttonClass" style="background:rgb(255,255,0);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=255-128-0-" class="buttonClass" style="background:rgb(255,128,0);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=0-0-0-" class="buttonClass" style="background:rgb(0,0,0);"></a></span></div>
+			<div class="grid-item"><span class="dot"><a href="c.php?led=255-255-255-" class="buttonClass" style="background:rgb(255,255,255);"></a></span></div>
+		</div>
+	</body>
+
+</html>

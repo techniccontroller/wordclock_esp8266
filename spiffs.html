@@ -1,0 +1,64 @@
+
+<!DOCTYPE HTML> <!-- For more information visit: https://fipsok.de -->
+<html lang="de">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <title>Esp8266 Datei Manager</title>
+    <script>
+	  var to = JSON.parse(localStorage.getItem('sortBy'));
+      document.addEventListener('DOMContentLoaded', () => {
+	    list(to);
+        fs.addEventListener('change', () => {
+		  for (var bytes = 0, j = 0; j < event.target.files.length; j++) bytes += event.target.files[j].size;
+          for (var out = `${bytes} Byte`, i = 0, circa = bytes / 1024; circa > 1; circa /= 1024) {
+            out = circa.toFixed(2) + [' KB', ' MB', ' GB'][i++];
+          }
+          if (bytes > free) {
+            si.innerHTML = `<li><b> ${out}</b><strong> Ungenügend Speicher frei</strong></li>`;
+            up.setAttribute('disabled', 'disabled');
+          }
+          else {
+            si.innerHTML = `<li><b>Dateigröße:</b> ${out}</li>`;
+            up.removeAttribute('disabled');
+          }
+        });
+		btn.addEventListener('click', () => {
+	      if (!confirm(`Wirklich formatieren? Alle Daten gehen verloren.\nDu musst anschließend spiffs.html wieder laden.`)) event.preventDefault();
+	    });
+	  });
+	  function list(arg){
+		let myList = document.querySelector('main');
+        fetch('list?sort='+arg).then( (response) => {
+          return response.json();
+        }).then((json) => {
+		  myList.innerHTML = '';
+          for (var i = 0; i < json.length - 1; i++) {
+            let dir = `<li><a href ="${json[i].name}">${json[i].name}</a><small> ${json[i].size}</small><a href ="${json[i].name}"download="${json[i].name}"> Download </a>`;
+            if (json[i].name != 'spiffs.html') dir += `or <a href ="?delete=/${json[i].name}">Delete </a>`;
+            myList.insertAdjacentHTML('beforeend', dir);
+          }
+          myList.insertAdjacentHTML('beforeend', `<li><b id="so">${to ? '&#9660;' : '&#9650;'} SPIFFS</b> belegt ${json[i].usedBytes} von ${json[i].totalBytes}`);
+          free = json[i].freeBytes;
+		  so.addEventListener('click', () => {
+			list(to=++to%2);
+			localStorage.setItem('sortBy', JSON.stringify(to));
+	      });
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <h2>ESP8266 Datei Manager</h2>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+	  <input id="fs" type="file" name="upload[]" multiple>
+      <input id="up" type="submit" value="Upload" disabled>
+    </form>
+    <div>
+      <span id="si"></span>
+      <main></main>
+    </div>
+    <form action="/format" method="POST"><input id="btn" type="submit" value="Format SPIFFS"></form>	
+  </body>
+</html>
