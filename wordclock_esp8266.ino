@@ -71,6 +71,7 @@ long lastStep = millis();
 IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
 int logMulticastPort = 8123;
 UDPLogger logger;
+uint8_t currentState = 0;
 
 
 void setup() {
@@ -166,13 +167,36 @@ void loop() {
     logger.logString("Heartbeat\n");
     lastheartbeat = millis();
   }
-
-  if(millis() - lastStep > 100){
-    int res = spiral(false, sprialDir, width-2);
-    if(res){
-      sprialDir = !sprialDir;
-      spiral(true, sprialDir, width-2);
+  int res = 0;
+  if(millis() - lastStep > 200){
+    switch(currentState){
+      case 0:
+        res = spiral(false, sprialDir, width-2);
+        if(res && !sprialDir){
+          sprialDir = !sprialDir;
+          spiral(true, sprialDir, width-2);
+          
+        }else if(res && sprialDir){
+          sprialDir = !sprialDir;
+          
+          currentState = 1;
+          logger.logString("State change to 1");
+          matrix.fillScreen(0);
+          snake(true, 8, colors[1]);
+        }
+        break;
+      case 1:
+        matrix.fillScreen(0);
+        res = snake(false, 8, colors[1]);
+        if(res){
+          currentState = 0;
+          logger.logString("State change to 0");
+          spiral(true, sprialDir, width-2);
+        }
+        break;
     }
+    
+    
     matrix.show();
     lastStep = millis();
   }

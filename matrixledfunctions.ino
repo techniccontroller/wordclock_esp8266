@@ -19,7 +19,13 @@ uint32_t Wheel(uint8_t WheelPos)
     return matrix.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
 
-// Interpolates two colors and returns an color of the result
+//! Interpolates two colors and returns an color of the result
+/*!
+ * \param color1 startcolor for interpolation
+ * \param color2 endcolor for interpolation
+ * \param factor which color is wanted on the path from start to end color
+ * \returns interpolated color
+ */
 uint32_t interpolateColor(uint32_t color1, uint32_t color2, float factor)
 {
     uint8_t resultRed = color1 >> 16 & 0xff;
@@ -74,7 +80,7 @@ void setMinIndicator(uint8_t pattern, uint32_t color){
  * \param init marks if call is the initial step of the spiral
  * \param empty marks if the spiral should 'draw' empty leds
  * \param size the size of the spiral in leds
- * \return 1 if end is reached, else 0
+ * \returns 1 if end is reached, else 0
  */
 int spiral(bool init, bool empty, uint8_t size){
   static direction dir1;   // current direction
@@ -139,11 +145,85 @@ int spiral(bool init, bool empty, uint8_t size){
 }
 
 
+int snake(bool init, const uint8_t len, const uint16_t color){
+  static direction dir1;
+  static int snake1[2][10];
+  static int randomy;
+  static int randomx;
+  static int e;
+  static int countStep;
+  if(init){
+    dir1 = down;        // current direction
+    for(int i = 0; i < len; i++){
+      snake1[0][i] = 3;
+      snake1[1][i] = i;
+    }
+    
+    randomy = random(1,8);    // Random variable for y-direction
+    randomx = random(1,4);    // Random variable for x-direction
+    e = LEFT;                 // next turn
+  }
+  if (countStep == 200){
+    // End reached return 1
+    return 1;
+  }
+  else{ 
+      // move one step forward
+      for(int i = 0; i < len; i++){
+        if(i < len-1){
+          snake1[0][i] = snake1[0][i+1];
+          snake1[1][i] = snake1[1][i+1];
+        }else{
+          snake1[0][i] = snake1[0][i]+dx[dir1];
+          snake1[1][i] = snake1[1][i]+dy[dir1];
+        }
+      }
+      // collision with wall?
+      if( (dir1 == down && snake1[1][len-1] == height-1) || 
+          (dir1 == up && snake1[1][len-1] == 0) ||
+          (dir1 == right && snake1[0][len-1] == width-1) ||
+          (dir1 == left && snake1[0][len-1] == 0)){
+          dir1 = nextDir(dir1, e);  
+      }
+      // Random branching at the side edges
+      else if((dir1 == up && snake1[1][len-1] == randomy && snake1[0][len-1] == width-1) || (dir1 == down && snake1[1][len-1] == randomy && snake1[0][len-1] == 0)){
+        dir1 = nextDir(dir1, LEFT);
+        e = (e+2)%2+1;
+      }
+      else if((dir1 == down && snake1[1][len-1] == randomy && snake1[0][len-1] == width-1) || (dir1 == up && snake1[1][len-1] == randomy && snake1[0][len-1] == 0)){
+        dir1 = nextDir(dir1, RIGHT);
+        e = (e+2)%2+1;
+      }
+      else if((dir1 == left && snake1[0][len-1] == randomx && snake1[1][len-1] == 0) || (dir1 == right && snake1[0][len-1] == randomx && snake1[1][len-1] == height-1)){
+        dir1 = nextDir(dir1, LEFT);
+        e = (e+2)%2+1;
+      }
+      else if((dir1 == right && snake1[0][len-1] == randomx && snake1[1][len-1] == 0) || (dir1 == left && snake1[0][len-1] == randomx && snake1[1][len-1] == height-1)){
+        dir1 = nextDir(dir1, RIGHT);
+        e = (e+2)%2+1;
+      }
+
+      
+      for(int i = 0; i < len; i++){
+        // draw the snake
+        matrix.drawPixel(snake1[0][i], snake1[1][i], color);
+      }
+
+      // calc new random variables after every 20 steps
+      if(countStep%20== 0){
+        randomy = random(1,8);
+        randomx = random(1,4);
+      }
+      countStep++;
+  }
+  return 0;
+}
+
 //! calc the next direction for led movement (snake and spiral)
 /*!
  * \param dir direction of the current led movement
  * \param d action to be executed
- * \return next direction
+ * \returns next direction
  */
 direction nextDir(direction dir, int d){
   // d = 0 -> continue straight on
