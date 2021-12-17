@@ -18,11 +18,13 @@
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>          // NeoPixel library used to run the NeoPixel LEDs
 #include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 //#include <WiFiClient.h>
 #include <ESP8266HTTPClient.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
 #include "udplogger.h"
+#include "ntp_client_plus.h"
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
 #define NUMPIXELS 125       // number of pixels attached to Attiny85
@@ -72,6 +74,8 @@ IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
 int logMulticastPort = 8123;
 UDPLogger logger;
 uint8_t currentState = 0;
+WiFiUDP NTPUDP;
+NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 
 
 void setup() {
@@ -154,6 +158,11 @@ void setup() {
   spiral(true, sprialDir, width-2);
   matrix.show();
   delay(200);
+
+  // setup NTP
+  ntp.setupNTPClient();
+  logger.logString("NTP running");
+  logger.logString("Time: " +  ntp.getFormattedTime());
 }
 
 void loop() {
