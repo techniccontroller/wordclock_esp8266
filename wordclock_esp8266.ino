@@ -23,6 +23,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
+#include <Base64_.h>                    // https://github.com/Xander-Electronics/Base64
 #include "udplogger.h"
 #include "ntp_client_plus.h"
 
@@ -70,12 +71,14 @@ uint8_t brightness = 40;     // current brightness of leds
 bool sprialDir = false;
 long lastheartbeat = millis();
 long lastStep = millis();
+long lastLEDdirect = 0;
 IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
 int logMulticastPort = 8123;
 UDPLogger logger;
 uint8_t currentState = 0;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
+
 
 
 void setup() {
@@ -142,6 +145,8 @@ void setup() {
   setupOTA();
 
   server.on("/c.php", handleCommand); // process commands
+  //server.on("/ledvideo", HTTP_POST, handleLEDVideo); // Call the 'handleLEDVideo' function when a POST request is made to URI "/ledvideo"
+  server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
 
   logger = UDPLogger(WiFi.localIP(), logMulticastIP, logMulticastPort);
   logger.setName(WiFi.localIP().toString());
@@ -177,7 +182,7 @@ void loop() {
     lastheartbeat = millis();
   }
   int res = 0;
-  if(millis() - lastStep > 200){
+  if((millis() - lastStep > 200)  && (millis() - lastLEDdirect > 5000)){
     switch(currentState){
       case 0:
         res = spiral(false, sprialDir, width-2);
@@ -210,6 +215,57 @@ void loop() {
     lastStep = millis();
   }
   
+}
+
+void handleLEDDirect() {
+  if (server.method() != HTTP_POST) {
+    server.send(405, "text/plain", "Method Not Allowed");
+  } else {
+    String message = "POST data was:\n";
+    /*logger.logString(message);
+    delay(10);
+    for (uint8_t i = 0; i < server.args(); i++) {
+      message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+      logger.logString(server.arg(i));
+      delay(10);
+    }*/
+    if(server.args() == 1){
+      String data = String(server.arg(0));
+      int dataLength = data.length();
+      //char byteArray[dataLength];
+      //data.toCharArray(byteArray, dataLength);
+
+      // base64 decoding
+      char base64data[dataLength];
+      data.toCharArray(base64data, dataLength);
+      int base64dataLen = dataLength;
+      int decodedLength = Base64.decodedLength(base64data, base64dataLen);
+      char byteArray[decodedLength];
+      Base64.decode(byteArray, base64data, base64dataLen);
+
+      /*for(int i = 0; i < 10; i++){
+        logger.logString(String((int)(byteArray[i])));
+        delay(10);
+      }*/
+
+
+      for(int i = 0; i < dataLength; i += 4) {
+        uint8_t red = byteArray[i]; // red
+        uint8_t green = byteArray[i + 1]; // green
+        uint8_t blue = byteArray[i + 2]; // blue
+        matrix.drawPixel((i/4) % 11, (i/4) / 11, matrix.Color(red, green, blue));
+      }
+      matrix.show();
+
+      lastLEDdirect = millis();
+
+
+      
+
+    }
+    
+    server.send(200, "text/plain", message);
+  }
 }
 
 
