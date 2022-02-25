@@ -75,6 +75,38 @@ void setMinIndicator(uint8_t pattern, uint32_t color){
   matrix.show();
 }
 
+// "activates" a pixel in grid
+void gridAddPixel(uint8_t x,uint8_t y){
+    grid[y][x] = 1;
+}
+
+// "deactivates" all pixels in grid
+void gridFlush(void){
+    //Setzt an jeder Position eine 0
+    for(uint8_t i=0; i<height; i++){
+        for(uint8_t j=0; j<width; j++){
+            grid[i][j] = 0;
+        }
+    }
+}
+
+
+// draws the grid to the ledmatrix with the current active color
+void drawOnMatrix(uint32_t color){
+  for(int s = 0; s < width; s++){
+    for(int z = 0; z < height; z++){
+      if(grid[z][s] != 0){
+        Serial.print("1 ");
+        matrix.drawPixel(s, z, color); 
+      }
+      else{
+        Serial.print("0 ");
+      }
+    }
+    Serial.println();  
+  }
+}
+
 //! Function to draw a spiral step (from center)
 /*! 
  * \param init marks if call is the initial step of the spiral
@@ -137,7 +169,7 @@ int spiral(bool init, bool empty, uint8_t size){
     
     x += dx[dir1];
     y += dy[dir1];
-    logger.logString("x: " + String(x) + ", y: " + String(y) + "\n");
+    //logger.logString("x: " + String(x) + ", y: " + String(y) + "\n");
     counter1++;
     countStep++;
   }
@@ -162,6 +194,7 @@ int snake(bool init, const uint8_t len, const uint16_t color){
     randomy = random(1,8);    // Random variable for y-direction
     randomx = random(1,4);    // Random variable for x-direction
     e = LEFT;                 // next turn
+    countStep = 0;
   }
   if (countStep == 200){
     // End reached return 1

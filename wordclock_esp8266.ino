@@ -27,6 +27,11 @@
 #include "udplogger.h"
 #include "ntp_client_plus.h"
 
+
+// ----------------------------------------------------------------------------------
+//                                        CONSTANTS
+// ----------------------------------------------------------------------------------
+
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
 #define NUMPIXELS 125       // number of pixels attached to Attiny85
 #define BUTTONPIN 14        // pin to which the button is attached
@@ -34,6 +39,10 @@
 #define RIGHT 2
 #define LINE 10
 #define RECT 5
+
+#define PERIOD_HEARTBEAT 1000
+#define PERIOD_ANIMATION 200
+#define TIMEOUT_LEDDIRECT 5000
 
 // own datatype for matrix movement (snake and spiral)
 enum direction {right, left, up, down};
@@ -45,6 +54,9 @@ const int height = 11;
 
 
 
+// ----------------------------------------------------------------------------------
+//                                        GLOBAL VARIABLES
+// ----------------------------------------------------------------------------------
 
 ESP8266WebServer server(80);  // serve webserver on port 80
 
@@ -57,7 +69,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(width, height+1, NEOPIXELPIN,
   NEO_GRB            + NEO_KHZ800);
 
 
-// six predefined colors (red, yellow, purple, orange, green, blue) 
+// seven predefined colors (black, red, yellow, purple, orange, green, blue) 
 const uint16_t colors[] = {
   matrix.Color(0, 0, 0),
   matrix.Color(255, 0, 0),
@@ -67,11 +79,13 @@ const uint16_t colors[] = {
   matrix.Color(0, 128, 0), 
   matrix.Color(0, 0, 255) };
 
-uint8_t brightness = 40;     // current brightness of leds
+uint8_t brightness = 40;            // current brightness of leds
 bool sprialDir = false;
-long lastheartbeat = millis();
-long lastStep = millis();
-long lastLEDdirect = 0;
+
+// timestamp variables
+long lastheartbeat = millis();      // time of last heartbeat sending
+long lastStep = millis();           // time of last animation step
+long lastLEDdirect = 0;             // time of last direct LED command (=> fall back to normal mode after timeout)
 IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
 int logMulticastPort = 8123;
 UDPLogger logger;
@@ -79,7 +93,23 @@ uint8_t currentState = 0;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 
+// representation of matrix as 2D array
+int grid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,0,0,0}};
 
+
+// ----------------------------------------------------------------------------------
+//                                        SETUP
+// ----------------------------------------------------------------------------------
 
 void setup() {
   // put your setup code here, to run once:
@@ -146,21 +176,25 @@ void setup() {
 
   server.on("/c.php", handleCommand); // process commands
   //server.on("/ledvideo", HTTP_POST, handleLEDVideo); // Call the 'handleLEDVideo' function when a POST request is made to URI "/ledvideo"
-  server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
+  //server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
 
   logger = UDPLogger(WiFi.localIP(), logMulticastIP, logMulticastPort);
   logger.setName(WiFi.localIP().toString());
   logger.logString("Start program\n");
+  logger.logString("Sketchname: "+ String(__FILE__) +"; Build: " + String(__TIMESTAMP__) + "");
 
   for(int r = 0; r < height; r++){
     for(int c = 0; c < width; c++){
       matrix.fillScreen(0);
       matrix.drawPixel(c, r, colors[2]);
       matrix.show();
-      delay(50); 
+      delay(10); 
     }
   }
-  spiral(true, sprialDir, width-2);
+  spiral(true, sprialDir, width-6);
+  
+  // clear Matrix
+  matrix.fillScreen(0);
   matrix.show();
   delay(200);
 
@@ -168,7 +202,21 @@ void setup() {
   ntp.setupNTPClient();
   logger.logString("NTP running");
   logger.logString("Time: " +  ntp.getFormattedTime());
+
+  int hours = ntp.getHours24();
+  int minutes = ntp.getMinutes();
+  String timeMessage = timeToString(hours, minutes);
+  showStringOnClock(timeMessage);
+  drawOnMatrix(colors[2]);
+  drawMinuteIndicator(minutes, colors[2]);
+  matrix.show();
+  delay(10000);
 }
+
+
+// ----------------------------------------------------------------------------------
+//                                        LOOP
+// ----------------------------------------------------------------------------------
 
 void loop() {
   // handle OTA
@@ -177,25 +225,31 @@ void loop() {
   // handle Webserver
   server.handleClient();
 
-  if(millis() - lastheartbeat > 1000){
-    logger.logString("Heartbeat\n");
+  if(millis() - lastheartbeat > PERIOD_HEARTBEAT){
+    logger.logString("Heartbeat, mode: " + String(currentState) + "\n");
     lastheartbeat = millis();
   }
   int res = 0;
-  if((millis() - lastStep > 200)  && (millis() - lastLEDdirect > 5000)){
+  if((millis() - lastStep > PERIOD_ANIMATION)  && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     switch(currentState){
       case 0:
-        res = spiral(false, sprialDir, width-2);
-        if(res && !sprialDir){
-          sprialDir = !sprialDir;
-          spiral(true, sprialDir, width-2);
+        res = spiral(false, sprialDir, width-6);
+        if(res && sprialDir == 0){
+          // change spiral direction to closing (draw empty leds)
+          sprialDir = 1;
+          // init spiral with new spiral direction
+          spiral(true, sprialDir, width-6);
           
-        }else if(res && sprialDir){
-          sprialDir = !sprialDir;
+        }else if(res && sprialDir == 1){
+          // reset spiral direction to normal drawing leds
+          sprialDir = 0;
           
+          // switch to new state
           currentState = 1;
           logger.logString("State change to 1");
           matrix.fillScreen(0);
+
+          // init snake for next run
           snake(true, 8, colors[1]);
         }
         break;
@@ -203,10 +257,14 @@ void loop() {
         matrix.fillScreen(0);
         res = snake(false, 8, colors[1]);
         if(res){
-          currentState = 0;
-          logger.logString("State change to 0");
+          currentState = 2;
+          logger.logString("State change to 2");
           spiral(true, sprialDir, width-2);
         }
+        break;
+      default:
+        currentState = 0;
+        logger.logString("State change to 0");
         break;
     }
     
@@ -216,6 +274,11 @@ void loop() {
   }
   
 }
+
+
+// ----------------------------------------------------------------------------------
+//                                        OTHER FUNCTIONS
+// ----------------------------------------------------------------------------------
 
 void handleLEDDirect() {
   if (server.method() != HTTP_POST) {
