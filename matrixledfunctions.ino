@@ -1,6 +1,15 @@
 const int8_t dx[] = {1, -1, 0, 0};
 const int8_t dy[] = {0, 0, -1, 1};
 
+uint16_t color24to16bit(uint32_t color24bit){
+  uint8_t r = color24bit >> 16 & 0xff;
+  uint8_t g = color24bit >> 8 & 0xff;
+  uint8_t b = color24bit & 0xff;
+  return ((uint16_t)(r & 0xF8) << 8) |
+         ((uint16_t)(g & 0xFC) << 3) |
+                    (b         >> 3);
+}
+
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
 uint32_t Wheel(uint8_t WheelPos)
@@ -8,33 +17,34 @@ uint32_t Wheel(uint8_t WheelPos)
     WheelPos = 255 - WheelPos;
     if (WheelPos < 85)
     {
-        return matrix.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+        return Color24bit(255 - WheelPos * 3, 0, WheelPos * 3);
     }
     if (WheelPos < 170)
     {
         WheelPos -= 85;
-        return matrix.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+        return Color24bit(0, WheelPos * 3, 255 - WheelPos * 3);
     }
     WheelPos -= 170;
-    return matrix.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+    return Color24bit(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
 
-//! Interpolates two colors and returns an color of the result
+//! Interpolates two colors24bit and returns an color of the result
 /*!
  * \param color1 startcolor for interpolation
  * \param color2 endcolor for interpolation
  * \param factor which color is wanted on the path from start to end color
  * \returns interpolated color
  */
-uint32_t interpolateColor(uint32_t color1, uint32_t color2, float factor)
+uint32_t interpolateColor24bit(uint32_t color1, uint32_t color2, float factor)
 {
+    
     uint8_t resultRed = color1 >> 16 & 0xff;
     uint8_t resultGreen = color1 >> 8 & 0xff;
     uint8_t resultBlue = color1 & 0xff;
-    resultRed = (int16_t)(resultRed + (int16_t)(factor * ((int16_t)(color2 >> 16 & 0xff) - (int16_t)resultRed)));
-    resultGreen = (int16_t)(resultGreen + (int16_t)(factor * ((int16_t)(color2 >> 8 & 0xff) - (int16_t)resultGreen)));
-    resultBlue = (int16_t)(resultBlue + (int16_t)(factor * ((int16_t)(color2 & 0xff) - (int16_t)resultBlue)));
-    return matrix.Color(resultRed, resultGreen, resultBlue);
+    resultRed = (uint8_t)(resultRed + (int16_t)(factor * ((int16_t)(color2 >> 16 & 0xff) - (int16_t)resultRed)));
+    resultGreen = (uint8_t)(resultGreen + (int16_t)(factor * ((int16_t)(color2 >> 8 & 0xff) - (int16_t)resultGreen)));
+    resultBlue = (uint8_t)(resultBlue + (int16_t)(factor * ((int16_t)(color2 & 0xff) - (int16_t)resultBlue)));
+    return Color24bit(resultRed, resultGreen, resultBlue);
 }
 
 //setup function LED
@@ -43,7 +53,7 @@ void setupMatrix()
     matrix.begin();       
     matrix.setTextWrap(false);
     matrix.setBrightness(brightness);
-    matrix.setTextColor(colors[0]);
+    matrix.setTextColor(colors24bit[0]);
     randomSeed(analogRead(0));
 }
 
@@ -61,16 +71,16 @@ void setMinIndicator(uint8_t pattern, uint32_t color){
   //  1 -> 0001
   //  0 -> 0000
   if(pattern & 1){
-    matrix.drawPixel(width - 1, height, color);
+    matrix.drawPixel(width - 1, height, color24to16bit(color));
   }
   if(pattern >> 1 & 1){
-    matrix.drawPixel(width - 2, height, color);
+    matrix.drawPixel(width - 2, height, color24to16bit(color));
   }
   if(pattern >> 2 & 1){
-    matrix.drawPixel(width - 3, height, color);
+    matrix.drawPixel(width - 3, height, color24to16bit(color));
   }
   if(pattern >> 3 & 1){
-    matrix.drawPixel(width - 4, height, color);
+    matrix.drawPixel(width - 4, height, color24to16bit(color));
   }
   matrix.show();
 }
@@ -92,18 +102,14 @@ void gridFlush(void){
 
 
 // draws the targetgrid to the ledmatrix with the current active color
-void drawOnMatrix(uint32_t color){
+void drawOnMatrix(){
   for(int s = 0; s < width; s++){
     for(int z = 0; z < height; z++){
-      if(targetgrid[z][s] != 0){
-        //Serial.print("1 ");
-        matrix.drawPixel(s, z, targetgrid[z][s]); 
-      }
-      else{
-        //Serial.print("0 ");
-      }
-    }
-    //Serial.println();  
+      // inplement momentum as smooth transistion function
+      uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], 0.5);
+      matrix.drawPixel(s, z, color24to16bit(filteredColor)); 
+      currentgrid[z][s] = filteredColor;
+    } 
   }
 }
 
@@ -144,10 +150,10 @@ int spiral(bool init, bool empty, uint8_t size){
   else{
     
     if(empty){
-      matrix.drawPixel(x, y, 0);
+      gridAddPixel(x, y, 0);
     }
     else{
-      matrix.drawPixel(x, y, Wheel((randNum +countStep*6)%255));
+      gridAddPixel(x, y, Wheel((randNum +countStep*6)%255));
     }
     Serial.print(counter1);
     Serial.print(countEdge);
@@ -177,7 +183,7 @@ int spiral(bool init, bool empty, uint8_t size){
 }
 
 
-int snake(bool init, const uint8_t len, const uint16_t color){
+int snake(bool init, const uint8_t len, const uint32_t color){
   static direction dir1;
   static int snake1[2][10];
   static int randomy;
@@ -239,7 +245,7 @@ int snake(bool init, const uint8_t len, const uint16_t color){
       
       for(int i = 0; i < len; i++){
         // draw the snake
-        matrix.drawPixel(snake1[0][i], snake1[1][i], color);
+        gridAddPixel(snake1[0][i], snake1[1][i], color);
       }
 
       // calc new random variables after every 20 steps

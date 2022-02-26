@@ -46,6 +46,7 @@
 #define PERIOD_STATECHANGE 10000
 #define PERIOD_NTPUPDATE 30000
 #define PERIOD_TIMEVISUUPDATE 1000
+#define PERIOD_MATRIXUPDATE 100
 
 // own datatype for matrix movement (snake and spiral)
 enum direction {right, left, up, down};
@@ -75,16 +76,19 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(width, height+1, NEOPIXELPIN,
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
 
+uint32_t Color24bit(uint8_t r, uint8_t g, uint8_t b) {
+  return ((uint32_t)r << 16) | ((uint32_t)g <<  8) | b;
+}
 
-// seven predefined colors (black, red, yellow, purple, orange, green, blue) 
-const uint16_t colors[] = {
-  matrix.Color(0, 0, 0),
-  matrix.Color(255, 0, 0),
-  matrix.Color(200, 200, 0),
-  matrix.Color(255, 0, 200),
-  matrix.Color(255, 128, 0), 
-  matrix.Color(0, 128, 0), 
-  matrix.Color(0, 0, 255) };
+// seven predefined colors24bit (black, red, yellow, purple, orange, green, blue) 
+const uint32_t colors24bit[] = {
+  Color24bit(0, 0, 0),
+  Color24bit(255, 0, 0),
+  Color24bit(200, 200, 0),
+  Color24bit(255, 0, 200),
+  Color24bit(255, 128, 0), 
+  Color24bit(0, 128, 0), 
+  Color24bit(0, 0, 255) };
 
 uint8_t brightness = 40;            // current brightness of leds
 bool sprialDir = false;
@@ -95,6 +99,7 @@ long lastStep = millis();           // time of last animation step
 long lastLEDdirect = 0;             // time of last direct LED command (=> fall back to normal mode after timeout)
 long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis();      // time of last NTP update
+long lastAnimationStep = millis();       // time of last Matrix update
 IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
 int logMulticastPort = 8123;
 UDPLogger logger;
@@ -102,8 +107,21 @@ uint8_t currentState = st_clock;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 
-// representation of matrix as 2D array
+// target representation of matrix as 2D array
 uint32_t targetgrid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0}};
+
+// current representation of matrix as 2D array
+uint32_t currentgrid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
@@ -135,9 +153,9 @@ void setup() {
   setupMatrix();
 
   delay(250);
-  setMinIndicator(15, colors[6]);
+  setMinIndicator(15, colors24bit[6]);
   delay(1000);
-  setMinIndicator(15, colors[0]);
+  setMinIndicator(15, colors24bit[0]);
 
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
@@ -151,9 +169,9 @@ void setup() {
   int timeoutcounter = 0;
   while (WiFi.status() != WL_CONNECTED && timeoutcounter < 30) {
     delay(250);
-    setMinIndicator(15, colors[6]);
+    setMinIndicator(15, colors24bit[6]);
     delay(250);
-    setMinIndicator(15, colors[6]);
+    setMinIndicator(15, colors24bit[6]);
     Serial.print(".");
     timeoutcounter++;
   }
@@ -195,7 +213,7 @@ void setup() {
   for(int r = 0; r < height; r++){
     for(int c = 0; c < width; c++){
       matrix.fillScreen(0);
-      matrix.drawPixel(c, r, colors[2]);
+      matrix.drawPixel(c, r, color24to16bit(colors24bit[2]));
       matrix.show();
       delay(10); 
     }
@@ -215,18 +233,35 @@ void setup() {
   int hours = ntp.getHours24();
   int minutes = ntp.getMinutes();
   String timeMessage = timeToString(hours, minutes);
-  showStringOnClock(timeMessage, colors[2]);
-  drawOnMatrix(colors[2]);
-  drawMinuteIndicator(minutes, colors[2]);
+  showStringOnClock(timeMessage, colors24bit[2]);
+  drawMinuteIndicator(minutes, colors24bit[2]);
+  drawOnMatrix();
   matrix.show();
   delay(10000);
 
 
   // init all animation modes
   // init snake
-  snake(true, 8, colors[1]);
+  snake(true, 8, colors24bit[1]);
   // init spiral
   spiral(true, sprialDir, width-6);
+
+  for(int i = 0; i < 6; i++){
+    uint32_t color1 = interpolateColor24bit(colors24bit[i+1], colors24bit[i], 0.5);
+    logger.logString("Test: " + String(i));
+    logColor(colors24bit[i+1]);
+    logColor(colors24bit[i]);
+    logColor(color1);
+    delay(100);
+  }
+  
+}
+
+void logColor(uint32_t color){
+  uint8_t resultRed = color >> 16 & 0xff;
+  uint8_t resultGreen = color >> 8 & 0xff;
+  uint8_t resultBlue = color & 0xff;
+  logger.logString(String(resultRed) + ", " + String(resultGreen) + ", " + String(resultBlue));
 }
 
 
@@ -264,32 +299,36 @@ void loop() {
         }
         break;
       case st_snake:
-        matrix.fillScreen(0);
-        res = snake(false, 8, colors[1]);
+        gridFlush();
+        res = snake(false, 8, colors24bit[1]);
         if(res){
           // init snake for next run
-          snake(true, 8, colors[1]);
+          snake(true, 8, colors24bit[1]);
         }
         break;
       case st_clock:
         int hours = ntp.getHours24();
         int minutes = ntp.getMinutes();
-        showStringOnClock(timeToString(hours, minutes), colors[2]);
-        drawOnMatrix(colors[2]);
-        drawMinuteIndicator(minutes, colors[2]);
+        showStringOnClock(timeToString(hours, minutes), colors24bit[2]);
+        drawMinuteIndicator(minutes, colors24bit[2]);
         break;
     }    
     
-    matrix.show();
     lastStep = millis();
+  }
+
+  // periodically write colors to matrix
+  if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE){
+    drawOnMatrix();
+    matrix.show();
+    lastAnimationStep = millis();
   }
 
 
   // handle state changes
   if(millis() - lastStateChange > PERIOD_STATECHANGE){
     // first clear matrix
-    matrix.fillScreen(0);
-    matrix.show();
+    gridFlush();
     
     // increment state variable
     currentState = currentState + 1;
