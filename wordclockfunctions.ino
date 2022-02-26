@@ -29,7 +29,7 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
   }
 }
 
-int showStringOnClock(String message){
+int showStringOnClock(String message, uint32_t color){
     int messageStart = 0;
     String word = "";
     int lastLetterClock = 0;
@@ -40,7 +40,7 @@ int showStringOnClock(String message){
     // add space on the end of message for splitting
     message = message + " ";
 
-    // empty the grid
+    // empty the targetgrid
     gridFlush();
 
     while(true){
@@ -53,11 +53,11 @@ int showStringOnClock(String message){
         positionOfWord = clockStringGerman.indexOf(word, lastLetterClock);
         
         if(positionOfWord >= 0){
-          // word found on clock -> enable leds in grid
+          // word found on clock -> enable leds in targetgrid
           for(int i = 0; i < word.length(); i++){
             int x = (positionOfWord + i)%width;
             int y = (positionOfWord + i)/width;
-            gridAddPixel(x, y);
+            gridAddPixel(x, y, color);
           }
           // remember end of the word on clock
           lastLetterClock = positionOfWord + word.length();

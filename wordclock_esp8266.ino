@@ -103,17 +103,17 @@ WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 
 // representation of matrix as 2D array
-int grid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0},
-                            {0,0,0,0,0,0,0,0,0,0,0}};
+uint32_t targetgrid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0},
+                                      {0,0,0,0,0,0,0,0,0,0,0}};
 
 
 // ----------------------------------------------------------------------------------
@@ -215,7 +215,7 @@ void setup() {
   int hours = ntp.getHours24();
   int minutes = ntp.getMinutes();
   String timeMessage = timeToString(hours, minutes);
-  showStringOnClock(timeMessage);
+  showStringOnClock(timeMessage, colors[2]);
   drawOnMatrix(colors[2]);
   drawMinuteIndicator(minutes, colors[2]);
   matrix.show();
@@ -274,7 +274,7 @@ void loop() {
       case st_clock:
         int hours = ntp.getHours24();
         int minutes = ntp.getMinutes();
-        showStringOnClock(timeToString(hours, minutes));
+        showStringOnClock(timeToString(hours, minutes), colors[2]);
         drawOnMatrix(colors[2]);
         drawMinuteIndicator(minutes, colors[2]);
         break;

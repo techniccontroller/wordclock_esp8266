@@ -75,29 +75,29 @@ void setMinIndicator(uint8_t pattern, uint32_t color){
   matrix.show();
 }
 
-// "activates" a pixel in grid
-void gridAddPixel(uint8_t x,uint8_t y){
-    grid[y][x] = 1;
+// "activates" a pixel in targetgrid with color
+void gridAddPixel(uint8_t x,uint8_t y, uint32_t color){
+    targetgrid[y][x] = color;
 }
 
-// "deactivates" all pixels in grid
+// "deactivates" all pixels in targetgrid
 void gridFlush(void){
     //Setzt an jeder Position eine 0
     for(uint8_t i=0; i<height; i++){
         for(uint8_t j=0; j<width; j++){
-            grid[i][j] = 0;
+            targetgrid[i][j] = 0;
         }
     }
 }
 
 
-// draws the grid to the ledmatrix with the current active color
+// draws the targetgrid to the ledmatrix with the current active color
 void drawOnMatrix(uint32_t color){
   for(int s = 0; s < width; s++){
     for(int z = 0; z < height; z++){
-      if(grid[z][s] != 0){
+      if(targetgrid[z][s] != 0){
         //Serial.print("1 ");
-        matrix.drawPixel(s, z, color); 
+        matrix.drawPixel(s, z, targetgrid[z][s]); 
       }
       else{
         //Serial.print("0 ");
