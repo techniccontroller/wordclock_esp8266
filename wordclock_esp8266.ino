@@ -43,6 +43,9 @@
 #define PERIOD_HEARTBEAT 1000
 #define PERIOD_ANIMATION 200
 #define TIMEOUT_LEDDIRECT 5000
+#define PERIOD_STATECHANGE 10000
+#define PERIOD_NTPUPDATE 30000
+#define PERIOD_TIMEVISUUPDATE 1000
 
 // own datatype for matrix movement (snake and spiral)
 enum direction {right, left, up, down};
@@ -52,6 +55,10 @@ const int width = 11;
 // height of the led matrix
 const int height = 11;
 
+// own datatype for state machine states
+#define NUM_STATES 3
+enum ClockState {st_clock, st_spiral, st_snake, st_diclock};
+const uint16_t PERIODS[NUM_STATES] = {PERIOD_TIMEVISUUPDATE, PERIOD_ANIMATION, PERIOD_ANIMATION};
 
 
 // ----------------------------------------------------------------------------------
@@ -86,10 +93,12 @@ bool sprialDir = false;
 long lastheartbeat = millis();      // time of last heartbeat sending
 long lastStep = millis();           // time of last animation step
 long lastLEDdirect = 0;             // time of last direct LED command (=> fall back to normal mode after timeout)
+long lastStateChange = millis();    // time of last state change
+long lastNTPUpdate = millis();      // time of last NTP update
 IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
 int logMulticastPort = 8123;
 UDPLogger logger;
-uint8_t currentState = 0;
+uint8_t currentState = st_clock;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 
@@ -191,7 +200,7 @@ void setup() {
       delay(10); 
     }
   }
-  spiral(true, sprialDir, width-6);
+  
   
   // clear Matrix
   matrix.fillScreen(0);
@@ -211,6 +220,13 @@ void setup() {
   drawMinuteIndicator(minutes, colors[2]);
   matrix.show();
   delay(10000);
+
+
+  // init all animation modes
+  // init snake
+  snake(true, 8, colors[1]);
+  // init spiral
+  spiral(true, sprialDir, width-6);
 }
 
 
@@ -226,13 +242,13 @@ void loop() {
   server.handleClient();
 
   if(millis() - lastheartbeat > PERIOD_HEARTBEAT){
-    logger.logString("Heartbeat, mode: " + String(currentState) + "\n");
+    logger.logString("Heartbeat, state: " + String(currentState) + "\n");
     lastheartbeat = millis();
   }
   int res = 0;
-  if((millis() - lastStep > PERIOD_ANIMATION)  && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
+  if((millis() - lastStep > PERIODS[currentState])  && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     switch(currentState){
-      case 0:
+      case st_spiral:
         res = spiral(false, sprialDir, width-6);
         if(res && sprialDir == 0){
           // change spiral direction to closing (draw empty leds)
@@ -243,34 +259,54 @@ void loop() {
         }else if(res && sprialDir == 1){
           // reset spiral direction to normal drawing leds
           sprialDir = 0;
-          
-          // switch to new state
-          currentState = 1;
-          logger.logString("State change to 1");
-          matrix.fillScreen(0);
-
+          // init spiral with new spiral direction
+          spiral(true, sprialDir, width-6);
+        }
+        break;
+      case st_snake:
+        matrix.fillScreen(0);
+        res = snake(false, 8, colors[1]);
+        if(res){
           // init snake for next run
           snake(true, 8, colors[1]);
         }
         break;
-      case 1:
-        matrix.fillScreen(0);
-        res = snake(false, 8, colors[1]);
-        if(res){
-          currentState = 2;
-          logger.logString("State change to 2");
-          spiral(true, sprialDir, width-2);
-        }
+      case st_clock:
+        int hours = ntp.getHours24();
+        int minutes = ntp.getMinutes();
+        showStringOnClock(timeToString(hours, minutes));
+        drawOnMatrix(colors[2]);
+        drawMinuteIndicator(minutes, colors[2]);
         break;
-      default:
-        currentState = 0;
-        logger.logString("State change to 0");
-        break;
-    }
-    
+    }    
     
     matrix.show();
     lastStep = millis();
+  }
+
+
+  // handle state changes
+  if(millis() - lastStateChange > PERIOD_STATECHANGE){
+    // first clear matrix
+    matrix.fillScreen(0);
+    matrix.show();
+    
+    // increment state variable
+    currentState = currentState + 1;
+    if(currentState == NUM_STATES){
+      currentState = 0;
+    }
+    
+    logger.logString("State change to: " + String(currentState));
+
+    lastStateChange = millis();
+  }
+
+  // NTP time update
+  if(millis() - lastNTPUpdate > PERIOD_NTPUPDATE){
+    logger.logString("NTP-Update");
+    ntp.updateNTP();
+    lastNTPUpdate = millis();
   }
   
 }

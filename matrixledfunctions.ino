@@ -96,14 +96,14 @@ void drawOnMatrix(uint32_t color){
   for(int s = 0; s < width; s++){
     for(int z = 0; z < height; z++){
       if(grid[z][s] != 0){
-        Serial.print("1 ");
+        //Serial.print("1 ");
         matrix.drawPixel(s, z, color); 
       }
       else{
-        Serial.print("0 ");
+        //Serial.print("0 ");
       }
     }
-    Serial.println();  
+    //Serial.println();  
   }
 }
 
