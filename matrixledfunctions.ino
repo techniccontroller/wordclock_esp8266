@@ -71,18 +71,17 @@ void setMinIndicator(uint8_t pattern, uint32_t color){
   //  1 -> 0001
   //  0 -> 0000
   if(pattern & 1){
-    matrix.drawPixel(width - 1, height, color24to16bit(color));
+    targetindicators[0] = color24to16bit(color);
   }
   if(pattern >> 1 & 1){
-    matrix.drawPixel(width - 2, height, color24to16bit(color));
+    targetindicators[1] = color24to16bit(color);
   }
   if(pattern >> 2 & 1){
-    matrix.drawPixel(width - 3, height, color24to16bit(color));
+    targetindicators[2] = color24to16bit(color);
   }
   if(pattern >> 3 & 1){
-    matrix.drawPixel(width - 4, height, color24to16bit(color));
+    targetindicators[3] = color24to16bit(color);
   }
-  matrix.show();
 }
 
 // "activates" a pixel in targetgrid with color
@@ -92,12 +91,17 @@ void gridAddPixel(uint8_t x,uint8_t y, uint32_t color){
 
 // "deactivates" all pixels in targetgrid
 void gridFlush(void){
-    //Setzt an jeder Position eine 0
+    // set a zero to each pixel
     for(uint8_t i=0; i<height; i++){
         for(uint8_t j=0; j<width; j++){
             targetgrid[i][j] = 0;
         }
     }
+    // set every minutes indicator led to 0
+    targetindicators[0] = 0;
+    targetindicators[1] = 0;
+    targetindicators[2] = 0;
+    targetindicators[3] = 0;
 }
 
 
@@ -106,10 +110,16 @@ void drawOnMatrix(){
   for(int s = 0; s < width; s++){
     for(int z = 0; z < height; z++){
       // inplement momentum as smooth transistion function
-      uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], 0.5);
+      uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], FILTER_FACTOR);
       matrix.drawPixel(s, z, color24to16bit(filteredColor)); 
       currentgrid[z][s] = filteredColor;
     } 
+  }
+
+  for(int i = 0; i < 4; i++){
+    uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], FILTER_FACTOR);
+    matrix.drawPixel(width - (1+i), height, color24to16bit(filteredColor));
+    currentindicators[i] = filteredColor;
   }
 }
 

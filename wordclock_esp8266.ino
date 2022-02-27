@@ -48,6 +48,8 @@
 #define PERIOD_TIMEVISUUPDATE 1000
 #define PERIOD_MATRIXUPDATE 100
 
+#define FILTER_FACTOR 0.5
+
 // own datatype for matrix movement (snake and spiral)
 enum direction {right, left, up, down};
 
@@ -133,6 +135,11 @@ uint32_t currentgrid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0}};
 
+// target representation of minutes indicator leds
+uint32_t targetindicators[4] = {0, 0, 0, 0};
+
+// current representation of minutes indicator leds
+uint32_t currentindicators[4] = {0, 0, 0, 0};
 
 // ----------------------------------------------------------------------------------
 //                                        SETUP
