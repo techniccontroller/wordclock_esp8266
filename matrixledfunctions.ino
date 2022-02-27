@@ -131,10 +131,11 @@ int spiral(bool init, bool empty, uint8_t size){
   static bool breiter ;
   static int randNum;
   if(init){
+    logger.logString("Init Spiral with empty=" + String(empty));
     dir1 = down;          // current direction
     x = width/2;
     y = width/2;
-    if(!empty)matrix.fillScreen(0);
+    if(!empty)gridFlush();
     counter1 = 0;
     countStep = 0;
     countEdge = 1;
@@ -148,16 +149,13 @@ int spiral(bool init, bool empty, uint8_t size){
     return 1;
   }
   else{
-    
+    // calc color from colorwheel
+    uint32_t color = Wheel((randNum +countStep*6)%255);
+    // if draw mode is empty, set color to zero
     if(empty){
-      gridAddPixel(x, y, 0);
+      color = 0;
     }
-    else{
-      gridAddPixel(x, y, Wheel((randNum +countStep*6)%255));
-    }
-    Serial.print(counter1);
-    Serial.print(countEdge);
-    Serial.println(countCorner);
+    gridAddPixel(x, y, color);
     if(countCorner == 2 && breiter){
       countEdge +=1;
       breiter = false;
@@ -175,7 +173,7 @@ int spiral(bool init, bool empty, uint8_t size){
     
     x += dx[dir1];
     y += dy[dir1];
-    //logger.logString("x: " + String(x) + ", y: " + String(y) + "\n");
+    //logger.logString("x: " + String(x) + ", y: " + String(y) + "c: " + String(color) + "\n");
     counter1++;
     countStep++;
   }
@@ -183,7 +181,7 @@ int spiral(bool init, bool empty, uint8_t size){
 }
 
 
-int snake(bool init, const uint8_t len, const uint32_t color){
+int snake(bool init, const uint8_t len, const uint32_t color, int numSteps){
   static direction dir1;
   static int snake1[2][10];
   static int randomy;
@@ -202,7 +200,7 @@ int snake(bool init, const uint8_t len, const uint32_t color){
     e = LEFT;                 // next turn
     countStep = 0;
   }
-  if (countStep == 200){
+  if (countStep == numSteps){
     // End reached return 1
     return 1;
   }

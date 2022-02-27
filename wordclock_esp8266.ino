@@ -242,7 +242,7 @@ void setup() {
 
   // init all animation modes
   // init snake
-  snake(true, 8, colors24bit[1]);
+  snake(true, 8, colors24bit[1], -1);
   // init spiral
   spiral(true, sprialDir, width-6);
 
@@ -300,10 +300,10 @@ void loop() {
         break;
       case st_snake:
         gridFlush();
-        res = snake(false, 8, colors24bit[1]);
+        res = snake(false, 8, colors24bit[1], -1);
         if(res){
           // init snake for next run
-          snake(true, 8, colors24bit[1]);
+          snake(true, 8, colors24bit[1], -1);
         }
         break;
       case st_clock:
@@ -335,6 +335,9 @@ void loop() {
     if(currentState == NUM_STATES){
       currentState = 0;
     }
+
+    // call entry action for each state
+    entryAction(currentState);
     
     logger.logString("State change to: " + String(currentState));
 
@@ -354,6 +357,22 @@ void loop() {
 // ----------------------------------------------------------------------------------
 //                                        OTHER FUNCTIONS
 // ----------------------------------------------------------------------------------
+
+/**
+ * @brief call entry action of given state
+ * 
+ * @param state 
+ */
+void entryAction(uint8_t state){
+  switch(state){
+    case st_spiral:
+      // Init spiral with normal drawing mode
+      sprialDir = 0;
+      spiral(true, sprialDir, width-6);
+      break;
+  }
+}
+
 
 void handleLEDDirect() {
   if (server.method() != HTTP_POST) {
