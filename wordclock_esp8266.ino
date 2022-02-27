@@ -63,12 +63,21 @@ const int height = 11;
 enum ClockState {st_clock, st_spiral, st_snake, st_diclock};
 const uint16_t PERIODS[NUM_STATES] = {PERIOD_TIMEVISUUPDATE, PERIOD_ANIMATION, PERIOD_ANIMATION};
 
+// ports
+const unsigned int localPort = 2390;
+const unsigned int HTTPPort = 80;
+const unsigned int logMulticastPort = 8123;
+
+// ip addresses
+IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
+
 
 // ----------------------------------------------------------------------------------
 //                                        GLOBAL VARIABLES
 // ----------------------------------------------------------------------------------
 
-ESP8266WebServer server(80);  // serve webserver on port 80
+// Webserver
+ESP8266WebServer server(HTTPPort);
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
@@ -102,8 +111,6 @@ long lastLEDdirect = 0;             // time of last direct LED command (=> fall 
 long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis();      // time of last NTP update
 long lastAnimationStep = millis();       // time of last Matrix update
-IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
-int logMulticastPort = 8123;
 UDPLogger logger;
 uint8_t currentState = st_clock;
 WiFiUDP NTPUDP;
@@ -192,7 +199,7 @@ void setup() {
     Serial.println(WiFi.localIP()); 
   
   } else {
-
+    // no wifi found -> open access point
     WiFi.mode(WIFI_AP);
     WiFi.softAP(AP_SSID + WiFi.macAddress(), AP_PASS);
 
@@ -203,7 +210,6 @@ void setup() {
 
   // init ESP8266 File manager
   spiffs();
-  server.begin();
 
   // setup OTA
   setupOTA();
@@ -211,7 +217,8 @@ void setup() {
   server.on("/c.php", handleCommand); // process commands
   //server.on("/ledvideo", HTTP_POST, handleLEDVideo); // Call the 'handleLEDVideo' function when a POST request is made to URI "/ledvideo"
   //server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
-
+  server.begin();
+  
   logger = UDPLogger(WiFi.localIP(), logMulticastIP, logMulticastPort);
   logger.setName(WiFi.localIP().toString());
   logger.logString("Start program\n");
