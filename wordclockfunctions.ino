@@ -11,19 +11,19 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
         break;
           
       case 1:
-        setMinIndicator(1, color);
+        setMinIndicator(0b1000, color);
         break;
 
       case 2:
-        setMinIndicator(3, color);
+        setMinIndicator(0b1100, color);
         break;
 
       case 3:
-        setMinIndicator(7, color);
+        setMinIndicator(0b1110, color);
         break;
 
       case 4:
-        setMinIndicator(15, color);
+        setMinIndicator(0b1111, color);
         break;
     }
   }
