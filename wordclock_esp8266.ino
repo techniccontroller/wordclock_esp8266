@@ -26,6 +26,7 @@
 #include <Base64_.h>                    // https://github.com/Xander-Electronics/Base64
 #include "udplogger.h"
 #include "ntp_client_plus.h"
+#include "own_font.h"
 
 
 // ----------------------------------------------------------------------------------
@@ -248,19 +249,32 @@ void setup() {
   matrix.show();
   delay(200);
 
+  // display IP
+  uint8_t address = WiFi.localIP()[3];
+  printChar(1, 0, 'I', colors24bit[2]);
+  printChar(5, 0, 'P', colors24bit[2]);
+  printNumber(0, 6, (address/100), colors24bit[2]);
+  printNumber(4, 6, (address/10)%10, colors24bit[2]);
+  printNumber(8, 6, address%10, colors24bit[2]);
+  drawOnMatrixInstant();
+  matrix.show();
+  delay(2000);
+
+
   // setup NTP
   ntp.setupNTPClient();
   logger.logString("NTP running");
   logger.logString("Time: " +  ntp.getFormattedTime());
 
+  // show the current time for short time in words
   int hours = ntp.getHours24();
   int minutes = ntp.getMinutes();
   String timeMessage = timeToString(hours, minutes);
   showStringOnClock(timeMessage, colors24bit[2]);
   drawMinuteIndicator(minutes, colors24bit[2]);
-  drawOnMatrix();
+  drawOnMatrixSmooth();
   matrix.show();
-  delay(10000);
+  delay(1000);
 
 
   // init all animation modes
@@ -269,14 +283,17 @@ void setup() {
   // init spiral
   spiral(true, sprialDir, width-6);
 
-  for(int i = 0; i < 6; i++){
-    uint32_t color1 = interpolateColor24bit(colors24bit[i+1], colors24bit[i], 0.5);
-    logger.logString("Test: " + String(i));
-    logColor(colors24bit[i+1]);
-    logColor(colors24bit[i]);
-    logColor(color1);
-    delay(100);
+  // show countdown
+  for(int i = 9; i > 0; i--){
+    logger.logString("DiTest: " + String(i));
+    Serial.println("DiTest: " + String(i));
+    gridFlush();
+    printNumber(4, 3, i, colors24bit[2]);
+    drawOnMatrixInstant();
+    matrix.show();
+    delay(1000);
   }
+
   
 }
 
@@ -318,7 +335,9 @@ void loop() {
       // state diclock
       case st_diclock:
         {
-
+          int hours = ntp.getHours24();
+          int minutes = ntp.getMinutes();
+          showDigitalClock(hours, minutes, colors24bit[2]);
         }
         break;
       // state spiral
@@ -369,7 +388,7 @@ void loop() {
 
   // periodically write colors to matrix
   if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE){
-    drawOnMatrix();
+    drawOnMatrixSmooth();
     matrix.show();
     lastAnimationStep = millis();
   }

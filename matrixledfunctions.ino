@@ -104,20 +104,28 @@ void gridFlush(void){
     targetindicators[3] = 0;
 }
 
+void drawOnMatrixInstant(){
+  drawOnMatrix(1.0);
+}
+
+void drawOnMatrixSmooth(){
+  drawOnMatrix(FILTER_FACTOR);
+}
+
 
 // draws the targetgrid to the ledmatrix with the current active color
-void drawOnMatrix(){
+void drawOnMatrix(float factor){
   for(int s = 0; s < width; s++){
     for(int z = 0; z < height; z++){
       // inplement momentum as smooth transistion function
-      uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], FILTER_FACTOR);
+      uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], factor);
       matrix.drawPixel(s, z, color24to16bit(filteredColor)); 
       currentgrid[z][s] = filteredColor;
     } 
   }
 
   for(int i = 0; i < 4; i++){
-    uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], FILTER_FACTOR);
+    uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], factor);
     matrix.drawPixel(width - (1+i), height, color24to16bit(filteredColor));
     currentindicators[i] = filteredColor;
   }
@@ -301,5 +309,69 @@ direction nextDir(direction dir, int d){
   }
   direction next = selection[d];
   return next;
+}
+
+/**
+ * @brief show the time as digits on the wordclock
+ * 
+ * @param hours hours of time to display
+ * @param minutes minutes of time to display
+ * @param color  color to display (24bit)
+ */
+void showDigitalClock(uint8_t hours, uint8_t minutes, uint32_t color){
+  uint8_t fstDigitH = hours/10;
+  uint8_t sndDigitH = hours%10;
+  uint8_t fstDigitM = minutes/10;
+  uint8_t sndDigitM = minutes%10;
+  printNumber(1, 0, fstDigitH, color);
+  printNumber(5, 0, sndDigitH, color);
+  printNumber(1, 6, fstDigitM, color);
+  printNumber(5, 6, sndDigitM, color);
+}
+
+/**
+ * @brief show a 1-digit number on LED matrix (5x3)
+ * 
+ * @param xpos x of left top corner of digit
+ * @param ypos y of left top corner of digit
+ * @param number number to display
+ * @param color color to display (24bit)
+ */
+void printNumber(uint8_t xpos, uint8_t ypos, uint8_t number, uint32_t color){
+  for(int y=ypos, i = 0; y < (ypos+5); y++, i++){
+    for(int x=xpos, k = 2; x < (xpos+3); x++, k--){
+      if((numbers_font[number][i] >> k) & 0x1){
+        Serial.print(1);
+        gridAddPixel(x, y, color);
+      }
+    }
+  }
+}
+
+/**
+ * @brief show a character on LED matrix (5x3), supports currently only 'I' and 'P'
+ * 
+ * @param xpos x of left top corner of character
+ * @param ypos y of left top corner of character
+ * @param character character to display
+ * @param color color to display (24bit)
+ */
+void printChar(uint8_t xpos, uint8_t ypos, char character, uint32_t color){
+  int id = 0;
+  if(character == 'I'){
+    id = 0;
+  }
+  else if(character == 'P'){
+    id = 1;
+  }
+
+  for(int y=ypos, i = 0; y < (ypos+5); y++, i++){
+    for(int x=xpos, k = 2; x < (xpos+3); x++, k--){
+      if((chars_font[id][i] >> k) & 0x1){
+        Serial.print(1);
+        gridAddPixel(x, y, color);
+      }
+    }
+  }
 }
 
