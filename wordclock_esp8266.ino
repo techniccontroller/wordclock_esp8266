@@ -59,9 +59,15 @@ const int width = 11;
 const int height = 11;
 
 // own datatype for state machine states
-#define NUM_STATES 3
-enum ClockState {st_clock, st_spiral, st_snake, st_diclock};
-const uint16_t PERIODS[NUM_STATES] = {PERIOD_TIMEVISUUPDATE, PERIOD_ANIMATION, PERIOD_ANIMATION};
+#define NUM_STATES 6
+enum ClockState {st_clock, st_diclock, st_spiral, st_tetris, st_snake, st_pingpong};
+const String stateNames[] = {"Clock", "DiClock", "Sprial", "Tetris", "Snake", "PingPong"};
+const uint16_t PERIODS[NUM_STATES] = {PERIOD_TIMEVISUUPDATE, 
+                                      PERIOD_TIMEVISUUPDATE, 
+                                      PERIOD_ANIMATION,
+                                      PERIOD_ANIMATION, 
+                                      PERIOD_ANIMATION,  
+                                      PERIOD_ANIMATION};
 
 // ports
 const unsigned int localPort = 2390;
@@ -214,7 +220,7 @@ void setup() {
   // setup OTA
   setupOTA();
 
-  server.on("/c.php", handleCommand); // process commands
+  server.on("/cmd", handleCommand); // process commands
   //server.on("/ledvideo", HTTP_POST, handleLEDVideo); // Call the 'handleLEDVideo' function when a POST request is made to URI "/ledvideo"
   //server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
   server.begin();
@@ -291,40 +297,67 @@ void loop() {
   server.handleClient();
 
   if(millis() - lastheartbeat > PERIOD_HEARTBEAT){
-    logger.logString("Heartbeat, state: " + String(currentState) + "\n");
+    logger.logString("Heartbeat, state: " + stateNames[currentState] + "\n");
     lastheartbeat = millis();
   }
   int res = 0;
   if((millis() - lastStep > PERIODS[currentState])  && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     switch(currentState){
-      case st_spiral:
-        res = spiral(false, sprialDir, width-6);
-        if(res && sprialDir == 0){
-          // change spiral direction to closing (draw empty leds)
-          sprialDir = 1;
-          // init spiral with new spiral direction
-          spiral(true, sprialDir, width-6);
-          
-        }else if(res && sprialDir == 1){
-          // reset spiral direction to normal drawing leds
-          sprialDir = 0;
-          // init spiral with new spiral direction
-          spiral(true, sprialDir, width-6);
-        }
-        break;
-      case st_snake:
-        gridFlush();
-        res = snake(false, 8, colors24bit[1], -1);
-        if(res){
-          // init snake for next run
-          snake(true, 8, colors24bit[1], -1);
-        }
-        break;
+      // state clock
       case st_clock:
-        int hours = ntp.getHours24();
-        int minutes = ntp.getMinutes();
-        showStringOnClock(timeToString(hours, minutes), colors24bit[2]);
-        drawMinuteIndicator(minutes, colors24bit[2]);
+        {
+          int hours = ntp.getHours24();
+          int minutes = ntp.getMinutes();
+          showStringOnClock(timeToString(hours, minutes), colors24bit[2]);
+          drawMinuteIndicator(minutes, colors24bit[2]);
+        }
+        break;
+      // state diclock
+      case st_diclock:
+        {
+
+        }
+        break;
+      // state spiral
+      case st_spiral:
+        {
+          res = spiral(false, sprialDir, width-6);
+          if(res && sprialDir == 0){
+            // change spiral direction to closing (draw empty leds)
+            sprialDir = 1;
+            // init spiral with new spiral direction
+            spiral(true, sprialDir, width-6);
+            
+          }else if(res && sprialDir == 1){
+            // reset spiral direction to normal drawing leds
+            sprialDir = 0;
+            // init spiral with new spiral direction
+            spiral(true, sprialDir, width-6);
+          }
+        }
+        break;
+      // state tetris
+      case st_tetris:
+        {
+
+        }
+        break;
+      // state snake
+      case st_snake:
+        {
+          gridFlush();
+          res = snake(false, 8, colors24bit[1], -1);
+          if(res){
+            // init snake for next run
+            snake(true, 8, colors24bit[1], -1);
+          }
+        }
+        break;
+      // state pingpong
+      case st_pingpong:
+        {
+
+        }
         break;
     }    
     
@@ -341,20 +374,10 @@ void loop() {
 
   // handle state changes
   if(millis() - lastStateChange > PERIOD_STATECHANGE){
-    // first clear matrix
-    gridFlush();
+    // increment state variable and trigger state change
+    stateChange((currentState + 1) % NUM_STATES);
     
-    // increment state variable
-    currentState = currentState + 1;
-    if(currentState == NUM_STATES){
-      currentState = 0;
-    }
-
-    // call entry action for each state
-    entryAction(currentState);
-    
-    logger.logString("State change to: " + String(currentState));
-
+    // save last automatic state change
     lastStateChange = millis();
   }
 
@@ -385,6 +408,20 @@ void entryAction(uint8_t state){
       spiral(true, sprialDir, width-6);
       break;
   }
+}
+
+/**
+ * @brief execute a state change to given newState
+ * 
+ * @param newState the new state to be changed to
+ */
+void stateChange(uint8_t newState){
+  // first clear matrix
+  gridFlush();
+  // set new state
+  currentState = newState;
+  entryAction(currentState);
+  logger.logString("State change to: " + stateNames[currentState]);
 }
 
 
@@ -439,7 +476,10 @@ void handleLEDDirect() {
   }
 }
 
-
+/**
+ * @brief handler for handling commands sent to "/cmd" url
+ * 
+ */
 void handleCommand() {
   // receive command and handle accordingly
   for (uint8_t i = 0; i < server.args(); i++) {
@@ -448,9 +488,9 @@ void handleCommand() {
     Serial.println(server.arg(i));
   }
   
-  if (server.argName(0) == "led") // the parameter which was sent to this server
+  if (server.argName(0) == "led") // the parameter which was sent to this server is led color
   {
-    String colorstr = server.arg(0);
+    String colorstr = server.arg(0) + "-";
     String redstr = split(colorstr, '-', 0);
     String greenstr= split(colorstr, '-', 1);
     String bluestr = split(colorstr, '-', 2);
@@ -459,6 +499,30 @@ void handleCommand() {
     logger.logString("g: " + String(greenstr.toInt()));
     logger.logString("b: " + String(bluestr.toInt()));
     setMinIndicator(15, Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt()));
+  }
+  else if (server.argName(0) == "mode") // the parameter which was sent to this server is mode change
+  {
+    String modestr = server.arg(0);
+    logger.logString("Mode change via Webserver to: " + modestr);
+    // set current mode/state accordant sent mode
+    if(modestr == "clock"){
+      stateChange(st_clock);
+    }
+    else if(modestr == "diclock"){
+      stateChange(st_diclock);
+    }
+    else if(modestr == "spiral"){
+      stateChange(st_spiral);
+    }
+    else if(modestr == "tetris"){
+      stateChange(st_tetris);
+    }
+    else if(modestr == "snake"){
+      stateChange(st_snake);
+    }
+    else if(modestr == "pingpong"){
+      stateChange(st_pingpong);
+    } 
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
