@@ -76,7 +76,8 @@ const unsigned int logMulticastPort = 8123;
 
 // ip addresses
 IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
-
+// hostname
+String hostname = "wordclock";
 
 // ----------------------------------------------------------------------------------
 //                                        GLOBAL VARIABLES
@@ -183,8 +184,10 @@ void setup() {
   
   // We start by connecting to a WiFi network
   WiFi.mode(WIFI_STA);
+  //Set new hostname
+  WiFi.hostname(hostname.c_str());
   WiFi.begin(WIFI_SSID, WIFI_PASS);
-  wifi_station_set_hostname("esplamp");
+  //wifi_station_set_hostname("esplamp");
 
   int timeoutcounter = 0;
   while (WiFi.status() != WL_CONNECTED && timeoutcounter < 30) {
