@@ -27,5 +27,5 @@ print("Ready")
 # Receive/respond loop
 while True:
     data, address = sock.recvfrom(1024)
-    print(address, ": ", data)
+    print(address, ": ", data.decode("utf-8").strip())
 
