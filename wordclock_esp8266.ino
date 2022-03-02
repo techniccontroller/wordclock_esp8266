@@ -458,7 +458,7 @@ void handleCommand() {
     logger.logString("r: " + String(redstr.toInt()));
     logger.logString("g: " + String(greenstr.toInt()));
     logger.logString("b: " + String(bluestr.toInt()));
-    setMinIndicator(15, matrix.Color(redstr.toInt(), greenstr.toInt(), bluestr.toInt()));
+    setMinIndicator(15, Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt()));
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }

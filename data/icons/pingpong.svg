@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="50mm" height="50mm" version="1.1" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g transform="translate(-4.1575 -59.891)" display="none">
+  <rect x="-30.238" y="-2.0789" width="265.15" height="146.28" fill="#1b2131" fill-rule="evenodd" opacity=".998"/>
+ </g>
+ <g fill="none" stroke="#fff" stroke-linecap="round">
+  <path d="m5.9125 8.275v11.056" stroke-width="2"/>
+  <path d="m43.332 30.859v11.056" stroke-width="2"/>
+  <path d="m16.836 17.756h0.52268" stroke-width="1.663"/>
+ </g>
+ <g transform="translate(-158.51 -1.487)" stroke="#fff">
+  <rect x="159.51" y="2.487" width="48" height="48" ry="6.8036" fill="none" opacity=".998" stroke="#fff" stroke-dashoffset="37.795" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+ </g>
+</svg>

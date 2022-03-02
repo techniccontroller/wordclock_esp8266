@@ -33,11 +33,14 @@
 	  height:70px;
 	  color:#fff;
 	  font-weight:bold;
-	  border-top-left-radius:28px;
-	  border-top-right-radius:28px;
-	  border-bottom-left-radius:28px;
-	  border-bottom-right-radius:28px;
+	  border-top-left-radius:18px;
+	  border-top-right-radius:18px;
+	  border-bottom-left-radius:18px;
+	  border-bottom-right-radius:18px;
 	  text-shadow: 1px 1px 0px #2f6627;
+	  display: flex;
+      align-items: center;
+      justify-content: center;
 	}
 
 	.buttonClass:hover {
@@ -48,29 +51,54 @@
 	  font-size:15px;
 	  font-family:Arial;
 	  display: grid;
-	  grid-column-gap: 50px;
-	  grid-row-gap: 50px;
+	  grid-column-gap: 20px;
+	  grid-row-gap: 20px;
 	  grid-template-columns: auto auto auto;
 	  padding: 10px;
 	}
 	.grid-item {
-	  border-radius: 50%;
 	  text-align: center;
 	  display: inline-block;
 	  text-align: center;
 	}
 	.dot {
-		border-radius: 50%;
+		border-radius: 20%;
+		display: flex;
+		justify-content: center; /* align horizontal */
+		align-items: center; /* align vertical */
+
+	}
+
+	.dot-mode {
 		display: flex;
 		justify-content: center; /* align horizontal */
 		align-items: center; /* align vertical */
 	}
+
+	.mode-item{
+		background: rgb(59, 57, 57);
+	}
+
+	.mode-item:hover{
+		opacity: 0.7;
+	}
+
 	</style>
-	<title>SMART DESK LAMP</title>
+	<title>WORDCLOCK 2.0</title>
 	</head>
 
 	<body>
-		<h1 id="headline">Smart Desk Lamp</h1>
+		<h1 id="headline">WORDCLOCK 2.0</h1>
+
+		<div class="grid-container">
+			<div class="grid-item mode-item"><span class="dot-mode"><a href="c.php?mode=clock" class="buttonClass"><img src = "./icons/clock.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode"><a href="c.php?mode=diclock" class="buttonClass"><img src = "./icons/diclock.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode"><a href="c.php?mode=snake" class="buttonClass"><img src = "./icons/spiral.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode"><a href="c.php?mode=spiral" class="buttonClass"><img src = "./icons/tetris.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode"><a href="c.php?mode=pingpong" class="buttonClass"><img src = "./icons/snake.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode"><a href="c.php?mode=snake" class="buttonClass"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
+		</div>
+
 	
 		<div class="grid-container">
 			<div class="grid-item"><span class="dot"><a href="c.php?led=255-0-0-" class="buttonClass" style="background:rgb(255,0,0);"></a></span></div>
