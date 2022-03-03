@@ -513,16 +513,35 @@ int tetris(bool init){
       logger.logString("Tetris: num of blocks = " + String(counterID));
     }
     else{
-      // moving blocks exists -> move them onw pixel down
+      uint8_t tempscreen[height+3][width] = {0};
+      uint8_t moveX = width-1;
+      uint8_t moveY = height+2;
+      // moving blocks exists -> move them one pixel down
       // loop over pixels and move every pixel down, which belongs to a moving block
-      for(int c = 0; c < width; c++){
+      for(int c = width-1; c >= 0; c--){
         for(int r = height+1; r >= 0; r--){
           if((screen[r][c] != 0) && tomove[screen[r][c]]){
+            tempscreen[r+1][c] = screen[r][c];
             screen[r+1][c] = screen[r][c];
             screen[r][c] = 0;
+            // save top left corner of block
+            if(moveX > c) moveX = c;
+            if(moveY > r) moveY = r;
           }
         }
       }
+
+      /*logger.logString("rotation point: " + String(moveX) + ", " + String(moveY));
+      delay(5);
+      for(int r = 0; r < (height+3); r++){ // rows
+        String row = "";
+        for(int c = 0; c < width; c++){ // columns
+          
+          row += String(tempscreen[r][c]) + ",";
+        }
+        logger.logString(row);
+        delay(5);
+      }*/
     }    
 
     // draw/copy screen values to led grid (r - row, c - column)
@@ -538,5 +557,26 @@ int tetris(bool init){
     return 0; 
   }
   return 0; 
+}
+
+
+int rotate90X(int oldX, int oldY, bool clockwise){
+  int newX = 0;
+  if(clockwise){
+    newX = oldY;
+  }else{
+    newX = -1 * oldY;
+  }
+  return newX;
+}
+
+int rotate90Y(int oldX, int oldY, bool clockwise){
+  int newY = 0;
+  if(clockwise){
+    newY = -1 * oldX;
+  }else{
+    newY = oldX;
+  }
+  return newY;
 }
 

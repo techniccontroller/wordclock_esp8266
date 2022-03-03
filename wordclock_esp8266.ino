@@ -266,7 +266,7 @@ void setup() {
   delay(2000);
 
   // clear matrix
-  gridFlush()
+  gridFlush();
   drawOnMatrixInstant();
 
   // setup NTP
@@ -458,6 +458,8 @@ void stateChange(uint8_t newState){
   currentState = newState;
   entryAction(currentState);
   logger.logString("State change to: " + stateNames[currentState]);
+  delay(5);
+  logger.logString("FreeMemory=" + String(ESP.getFreeHeap()));
 }
 
 
