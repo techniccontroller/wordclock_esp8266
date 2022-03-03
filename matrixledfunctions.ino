@@ -325,6 +325,7 @@ direction nextDir(direction dir, int d){
  * @param color  color to display (24bit)
  */
 void showDigitalClock(uint8_t hours, uint8_t minutes, uint32_t color){
+  gridFlush();
   uint8_t fstDigitH = hours/10;
   uint8_t sndDigitH = hours%10;
   uint8_t fstDigitM = minutes/10;
