@@ -43,13 +43,15 @@
 
 #define PERIOD_HEARTBEAT 1000
 #define PERIOD_ANIMATION 200
+#define PERIOD_TETRIS 500
 #define TIMEOUT_LEDDIRECT 5000
 #define PERIOD_STATECHANGE 10000
 #define PERIOD_NTPUPDATE 30000
 #define PERIOD_TIMEVISUUPDATE 1000
 #define PERIOD_MATRIXUPDATE 100
 
-#define FILTER_FACTOR 0.5
+// number of colors in colors array
+#define NUM_COLORS 7
 
 // own datatype for matrix movement (snake and spiral)
 enum direction {right, left, up, down};
@@ -66,7 +68,7 @@ const String stateNames[] = {"Clock", "DiClock", "Sprial", "Tetris", "Snake", "P
 const uint16_t PERIODS[NUM_STATES] = {PERIOD_TIMEVISUUPDATE, 
                                       PERIOD_TIMEVISUUPDATE, 
                                       PERIOD_ANIMATION,
-                                      PERIOD_ANIMATION, 
+                                      PERIOD_TETRIS, 
                                       PERIOD_ANIMATION,  
                                       PERIOD_ANIMATION};
 
@@ -100,8 +102,8 @@ uint32_t Color24bit(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 // seven predefined colors24bit (black, red, yellow, purple, orange, green, blue) 
-const uint32_t colors24bit[] = {
-  Color24bit(0, 0, 0),
+const uint32_t colors24bit[NUM_COLORS] = {
+  Color24bit(0, 255, 0),
   Color24bit(255, 0, 0),
   Color24bit(200, 200, 0),
   Color24bit(255, 0, 200),
@@ -123,6 +125,9 @@ UDPLogger logger;
 uint8_t currentState = st_clock;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
+float filterFactor = 0.5;
+
+bool stateAutoChange = false;
 
 // target representation of matrix as 2D array
 uint32_t targetgrid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
@@ -177,7 +182,7 @@ void setup() {
   delay(250);
   setMinIndicator(15, colors24bit[6]);
   delay(1000);
-  setMinIndicator(15, colors24bit[0]);
+  setMinIndicator(15, 0);
 
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
@@ -272,7 +277,7 @@ void setup() {
   String timeMessage = timeToString(hours, minutes);
   showStringOnClock(timeMessage, colors24bit[2]);
   drawMinuteIndicator(minutes, colors24bit[2]);
-  drawOnMatrixSmooth();
+  drawOnMatrixSmooth(filterFactor);
   matrix.show();
   delay(1000);
 
@@ -282,9 +287,11 @@ void setup() {
   snake(true, 8, colors24bit[1], -1);
   // init spiral
   spiral(true, sprialDir, width-6);
+  // init tetris
+  tetris(true);
 
   // show countdown
-  for(int i = 9; i > 0; i--){
+  /*for(int i = 9; i > 0; i--){
     logger.logString("DiTest: " + String(i));
     Serial.println("DiTest: " + String(i));
     gridFlush();
@@ -292,7 +299,7 @@ void setup() {
     drawOnMatrixInstant();
     matrix.show();
     delay(1000);
-  }
+  }*/
 
   
 }
@@ -361,7 +368,7 @@ void loop() {
       // state tetris
       case st_tetris:
         {
-
+          tetris(false);
         }
         break;
       // state snake
@@ -388,14 +395,14 @@ void loop() {
 
   // periodically write colors to matrix
   if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE){
-    drawOnMatrixSmooth();
+    drawOnMatrixSmooth(filterFactor);
     matrix.show();
     lastAnimationStep = millis();
   }
 
 
   // handle state changes
-  if(millis() - lastStateChange > PERIOD_STATECHANGE){
+  if(stateAutoChange && (millis() - lastStateChange > PERIOD_STATECHANGE)){
     // increment state variable and trigger state change
     stateChange((currentState + 1) % NUM_STATES);
     
@@ -423,11 +430,15 @@ void loop() {
  * @param state 
  */
 void entryAction(uint8_t state){
+  filterFactor = 0.5;
   switch(state){
     case st_spiral:
       // Init spiral with normal drawing mode
       sprialDir = 0;
       spiral(true, sprialDir, width-6);
+      break;
+    case st_tetris:
+      filterFactor = 1.0;
       break;
   }
 }
