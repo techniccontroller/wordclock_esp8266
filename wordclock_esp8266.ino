@@ -265,6 +265,9 @@ void setup() {
   matrix.show();
   delay(2000);
 
+  // clear matrix
+  gridFlush()
+  drawOnMatrixInstant();
 
   // setup NTP
   ntp.setupNTPClient();
