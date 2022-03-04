@@ -16,6 +16,7 @@
 			Cantarell, 
 			"Helvetica Neue", 
 			sans-serif;
+		color: white;
 	}
 	
 	h1 {
@@ -33,11 +34,10 @@
 	  height:70px;
 	  color:#fff;
 	  font-weight:bold;
-	  border-top-left-radius:18px;
-	  border-top-right-radius:18px;
-	  border-bottom-left-radius:18px;
-	  border-bottom-right-radius:18px;
-	  text-shadow: 1px 1px 0px #2f6627;
+	  border-top-left-radius:14px;
+	  border-top-right-radius:14px;
+	  border-bottom-left-radius:14px;
+	  border-bottom-right-radius:14px;
 	  display: flex;
       align-items: center;
       justify-content: center;
@@ -51,28 +51,34 @@
 	  font-size:15px;
 	  font-family:Arial;
 	  display: grid;
-	  grid-column-gap: 20px;
-	  grid-row-gap: 20px;
+	  grid-column-gap: 5px;
+	  grid-row-gap: 5px;
 	  grid-template-columns: auto auto auto;
 	  padding: 10px;
+	  /* width: 170px; */
 	}
+
 	.grid-item {
 	  text-align: center;
 	  display: inline-block;
 	  text-align: center;
 	}
+
 	.dot {
 		border-radius: 20%;
 		display: flex;
 		justify-content: center; /* align horizontal */
 		align-items: center; /* align vertical */
-
 	}
 
 	.dot-mode {
 		display: flex;
 		justify-content: center; /* align horizontal */
 		align-items: center; /* align vertical */
+	}
+
+	.active{
+		border: 2px solid lightgray;
 	}
 
 	.mode-item{
@@ -83,39 +89,327 @@
 		opacity: 0.7;
 	}
 
+	.verticalline{
+		border-bottom: 1px solid rgba(255, 255, 255, 0.356);
+    	text-align: center;
+    	color: white;
+	}
+
+	input[type="checkbox"]{
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		appearance: none;
+		-webkit-tap-highlight-color: transparent;
+		cursor: pointer;
+	}
+
+
+	.toggle{
+		height: 32px;
+		width: 52px;
+		border-radius: 16px;
+		display: inline-block;
+		position: relative;
+		margin: 0;
+		border: 2px solid #474755;
+		background: linear-gradient(180deg, #2D2F39 0%, #1F2027 100%);
+		transition: all .2s ease;
+	}
+
+	.toggle:after{
+		content: '';
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		background: white;
+		box-shadow: 0 1px 2px rgba(44,44,44,.2);
+		transition: all .2s cubic-bezier(.5,.1,.75,1.35);
+	}
+
+	.toggle:checked{
+		border-color: lightgray;
+	}
+
+	.toggle:checked::after{
+		transform: translatex(20px);
+	}
+
+	label {
+		text-align: right;
+		clear: both;
+		float:left;
+		margin-right:15px;
+		vertical-align: middle;
+	}
+
+	.checkbox-container{
+		display:flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		margin: 10px;
+	}
+
+	.headline{
+		text-align: center;
+		font-weight: 200;
+		font-size: larger;
+		margin-bottom: 5px;
+	}
+
+	.hidden{
+		display: none;
+	}
+
+	.control-container{
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+	}
+
+	.snake-button-top{
+		width: 40%; 
+		height: 100px;  
+		margin: 5px;
+		background-color: #93939e;
+	}
+
+	.snake-button-bottom{
+		width: 80%; 
+		height: 40px; 
+		margin: 10px; 
+		padding: 5px;
+		background-color: #93939e;
+	}
+
+	.tetris-button-top{
+		width: 70px; 
+		height: 70px;
+		background-color: #93939e;
+	}
+
+	.tetris-button-bottom{
+		width: 105px; 
+		height: 40px; 
+		margin: 5px;
+		background-color: #93939e;
+	}
+  
 	</style>
 	<title>WORDCLOCK 2.0</title>
 	</head>
 
 	<body>
 		<h1 id="headline">WORDCLOCK 2.0</h1>
+		
 
+		<div class="verticalline">
+		</div>
+		<div class="headline">
+			Mode
+		</div>
 		<div class="grid-container">
-			<div class="grid-item mode-item"><span class="dot-mode"><a href="cmd?mode=clock" class="buttonClass" style="width: 100%;"><img src = "./icons/clock.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode"><a href="cmd?mode=diclock" class="buttonClass" style="width: 100%;"><img src = "./icons/diclock.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode"><a href="cmd?mode=spiral" class="buttonClass" style="width: 100%;"><img src = "./icons/spiral.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode"><a href="cmd?mode=tetris" class="buttonClass" style="width: 100%;"><img src = "./icons/tetris.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode"><a href="cmd?mode=snake" class="buttonClass" style="width: 100%;"><img src = "./icons/snake.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode"><a href="cmd?mode=pingpong" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 0)"><a href="cmd?mode=clock" class="buttonClass" style="width: 100%;"><img src = "./icons/clock.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 1)"><a href="cmd?mode=diclock" class="buttonClass" style="width: 100%;"><img src = "./icons/diclock.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 2)"><a href="cmd?mode=spiral" class="buttonClass" style="width: 100%;"><img src = "./icons/spiral.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 3)"><a href="cmd?mode=tetris" class="buttonClass" style="width: 100%;"><img src = "./icons/tetris.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 4)"><a href="cmd?mode=snake" class="buttonClass" style="width: 100%;"><img src = "./icons/snake.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a href="cmd?mode=pingpong" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
+		</div>
+		<div class="checkbox-container">
+			<label for="Nightmode" style="align-self: flex-start">Nightmode</label> 
+			<div>
+				<input name= "Nightmode" id="Nightmode" type="checkbox" class="toggle">
+			</div>
+		</div>
+		<div class="checkbox-container">
+			<label for="AutoChange" style="align-self: flex-start">Automatic mode change</label>
+			<div>
+				<input name= "AutoChange" id="AutoChange" type="checkbox" class="toggle">
+			</div>
+			
+		</div>
+		
+		<div class="main-container hidden" id="colorcontainer">
+			<div class="verticalline">
+			</div>
+			<div class="headline">
+				COLOR
+			</div>
+			<div class="control-container">
+				<div class="grid-container">
+					<div class="grid-item"><span class="dot"><a href="cmd?led=255-0-0" class="buttonClass" style="background:rgb(255,0,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=255-0-128" class="buttonClass" style="background:rgb(255,0,128);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=255-0-255" class="buttonClass" style="background:rgb(255,0,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=128-0-255" class="buttonClass" style="background:rgb(128,0,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=0-0-255" class="buttonClass" style="background:rgb(0,0,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=0-128-255" class="buttonClass" style="background:rgb(0,128,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=0-255-255" class="buttonClass" style="background:rgb(255,255,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=0-255-128" class="buttonClass" style="background:rgb(0,255,128);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=0-255-0" class="buttonClass" style="background:rgb(0,255,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=128-255-0" class="buttonClass" style="background:rgb(128,255,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=255-255-0" class="buttonClass" style="background:rgb(255,255,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a href="cmd?led=255-128-0" class="buttonClass" style="background:rgb(255,128,0);"></a></span></div>
+				</div>
+			</div>
 		</div>
 
-	
-		<div class="grid-container">
-			<div class="grid-item"><span class="dot"><a href="cmd?led=255-0-0" class="buttonClass" style="background:rgb(255,0,0);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=255-0-128" class="buttonClass" style="background:rgb(255,0,128);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=255-0-255" class="buttonClass" style="background:rgb(255,0,255);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=128-0-255" class="buttonClass" style="background:rgb(128,0,255);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=0-0-255" class="buttonClass" style="background:rgb(0,0,255);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=0-128-255" class="buttonClass" style="background:rgb(0,128,255);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=0-255-255" class="buttonClass" style="background:rgb(0,255,255);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=0-255-128" class="buttonClass" style="background:rgb(0,255,128);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=0-255-0" class="buttonClass" style="background:rgb(0,255,0);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=128-255-0" class="buttonClass" style="background:rgb(128,255,0);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=255-255-0" class="buttonClass" style="background:rgb(255,255,0);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=255-128-0" class="buttonClass" style="background:rgb(255,128,0);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=0-0-0" class="buttonClass" style="background:rgb(0,0,0);"></a></span></div>
-			<div class="grid-item"><span class="dot"><a href="cmd?led=255-255-255" class="buttonClass" style="background:rgb(255,255,255);"></a></span></div>
+
+		<div class="main-container hidden" id="snakecontainer">
+			<div class="verticalline">
+			</div>
+			<div class="headline">
+				SNAKE controls
+			</div>
+			<div class="control-container">
+				<div class="buttonClass snake-button-top" onclick="sendCommand('./cmd?snake=left')"><img src = "./icons/arrow_left.svg" style="height:50px"/></div>
+				<div class="buttonClass snake-button-top" onclick="sendCommand('./cmd?snake=right')"><img src = "./icons/arrow_right.svg" style="height:50px"/></div>
+			</div>
+			<div class="control-container">
+				<div class="buttonClass snake-button-bottom" onclick="sendCommand('./cmd?snake=new')"><img src = "./icons/refresh.svg" style="height:30px"/></div>
+			</div>
 		</div>
+
+
+		<div class="main-container hidden" id="tetriscontainer">
+			<div class="verticalline">
+			</div>
+			<div class="headline">
+				TETRIS controls
+			</div>
+			<div class="control-container">
+				<div class="grid-container">
+					<div class="grid-item" style="grid-column: 2; grid-row: 1;">
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=up')"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
+					</div>
+					
+					<div class="grid-item" style="grid-column: 1; grid-row: 2;">
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=left')"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
+					</div>
+					<div class="grid-item" style="grid-column: 2; grid-row: 2;">
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=down')"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
+					</div>
+					<div class="grid-item" style="grid-column: 3; grid-row: 2;">
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=right')"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
+					</div>
+				</div>
+			</div>
+			<div class="control-container">
+				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=play')"><img src = "./icons/play.svg" style="height:20px"/></div>
+				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=pause')"><img src = "./icons/pause.svg" style="height:20px"/></div>
+			</div>
+		</div>
+		
+
+		<script>
+
+			console.log();
+			var xmlhttp = new XMLHttpRequest();
+			var url = "./data?key=mode";
+
+			xmlhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					console.log(this.responseText);
+					var myVar = JSON.parse(this.responseText);
+					// set mode button state
+					var state = myVar.modeid;
+					var modebuttons = document.getElementsByClassName("dot-mode");
+					for (const element of modebuttons){
+						element.classList.remove("active");
+					}
+					modebuttons[state].classList.add("active");
+
+					// set checkbox states
+					var ckb_nightmode = document.querySelector('input[id="Nightmode"]');
+					if(myVar.nightMode == "1") {
+						console.log("nightMode == 1");
+						ckb_nightmode.checked = true;
+					}
+					else {
+						console.log("nightMode == 0");
+						ckb_nightmode.checked = false;
+					}
+					ckb_nightmode.addEventListener('change', () => {
+						if(ckb_nightmode.checked) {
+							sendCommand("./cmd?nightmode=1");
+						} else {
+							sendCommand("./cmd?nightmode=0");
+						}
+					});
+
+					var ckb_stateautochange = document.querySelector('input[id="AutoChange"]');
+					if(myVar.stateAutoChange == "1") {
+						console.log("stateAutoChange == 1");
+						ckb_stateautochange.checked = true;
+					}
+					else {
+						console.log("stateAutoChange == 0");
+						ckb_stateautochange.checked = false;
+					}
+					ckb_stateautochange.addEventListener('change', () => {
+						if(ckb_stateautochange.checked) {
+							sendCommand("./cmd?stateautochange=1");
+						} else {
+							sendCommand("./cmd?stateautochange=0");
+						}
+					});
+
+					updateDisplay(parseInt(myVar.modeid));
+					console.log(myVar);
+				}
+			};
+			xmlhttp.open("GET", url, true);
+			xmlhttp.send();
+			
+			function modechange(element, value){
+				console.log(element);
+				var modebuttons = document.getElementsByClassName("dot-mode");
+				for (const element of modebuttons){
+					element.classList.remove("active");
+				}
+				element.classList.add("active");
+
+				updateDisplay(value);
+			}
+
+			function updateDisplay(modeid){
+
+				var maincontainer = document.getElementsByClassName("main-container");
+				for (const element of maincontainer){
+					element.classList.add("hidden");
+				}
+				switch(modeid){
+					case 0: // clock
+						document.getElementById("colorcontainer").classList.remove("hidden");
+						break;
+					case 1: // diclock
+						document.getElementById("colorcontainer").classList.remove("hidden");
+						break;
+					case 2: // spiral
+						break;
+					case 3: // tetris
+						document.getElementById("tetriscontainer").classList.remove("hidden");
+						break;
+					case 4: // snake
+						document.getElementById("snakecontainer").classList.remove("hidden");
+						break;
+					case 5: // pingping
+						document.getElementById("colorcontainer").classList.remove("hidden");
+						break;
+
+				}
+			}
+
+			function sendCommand(command){
+				var xmlhttp = new XMLHttpRequest();
+				xmlhttp.open("GET", command, true);
+				xmlhttp.send();
+			}
+			
+		</script>
 	</body>
 
 </html>

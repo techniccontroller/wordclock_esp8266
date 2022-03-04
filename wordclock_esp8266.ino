@@ -128,6 +128,9 @@ NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 float filterFactor = 0.5;
 
 bool stateAutoChange = false;
+bool nightMode = false;
+uint32_t maincolor_clock = colors24bit[2];
+uint32_t maincolor_snake = colors24bit[1];
 
 // target representation of matrix as 2D array
 uint32_t targetgrid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
@@ -179,11 +182,6 @@ void setup() {
   // setup Matrix LED functions
   setupMatrix();
 
-  delay(250);
-  setMinIndicator(15, colors24bit[6]);
-  delay(1000);
-  setMinIndicator(15, 0);
-
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
@@ -199,8 +197,12 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED && timeoutcounter < 30) {
     delay(250);
     setMinIndicator(15, colors24bit[6]);
+    drawOnMatrixInstant();
+    matrix.show();
     delay(250);
     setMinIndicator(15, colors24bit[6]);
+    drawOnMatrixInstant();
+    matrix.show();
     Serial.print(".");
     timeoutcounter++;
   }
@@ -212,6 +214,7 @@ void setup() {
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP()); 
+    WiFi.setAutoReconnect(true);
   
   } else {
     // no wifi found -> open access point
@@ -230,6 +233,7 @@ void setup() {
   setupOTA();
 
   server.on("/cmd", handleCommand); // process commands
+  server.on("/data", handleDataRequest); // process datarequests
   //server.on("/ledvideo", HTTP_POST, handleLEDVideo); // Call the 'handleLEDVideo' function when a POST request is made to URI "/ledvideo"
   //server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
   server.begin();
@@ -256,11 +260,11 @@ void setup() {
 
   // display IP
   uint8_t address = WiFi.localIP()[3];
-  printChar(1, 0, 'I', colors24bit[2]);
-  printChar(5, 0, 'P', colors24bit[2]);
-  printNumber(0, 6, (address/100), colors24bit[2]);
-  printNumber(4, 6, (address/10)%10, colors24bit[2]);
-  printNumber(8, 6, address%10, colors24bit[2]);
+  printChar(1, 0, 'I', maincolor_clock);
+  printChar(5, 0, 'P', maincolor_clock);
+  printNumber(0, 6, (address/100), maincolor_clock);
+  printNumber(4, 6, (address/10)%10, maincolor_clock);
+  printNumber(8, 6, address%10, maincolor_clock);
   drawOnMatrixInstant();
   matrix.show();
   delay(2000);
@@ -268,6 +272,7 @@ void setup() {
   // clear matrix
   gridFlush();
   drawOnMatrixInstant();
+  matrix.show();
 
   // setup NTP
   ntp.setupNTPClient();
@@ -278,8 +283,8 @@ void setup() {
   int hours = ntp.getHours24();
   int minutes = ntp.getMinutes();
   String timeMessage = timeToString(hours, minutes);
-  showStringOnClock(timeMessage, colors24bit[2]);
-  drawMinuteIndicator(minutes, colors24bit[2]);
+  showStringOnClock(timeMessage, maincolor_clock);
+  drawMinuteIndicator(minutes, maincolor_clock);
   drawOnMatrixSmooth(filterFactor);
   matrix.show();
   delay(1000);
@@ -298,7 +303,7 @@ void setup() {
     logger.logString("DiTest: " + String(i));
     Serial.println("DiTest: " + String(i));
     gridFlush();
-    printNumber(4, 3, i, colors24bit[2]);
+    printNumber(4, 3, i, maincolor_clock);
     drawOnMatrixInstant();
     matrix.show();
     delay(1000);
@@ -331,15 +336,15 @@ void loop() {
     lastheartbeat = millis();
   }
   int res = 0;
-  if((millis() - lastStep > PERIODS[currentState])  && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
+  if(!nightMode && (millis() - lastStep > PERIODS[currentState]) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     switch(currentState){
       // state clock
       case st_clock:
         {
           int hours = ntp.getHours24();
           int minutes = ntp.getMinutes();
-          showStringOnClock(timeToString(hours, minutes), colors24bit[2]);
-          drawMinuteIndicator(minutes, colors24bit[2]);
+          showStringOnClock(timeToString(hours, minutes), maincolor_clock);
+          drawMinuteIndicator(minutes, maincolor_clock);
         }
         break;
       // state diclock
@@ -347,7 +352,7 @@ void loop() {
         {
           int hours = ntp.getHours24();
           int minutes = ntp.getMinutes();
-          showDigitalClock(hours, minutes, colors24bit[2]);
+          showDigitalClock(hours, minutes, maincolor_clock);
         }
         break;
       // state spiral
@@ -397,7 +402,7 @@ void loop() {
   }
 
   // periodically write colors to matrix
-  if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE){
+  if(!nightMode && (millis() - lastAnimationStep > PERIOD_MATRIXUPDATE)){
     drawOnMatrixSmooth(filterFactor);
     matrix.show();
     lastAnimationStep = millis();
@@ -405,7 +410,7 @@ void loop() {
 
 
   // handle state changes
-  if(stateAutoChange && (millis() - lastStateChange > PERIOD_STATECHANGE)){
+  if(stateAutoChange && (millis() - lastStateChange > PERIOD_STATECHANGE) && !nightMode){
     // increment state variable and trigger state change
     stateChange((currentState + 1) % NUM_STATES);
     
@@ -452,6 +457,10 @@ void entryAction(uint8_t state){
  * @param newState the new state to be changed to
  */
 void stateChange(uint8_t newState){
+  if(nightMode){
+    // deactivate Nightmode
+    setNightmode(false);
+  }
   // first clear matrix
   gridFlush();
   // set new state
@@ -536,7 +545,8 @@ void handleCommand() {
     logger.logString("r: " + String(redstr.toInt()));
     logger.logString("g: " + String(greenstr.toInt()));
     logger.logString("b: " + String(bluestr.toInt()));
-    setMinIndicator(15, Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt()));
+    // set new main color
+    maincolor_clock = Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
   }
   else if (server.argName(0) == "mode") // the parameter which was sent to this server is mode change
   {
@@ -562,6 +572,26 @@ void handleCommand() {
       stateChange(st_pingpong);
     } 
   }
+  else if(server.argName(0) == "nightmode"){
+    String modestr = server.arg(0);
+    logger.logString("Nightmode change via Webserver to: " + modestr);
+    if(modestr == "1") setNightmode(true);
+    else setNightmode(false);
+  }
+  else if(server.argName(0) == "stateautochange"){
+    String modestr = server.arg(0);
+    logger.logString("stateAutoChange change via Webserver to: " + modestr);
+    if(modestr == "1") stateAutoChange = true;
+    else stateAutoChange = false;
+  }
+  else if(server.argName(0) == "tetris"){
+    String cmdstr = server.arg(0);
+    logger.logString("Tetris cmd via Webserver to: " + cmdstr);
+  }
+  else if(server.argName(0) == "snake"){
+    String cmdstr = server.arg(0);
+    logger.logString("Snake cmd via Webserver to: " + cmdstr);
+  }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
@@ -579,4 +609,37 @@ String split(String s, char parser, int index) {
     } else parserCnt++;
   }
   return rs;
+}
+
+void handleDataRequest() {
+  // receive data request and handle accordingly
+  for (uint8_t i = 0; i < server.args(); i++) {
+    Serial.print(server.argName(i));
+    Serial.print(F(": "));
+    Serial.println(server.arg(i));
+  }
+  
+  if (server.argName(0) == "key") // the parameter which was sent to this server is led color
+  {
+    String message = "{";
+    String keystr = server.arg(0);
+    if(keystr == "mode"){
+      message += "\"mode\":\"" + stateNames[currentState] + "\"";
+      message += ",";
+      message += "\"modeid\":\"" + String(currentState) + "\"";
+      message += ",";
+      message += "\"stateAutoChange\":\"" + String(stateAutoChange) + "\"";
+      message += ",";
+      message += "\"nightMode\":\"" + String(nightMode) + "\"";
+    }
+    message += "}";
+    server.send(200, "application/json", message);
+  }
+}
+
+void setNightmode(bool on){
+  gridFlush();
+  drawOnMatrixInstant();
+  matrix.show();
+  nightMode = on;
 }

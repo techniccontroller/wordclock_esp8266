@@ -71,16 +71,16 @@ void setMinIndicator(uint8_t pattern, uint32_t color){
   //  1 -> 0001
   //  0 -> 0000
   if(pattern & 1){
-    targetindicators[0] = color24to16bit(color);
+    targetindicators[0] = color;
   }
   if(pattern >> 1 & 1){
-    targetindicators[1] = color24to16bit(color);
+    targetindicators[1] = color;
   }
   if(pattern >> 2 & 1){
-    targetindicators[2] = color24to16bit(color);
+    targetindicators[2] = color;
   }
   if(pattern >> 3 & 1){
-    targetindicators[3] = color24to16bit(color);
+    targetindicators[3] = color;
   }
 }
 
