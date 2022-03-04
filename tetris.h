@@ -33,7 +33,7 @@
 #define  BRICKOFFSET       -1   // Y offset for new bricks
 
 #define  INIT_SPEED        800  // Initial delay in ms between brick drops
-#define  SPEED_STEP        50   // Factor for speed increase between levels, default 10
+#define  SPEED_STEP        10   // Factor for speed increase between levels, default 10
 #define  LEVELUP           4    // Number of rows before levelup, default 5
 
 #define WIDTH 11
@@ -136,7 +136,7 @@ class Tetris{
         uint8_t lastselectedBrick = 0;
         uint8_t selectedBrick;
         long zeitfallen = 0;
-        int speedtetris = 100;
+        int speedtetris = 80;
         long lastButtonClickr = 0;
         bool fallenerlaubt;
 
