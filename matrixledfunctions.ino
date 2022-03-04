@@ -194,10 +194,10 @@ void showDigitalClock(uint8_t hours, uint8_t minutes, uint32_t color){
   uint8_t sndDigitH = hours%10;
   uint8_t fstDigitM = minutes/10;
   uint8_t sndDigitM = minutes%10;
-  ledmatrix.printNumber(1, 0, fstDigitH, color);
-  ledmatrix.printNumber(5, 0, sndDigitH, color);
-  ledmatrix.printNumber(1, 6, fstDigitM, color);
-  ledmatrix.printNumber(5, 6, sndDigitM, color);
+  ledmatrix.printNumber(2, 0, fstDigitH, color);
+  ledmatrix.printNumber(6, 0, sndDigitH, color);
+  ledmatrix.printNumber(2, 6, fstDigitM, color);
+  ledmatrix.printNumber(6, 6, sndDigitM, color);
 }
 
 
