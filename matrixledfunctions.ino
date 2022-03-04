@@ -135,6 +135,7 @@ void drawOnMatrix(float factor){
     matrix.drawPixel(WIDTH - (1+i), HEIGHT, color24to16bit(filteredColor));
     currentindicators[i] = filteredColor;
   }
+  matrix.show();
 }
 
 //! Function to draw a spiral step (from center)

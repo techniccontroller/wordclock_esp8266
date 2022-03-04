@@ -198,11 +198,9 @@ void setup() {
     delay(250);
     setMinIndicator(15, colors24bit[6]);
     drawOnMatrixInstant();
-    matrix.show();
     delay(250);
     setMinIndicator(15, colors24bit[6]);
     drawOnMatrixInstant();
-    matrix.show();
     Serial.print(".");
     timeoutcounter++;
   }
@@ -266,13 +264,11 @@ void setup() {
   printNumber(4, 6, (address/10)%10, maincolor_clock);
   printNumber(8, 6, address%10, maincolor_clock);
   drawOnMatrixInstant();
-  matrix.show();
   delay(2000);
 
   // clear matrix
   gridFlush();
   drawOnMatrixInstant();
-  matrix.show();
 
   // setup NTP
   ntp.setupNTPClient();
@@ -286,7 +282,6 @@ void setup() {
   showStringOnClock(timeMessage, maincolor_clock);
   drawMinuteIndicator(minutes, maincolor_clock);
   drawOnMatrixSmooth(filterFactor);
-  matrix.show();
   delay(1000);
 
 
@@ -404,7 +399,6 @@ void loop() {
   // periodically write colors to matrix
   if(!nightMode && (millis() - lastAnimationStep > PERIOD_MATRIXUPDATE)){
     drawOnMatrixSmooth(filterFactor);
-    matrix.show();
     lastAnimationStep = millis();
   }
 
@@ -640,6 +634,5 @@ void handleDataRequest() {
 void setNightmode(bool on){
   gridFlush();
   drawOnMatrixInstant();
-  matrix.show();
   nightMode = on;
 }
