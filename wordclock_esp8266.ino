@@ -51,6 +51,9 @@
 #define PERIOD_TIMEVISUUPDATE 1000
 #define PERIOD_MATRIXUPDATE 100
 
+#define SHORTPRESS 100
+#define LONGPRESS 2000
+
 // number of colors in colors array
 #define NUM_COLORS 7
 
@@ -119,6 +122,8 @@ long lastLEDdirect = 0;             // time of last direct LED command (=> fall 
 long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis();      // time of last NTP update
 long lastAnimationStep = millis();       // time of last Matrix update
+long buttonPressStart = 0;
+bool lastButtonState = false;
 UDPLogger logger;
 uint8_t currentState = st_clock;
 WiFiUDP NTPUDP;
@@ -368,6 +373,8 @@ void loop() {
     lastAnimationStep = millis();
   }
 
+  // handle putton press
+  handleButton();
 
   // handle state changes
   if(stateAutoChange && (millis() - lastStateChange > PERIOD_STATECHANGE) && !nightMode){
@@ -490,6 +497,45 @@ void handleLEDDirect() {
     
     server.send(200, "text/plain", message);
   }
+}
+
+/**
+ * @brief check button commands
+ * 
+ */
+void handleButton(){
+  bool buttonPressed = !digitalRead(BUTTONPIN);
+  // check rising edge
+  if(buttonPressed == true && lastButtonState == false){
+    // button press start
+    Serial.println("Button press started");
+    logger.logString("Button press started");
+    buttonPressStart = millis();
+  }
+  // check falling edge
+  if(buttonPressed == false && lastButtonState == true){
+    // button press ended
+    if((millis() - buttonPressStart) > LONGPRESS){
+      // longpress -> nightmode
+      Serial.println("Button press ended - longpress");
+      logger.logString("Button press ended - longpress");
+
+      setNightmode(true);
+    }
+    else if((millis() - buttonPressStart) > SHORTPRESS){
+      // shortpress -> state change 
+      Serial.println("Button press ended - shortpress");
+      logger.logString("Button press ended - shortpress");
+
+      if(nightMode){
+        setNightmode(false);
+      }else{
+        stateChange((currentState + 1) % NUM_STATES);
+      }
+      
+    }
+  }
+  lastButtonState = buttonPressed;
 }
 
 /**
