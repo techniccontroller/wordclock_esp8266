@@ -26,7 +26,7 @@
 #include <Base64_.h>                    // https://github.com/Xander-Electronics/Base64
 #include "udplogger.h"
 #include "ntp_client_plus.h"
-#include "own_font.h"
+#include "ledmatrix.h"
 
 
 // ----------------------------------------------------------------------------------
@@ -97,19 +97,16 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, HEIGHT+1, NEOPIXELPIN,
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
 
-uint32_t Color24bit(uint8_t r, uint8_t g, uint8_t b) {
-  return ((uint32_t)r << 16) | ((uint32_t)g <<  8) | b;
-}
 
 // seven predefined colors24bit (black, red, yellow, purple, orange, green, blue) 
 const uint32_t colors24bit[NUM_COLORS] = {
-  Color24bit(0, 255, 0),
-  Color24bit(255, 0, 0),
-  Color24bit(200, 200, 0),
-  Color24bit(255, 0, 200),
-  Color24bit(255, 128, 0), 
-  Color24bit(0, 128, 0), 
-  Color24bit(0, 0, 255) };
+  LEDMatrix::Color24bit(0, 255, 0),
+  LEDMatrix::Color24bit(255, 0, 0),
+  LEDMatrix::Color24bit(200, 200, 0),
+  LEDMatrix::Color24bit(255, 0, 200),
+  LEDMatrix::Color24bit(255, 128, 0), 
+  LEDMatrix::Color24bit(0, 128, 0), 
+  LEDMatrix::Color24bit(0, 0, 255) };
 
 uint8_t brightness = 40;            // current brightness of leds
 bool sprialDir = false;
@@ -126,43 +123,13 @@ uint8_t currentState = st_clock;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 float filterFactor = 0.5;
+LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
 
 bool stateAutoChange = false;
 bool nightMode = false;
 uint32_t maincolor_clock = colors24bit[2];
 uint32_t maincolor_snake = colors24bit[1];
 
-// target representation of matrix as 2D array
-uint32_t targetgrid[HEIGHT][WIDTH] = {{0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0}};
-
-// current representation of matrix as 2D array
-uint32_t currentgrid[HEIGHT][WIDTH] = {{0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0},
-                                      {0,0,0,0,0,0,0,0,0,0,0}};
-
-// target representation of minutes indicator leds
-uint32_t targetindicators[4] = {0, 0, 0, 0};
-
-// current representation of minutes indicator leds
-uint32_t currentindicators[4] = {0, 0, 0, 0};
 
 // ----------------------------------------------------------------------------------
 //                                        SETUP
@@ -180,7 +147,7 @@ void setup() {
   pinMode(BUTTONPIN, INPUT);
 
   // setup Matrix LED functions
-  setupMatrix();
+  ledmatrix.setupMatrix();
 
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
@@ -195,12 +162,12 @@ void setup() {
 
   int timeoutcounter = 0;
   while (WiFi.status() != WL_CONNECTED && timeoutcounter < 30) {
+    ledmatrix.setMinIndicator(15, colors24bit[6]);
+    ledmatrix.drawOnMatrixInstant();
     delay(250);
-    setMinIndicator(15, colors24bit[6]);
-    drawOnMatrixInstant();
+    ledmatrix.setMinIndicator(15, colors24bit[6]);
+    ledmatrix.drawOnMatrixInstant();
     delay(250);
-    setMinIndicator(15, colors24bit[6]);
-    drawOnMatrixInstant();
     Serial.print(".");
     timeoutcounter++;
   }
@@ -244,7 +211,7 @@ void setup() {
   for(int r = 0; r < HEIGHT; r++){
     for(int c = 0; c < WIDTH; c++){
       matrix.fillScreen(0);
-      matrix.drawPixel(c, r, color24to16bit(colors24bit[2]));
+      matrix.drawPixel(c, r, LEDMatrix::color24to16bit(colors24bit[2]));
       matrix.show();
       delay(10); 
     }
@@ -258,17 +225,17 @@ void setup() {
 
   // display IP
   uint8_t address = WiFi.localIP()[3];
-  printChar(1, 0, 'I', maincolor_clock);
-  printChar(5, 0, 'P', maincolor_clock);
-  printNumber(0, 6, (address/100), maincolor_clock);
-  printNumber(4, 6, (address/10)%10, maincolor_clock);
-  printNumber(8, 6, address%10, maincolor_clock);
-  drawOnMatrixInstant();
+  ledmatrix.printChar(1, 0, 'I', maincolor_clock);
+  ledmatrix.printChar(5, 0, 'P', maincolor_clock);
+  ledmatrix.printNumber(0, 6, (address/100), maincolor_clock);
+  ledmatrix.printNumber(4, 6, (address/10)%10, maincolor_clock);
+  ledmatrix.printNumber(8, 6, address%10, maincolor_clock);
+  ledmatrix.drawOnMatrixInstant();
   delay(2000);
 
   // clear matrix
-  gridFlush();
-  drawOnMatrixInstant();
+  ledmatrix.gridFlush();
+  ledmatrix.drawOnMatrixInstant();
 
   // setup NTP
   ntp.setupNTPClient();
@@ -281,7 +248,7 @@ void setup() {
   String timeMessage = timeToString(hours, minutes);
   showStringOnClock(timeMessage, maincolor_clock);
   drawMinuteIndicator(minutes, maincolor_clock);
-  drawOnMatrixSmooth(filterFactor);
+  ledmatrix.drawOnMatrixSmooth(filterFactor);
   delay(1000);
 
 
@@ -297,10 +264,9 @@ void setup() {
   /*for(int i = 9; i > 0; i--){
     logger.logString("DiTest: " + String(i));
     Serial.println("DiTest: " + String(i));
-    gridFlush();
+    ledmatrix.gridFlush();
     printNumber(4, 3, i, maincolor_clock);
-    drawOnMatrixInstant();
-    matrix.show();
+    ledmatrix.drawOnMatrixInstant();
     delay(1000);
   }*/
 
@@ -377,7 +343,7 @@ void loop() {
       // state snake
       case st_snake:
         {
-          gridFlush();
+          ledmatrix.gridFlush();
           res = snake(false, 8, colors24bit[1], -1);
           if(res){
             // init snake for next run
@@ -398,7 +364,7 @@ void loop() {
 
   // periodically write colors to matrix
   if(!nightMode && (millis() - lastAnimationStep > PERIOD_MATRIXUPDATE)){
-    drawOnMatrixSmooth(filterFactor);
+    ledmatrix.drawOnMatrixSmooth(filterFactor);
     lastAnimationStep = millis();
   }
 
@@ -414,8 +380,14 @@ void loop() {
 
   // NTP time update
   if(millis() - lastNTPUpdate > PERIOD_NTPUPDATE){
-    logger.logString("NTP-Update");
-    ntp.updateNTP();
+    if(ntp.updateNTP()){
+      logger.logString("NTP-Update successful");
+      Serial.println("NTP-Update successful");
+    }
+    else{
+      logger.logString("NTP-Update not successful");
+      Serial.println("NTP-Update not successful");
+    }
     lastNTPUpdate = millis();
   }
   
@@ -456,7 +428,7 @@ void stateChange(uint8_t newState){
     setNightmode(false);
   }
   // first clear matrix
-  gridFlush();
+  ledmatrix.gridFlush();
   // set new state
   currentState = newState;
   entryAction(currentState);
@@ -540,7 +512,7 @@ void handleCommand() {
     logger.logString("g: " + String(greenstr.toInt()));
     logger.logString("b: " + String(bluestr.toInt()));
     // set new main color
-    maincolor_clock = Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
+    maincolor_clock = LEDMatrix::Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
   }
   else if (server.argName(0) == "mode") // the parameter which was sent to this server is mode change
   {
@@ -632,7 +604,7 @@ void handleDataRequest() {
 }
 
 void setNightmode(bool on){
-  gridFlush();
-  drawOnMatrixInstant();
+  ledmatrix.gridFlush();
+  ledmatrix.drawOnMatrixInstant();
   nightMode = on;
 }

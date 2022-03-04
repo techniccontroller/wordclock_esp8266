@@ -1,143 +1,6 @@
 const int8_t dx[] = {1, -1, 0, 0};
 const int8_t dy[] = {0, 0, -1, 1};
 
-uint16_t color24to16bit(uint32_t color24bit){
-  uint8_t r = color24bit >> 16 & 0xff;
-  uint8_t g = color24bit >> 8 & 0xff;
-  uint8_t b = color24bit & 0xff;
-  return ((uint16_t)(r & 0xF8) << 8) |
-         ((uint16_t)(g & 0xFC) << 3) |
-                    (b         >> 3);
-}
-
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(uint8_t WheelPos)
-{
-    WheelPos = 255 - WheelPos;
-    if (WheelPos < 85)
-    {
-        return Color24bit(255 - WheelPos * 3, 0, WheelPos * 3);
-    }
-    if (WheelPos < 170)
-    {
-        WheelPos -= 85;
-        return Color24bit(0, WheelPos * 3, 255 - WheelPos * 3);
-    }
-    WheelPos -= 170;
-    return Color24bit(WheelPos * 3, 255 - WheelPos * 3, 0);
-}
-
-//! Interpolates two colors24bit and returns an color of the result
-/*!
- * \param color1 startcolor for interpolation
- * \param color2 endcolor for interpolation
- * \param factor which color is wanted on the path from start to end color
- * \returns interpolated color
- */
-uint32_t interpolateColor24bit(uint32_t color1, uint32_t color2, float factor)
-{
-    
-    uint8_t resultRed = color1 >> 16 & 0xff;
-    uint8_t resultGreen = color1 >> 8 & 0xff;
-    uint8_t resultBlue = color1 & 0xff;
-    resultRed = (uint8_t)(resultRed + (int16_t)(factor * ((int16_t)(color2 >> 16 & 0xff) - (int16_t)resultRed)));
-    resultGreen = (uint8_t)(resultGreen + (int16_t)(factor * ((int16_t)(color2 >> 8 & 0xff) - (int16_t)resultGreen)));
-    resultBlue = (uint8_t)(resultBlue + (int16_t)(factor * ((int16_t)(color2 & 0xff) - (int16_t)resultBlue)));
-    return Color24bit(resultRed, resultGreen, resultBlue);
-}
-
-//setup function LED
-void setupMatrix()
-{
-    matrix.begin();       
-    matrix.setTextWrap(false);
-    matrix.setBrightness(brightness);
-    matrix.setTextColor(colors24bit[0]);
-    randomSeed(analogRead(0));
-}
-
-//! turn on the minutes indicator leds with the provided pattern (binary encoded)
-/*!
- * \param pattern the binary encoded pattern of the minute indicator
- * \param color color to be displayed
- */
-void setMinIndicator(uint8_t pattern, uint32_t color){
-  // pattern:
-  // 15 -> 1111
-  // 14 -> 1110
-  // (...)
-  //  2 -> 0010
-  //  1 -> 0001
-  //  0 -> 0000
-  if(pattern & 1){
-    targetindicators[0] = color;
-  }
-  if(pattern >> 1 & 1){
-    targetindicators[1] = color;
-  }
-  if(pattern >> 2 & 1){
-    targetindicators[2] = color;
-  }
-  if(pattern >> 3 & 1){
-    targetindicators[3] = color;
-  }
-}
-
-// "activates" a pixel in targetgrid with color
-void gridAddPixel(uint8_t x, uint8_t y, uint32_t color){
-  // limit ranges of x and y
-  if(x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT){
-    targetgrid[y][x] = color;
-  }
-  else{
-    logger.logString("Index out of Range: " + String(x) + ", " + String(y));
-  }
-}
-
-// "deactivates" all pixels in targetgrid
-void gridFlush(void){
-    // set a zero to each pixel
-    for(uint8_t i=0; i<HEIGHT; i++){
-        for(uint8_t j=0; j<WIDTH; j++){
-            targetgrid[i][j] = 0;
-        }
-    }
-    // set every minutes indicator led to 0
-    targetindicators[0] = 0;
-    targetindicators[1] = 0;
-    targetindicators[2] = 0;
-    targetindicators[3] = 0;
-}
-
-void drawOnMatrixInstant(){
-  drawOnMatrix(1.0);
-}
-
-void drawOnMatrixSmooth(float factor){
-  drawOnMatrix(factor);
-}
-
-
-// draws the targetgrid to the ledmatrix with the current active color
-void drawOnMatrix(float factor){
-  for(int s = 0; s < WIDTH; s++){
-    for(int z = 0; z < HEIGHT; z++){
-      // inplement momentum as smooth transistion function
-      uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], factor);
-      matrix.drawPixel(s, z, color24to16bit(filteredColor)); 
-      currentgrid[z][s] = filteredColor;
-    } 
-  }
-
-  for(int i = 0; i < 4; i++){
-    uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], factor);
-    matrix.drawPixel(WIDTH - (1+i), HEIGHT, color24to16bit(filteredColor));
-    currentindicators[i] = filteredColor;
-  }
-  matrix.show();
-}
-
 //! Function to draw a spiral step (from center)
 /*! 
  * \param init marks if call is the initial step of the spiral
@@ -160,7 +23,7 @@ int spiral(bool init, bool empty, uint8_t size){
     dir1 = down;          // current direction
     x = WIDTH/2;
     y = WIDTH/2;
-    if(!empty)gridFlush();
+    if(!empty)ledmatrix.gridFlush();
     counter1 = 0;
     countStep = 0;
     countEdge = 1;
@@ -175,12 +38,12 @@ int spiral(bool init, bool empty, uint8_t size){
   }
   else{
     // calc color from colorwheel
-    uint32_t color = Wheel((randNum +countStep*6)%255);
+    uint32_t color = LEDMatrix::Wheel((randNum +countStep*6)%255);
     // if draw mode is empty, set color to zero
     if(empty){
       color = 0;
     }
-    gridAddPixel(x, y, color);
+    ledmatrix.gridAddPixel(x, y, color);
     if(countCorner == 2 && breiter){
       countEdge +=1;
       breiter = false;
@@ -268,7 +131,7 @@ int snake(bool init, const uint8_t len, const uint32_t color, int numSteps){
       
       for(int i = 0; i < len; i++){
         // draw the snake
-        gridAddPixel(snake1[0][i], snake1[1][i], color);
+        ledmatrix.gridAddPixel(snake1[0][i], snake1[1][i], color);
       }
 
       // calc new random variables after every 20 steps
@@ -326,61 +189,15 @@ direction nextDir(direction dir, int d){
  * @param color  color to display (24bit)
  */
 void showDigitalClock(uint8_t hours, uint8_t minutes, uint32_t color){
-  gridFlush();
+  ledmatrix.gridFlush();
   uint8_t fstDigitH = hours/10;
   uint8_t sndDigitH = hours%10;
   uint8_t fstDigitM = minutes/10;
   uint8_t sndDigitM = minutes%10;
-  printNumber(1, 0, fstDigitH, color);
-  printNumber(5, 0, sndDigitH, color);
-  printNumber(1, 6, fstDigitM, color);
-  printNumber(5, 6, sndDigitM, color);
-}
-
-/**
- * @brief show a 1-digit number on LED matrix (5x3)
- * 
- * @param xpos x of left top corner of digit
- * @param ypos y of left top corner of digit
- * @param number number to display
- * @param color color to display (24bit)
- */
-void printNumber(uint8_t xpos, uint8_t ypos, uint8_t number, uint32_t color){
-  for(int y=ypos, i = 0; y < (ypos+5); y++, i++){
-    for(int x=xpos, k = 2; x < (xpos+3); x++, k--){
-      if((numbers_font[number][i] >> k) & 0x1){
-        Serial.print(1);
-        gridAddPixel(x, y, color);
-      }
-    }
-  }
-}
-
-/**
- * @brief show a character on LED matrix (5x3), supports currently only 'I' and 'P'
- * 
- * @param xpos x of left top corner of character
- * @param ypos y of left top corner of character
- * @param character character to display
- * @param color color to display (24bit)
- */
-void printChar(uint8_t xpos, uint8_t ypos, char character, uint32_t color){
-  int id = 0;
-  if(character == 'I'){
-    id = 0;
-  }
-  else if(character == 'P'){
-    id = 1;
-  }
-
-  for(int y=ypos, i = 0; y < (ypos+5); y++, i++){
-    for(int x=xpos, k = 2; x < (xpos+3); x++, k--){
-      if((chars_font[id][i] >> k) & 0x1){
-        Serial.print(1);
-        gridAddPixel(x, y, color);
-      }
-    }
-  }
+  ledmatrix.printNumber(1, 0, fstDigitH, color);
+  ledmatrix.printNumber(5, 0, sndDigitH, color);
+  ledmatrix.printNumber(1, 6, fstDigitM, color);
+  ledmatrix.printNumber(5, 6, sndDigitM, color);
 }
 
 
@@ -435,7 +252,7 @@ int tetris(bool init){
     gameover = false;
   }
   else{
-    gridFlush();
+    ledmatrix.gridFlush();
     
     // list of all blocks in game, indicating which are moving
     // set every block on the screen as a potentially mover
@@ -551,7 +368,7 @@ int tetris(bool init){
       for(int r = 0; r < HEIGHT; r++){
         if(screen[r+3][c] != 0){
           // screen is 3 pixels higher than led grid, so drop the upper three lines
-          gridAddPixel(c,r,colors24bit[(screen[r+3][c] % NUM_COLORS)]);
+          ledmatrix.gridAddPixel(c,r,colors24bit[(screen[r+3][c] % NUM_COLORS)]);
           //logger.logString("x: " + String(c) + ", y= " + String(r));
         }
       }

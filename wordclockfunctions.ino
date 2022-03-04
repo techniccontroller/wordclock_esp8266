@@ -11,19 +11,19 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
         break;
           
       case 1:
-        setMinIndicator(0b1000, color);
+        ledmatrix.setMinIndicator(0b1000, color);
         break;
 
       case 2:
-        setMinIndicator(0b1100, color);
+        ledmatrix.setMinIndicator(0b1100, color);
         break;
 
       case 3:
-        setMinIndicator(0b1110, color);
+        ledmatrix.setMinIndicator(0b1110, color);
         break;
 
       case 4:
-        setMinIndicator(0b1111, color);
+        ledmatrix.setMinIndicator(0b1111, color);
         break;
     }
   }
@@ -41,7 +41,7 @@ int showStringOnClock(String message, uint32_t color){
     message = message + " ";
 
     // empty the targetgrid
-    gridFlush();
+    ledmatrix.gridFlush();
 
     while(true){
       // extract next word from message
@@ -57,7 +57,7 @@ int showStringOnClock(String message, uint32_t color){
           for(int i = 0; i < word.length(); i++){
             int x = (positionOfWord + i)%WIDTH;
             int y = (positionOfWord + i)/WIDTH;
-            gridAddPixel(x, y, color);
+            ledmatrix.gridAddPixel(x, y, color);
           }
           // remember end of the word on clock
           lastLetterClock = positionOfWord + word.length();
