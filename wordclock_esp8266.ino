@@ -27,6 +27,7 @@
 #include "udplogger.h"
 #include "ntp_client_plus.h"
 #include "ledmatrix.h"
+#include "tetris.h"
 
 
 // ----------------------------------------------------------------------------------
@@ -43,7 +44,7 @@
 
 #define PERIOD_HEARTBEAT 1000
 #define PERIOD_ANIMATION 200
-#define PERIOD_TETRIS 500
+#define PERIOD_TETRIS 50
 #define TIMEOUT_LEDDIRECT 5000
 #define PERIOD_STATECHANGE 10000
 #define PERIOD_NTPUPDATE 30000
@@ -124,6 +125,7 @@ WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 float filterFactor = 0.5;
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
+Tetris mytetris = Tetris(&ledmatrix, &logger);
 
 bool stateAutoChange = false;
 bool nightMode = false;
@@ -165,7 +167,7 @@ void setup() {
     ledmatrix.setMinIndicator(15, colors24bit[6]);
     ledmatrix.drawOnMatrixInstant();
     delay(250);
-    ledmatrix.setMinIndicator(15, colors24bit[6]);
+    ledmatrix.setMinIndicator(0, colors24bit[6]);
     ledmatrix.drawOnMatrixInstant();
     delay(250);
     Serial.print(".");
@@ -257,8 +259,6 @@ void setup() {
   snake(true, 8, colors24bit[1], -1);
   // init spiral
   spiral(true, sprialDir, WIDTH-6);
-  // init tetris
-  tetris(true);
 
   // show countdown
   /*for(int i = 9; i > 0; i--){
@@ -337,7 +337,7 @@ void loop() {
       // state tetris
       case st_tetris:
         {
-          tetris(false);
+          mytetris.loopCycle();
         }
         break;
       // state snake
@@ -413,6 +413,9 @@ void entryAction(uint8_t state){
       break;
     case st_tetris:
       filterFactor = 1.0;
+      mytetris.onTetrisstartChange(true);
+      delay(110);
+      mytetris.onPlayChange(true);
       break;
   }
 }
@@ -553,6 +556,24 @@ void handleCommand() {
   else if(server.argName(0) == "tetris"){
     String cmdstr = server.arg(0);
     logger.logString("Tetris cmd via Webserver to: " + cmdstr);
+    if(cmdstr == "up"){
+      mytetris.onHochChange(true);
+    }
+    else if(cmdstr == "left"){
+      mytetris.onLinksChange(true);
+    }
+    else if(cmdstr == "right"){
+      mytetris.onRechtsChange(true);
+    }
+    else if(cmdstr == "down"){
+      mytetris.onRunterChange(true);
+    }
+    else if(cmdstr == "play"){
+      mytetris.onPlayChange(true);
+    }
+    else if(cmdstr == "pause"){
+      mytetris.onPauseChange(true);
+    }
   }
   else if(server.argName(0) == "snake"){
     String cmdstr = server.arg(0);
