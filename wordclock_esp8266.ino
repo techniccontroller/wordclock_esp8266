@@ -57,9 +57,9 @@
 enum direction {right, left, up, down};
 
 // width of the led matrix
-const int width = 11;
+#define WIDTH 11
 // height of the led matrix
-const int height = 11;
+#define HEIGHT 11
 
 // own datatype for state machine states
 #define NUM_STATES 6
@@ -92,7 +92,7 @@ ESP8266WebServer server(HTTPPort);
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(width, height+1, NEOPIXELPIN,
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, HEIGHT+1, NEOPIXELPIN,
   NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
@@ -133,7 +133,7 @@ uint32_t maincolor_clock = colors24bit[2];
 uint32_t maincolor_snake = colors24bit[1];
 
 // target representation of matrix as 2D array
-uint32_t targetgrid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
+uint32_t targetgrid[HEIGHT][WIDTH] = {{0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
@@ -146,7 +146,7 @@ uint32_t targetgrid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0}};
 
 // current representation of matrix as 2D array
-uint32_t currentgrid[height][width] = {{0,0,0,0,0,0,0,0,0,0,0},
+uint32_t currentgrid[HEIGHT][WIDTH] = {{0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
                                       {0,0,0,0,0,0,0,0,0,0,0},
@@ -243,8 +243,8 @@ void setup() {
   logger.logString("Start program\n");
   logger.logString("Sketchname: "+ String(__FILE__) +"; Build: " + String(__TIMESTAMP__) + "");
 
-  for(int r = 0; r < height; r++){
-    for(int c = 0; c < width; c++){
+  for(int r = 0; r < HEIGHT; r++){
+    for(int c = 0; c < WIDTH; c++){
       matrix.fillScreen(0);
       matrix.drawPixel(c, r, color24to16bit(colors24bit[2]));
       matrix.show();
@@ -294,7 +294,7 @@ void setup() {
   // init snake
   snake(true, 8, colors24bit[1], -1);
   // init spiral
-  spiral(true, sprialDir, width-6);
+  spiral(true, sprialDir, WIDTH-6);
   // init tetris
   tetris(true);
 
@@ -358,18 +358,18 @@ void loop() {
       // state spiral
       case st_spiral:
         {
-          res = spiral(false, sprialDir, width-6);
+          res = spiral(false, sprialDir, WIDTH-6);
           if(res && sprialDir == 0){
             // change spiral direction to closing (draw empty leds)
             sprialDir = 1;
             // init spiral with new spiral direction
-            spiral(true, sprialDir, width-6);
+            spiral(true, sprialDir, WIDTH-6);
             
           }else if(res && sprialDir == 1){
             // reset spiral direction to normal drawing leds
             sprialDir = 0;
             // init spiral with new spiral direction
-            spiral(true, sprialDir, width-6);
+            spiral(true, sprialDir, WIDTH-6);
           }
         }
         break;
@@ -443,7 +443,7 @@ void entryAction(uint8_t state){
     case st_spiral:
       // Init spiral with normal drawing mode
       sprialDir = 0;
-      spiral(true, sprialDir, width-6);
+      spiral(true, sprialDir, WIDTH-6);
       break;
     case st_tetris:
       filterFactor = 1.0;

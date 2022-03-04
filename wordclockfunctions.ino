@@ -55,8 +55,8 @@ int showStringOnClock(String message, uint32_t color){
         if(positionOfWord >= 0){
           // word found on clock -> enable leds in targetgrid
           for(int i = 0; i < word.length(); i++){
-            int x = (positionOfWord + i)%width;
-            int y = (positionOfWord + i)/width;
+            int x = (positionOfWord + i)%WIDTH;
+            int y = (positionOfWord + i)/WIDTH;
             gridAddPixel(x, y, color);
           }
           // remember end of the word on clock

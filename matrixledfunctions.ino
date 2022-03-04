@@ -87,7 +87,7 @@ void setMinIndicator(uint8_t pattern, uint32_t color){
 // "activates" a pixel in targetgrid with color
 void gridAddPixel(uint8_t x, uint8_t y, uint32_t color){
   // limit ranges of x and y
-  if(x >= 0 && x < width && y >= 0 && y < height){
+  if(x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT){
     targetgrid[y][x] = color;
   }
   else{
@@ -98,8 +98,8 @@ void gridAddPixel(uint8_t x, uint8_t y, uint32_t color){
 // "deactivates" all pixels in targetgrid
 void gridFlush(void){
     // set a zero to each pixel
-    for(uint8_t i=0; i<height; i++){
-        for(uint8_t j=0; j<width; j++){
+    for(uint8_t i=0; i<HEIGHT; i++){
+        for(uint8_t j=0; j<WIDTH; j++){
             targetgrid[i][j] = 0;
         }
     }
@@ -121,8 +121,8 @@ void drawOnMatrixSmooth(float factor){
 
 // draws the targetgrid to the ledmatrix with the current active color
 void drawOnMatrix(float factor){
-  for(int s = 0; s < width; s++){
-    for(int z = 0; z < height; z++){
+  for(int s = 0; s < WIDTH; s++){
+    for(int z = 0; z < HEIGHT; z++){
       // inplement momentum as smooth transistion function
       uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], factor);
       matrix.drawPixel(s, z, color24to16bit(filteredColor)); 
@@ -132,7 +132,7 @@ void drawOnMatrix(float factor){
 
   for(int i = 0; i < 4; i++){
     uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], factor);
-    matrix.drawPixel(width - (1+i), height, color24to16bit(filteredColor));
+    matrix.drawPixel(WIDTH - (1+i), HEIGHT, color24to16bit(filteredColor));
     currentindicators[i] = filteredColor;
   }
 }
@@ -157,8 +157,8 @@ int spiral(bool init, bool empty, uint8_t size){
   if(init){
     logger.logString("Init Spiral with empty=" + String(empty));
     dir1 = down;          // current direction
-    x = width/2;
-    y = width/2;
+    x = WIDTH/2;
+    y = WIDTH/2;
     if(!empty)gridFlush();
     counter1 = 0;
     countStep = 0;
@@ -240,26 +240,26 @@ int snake(bool init, const uint8_t len, const uint32_t color, int numSteps){
         }
       }
       // collision with wall?
-      if( (dir1 == down && snake1[1][len-1] >= height-1) || 
+      if( (dir1 == down && snake1[1][len-1] >= HEIGHT-1) || 
           (dir1 == up && snake1[1][len-1] <= 0) ||
-          (dir1 == right && snake1[0][len-1] >= width-1) ||
+          (dir1 == right && snake1[0][len-1] >= WIDTH-1) ||
           (dir1 == left && snake1[0][len-1] <= 0)){
           dir1 = nextDir(dir1, e);  
       }
       // Random branching at the side edges
-      else if((dir1 == up && snake1[1][len-1] == randomy && snake1[0][len-1] >= width-1) || (dir1 == down && snake1[1][len-1] == randomy && snake1[0][len-1] <= 0)){
+      else if((dir1 == up && snake1[1][len-1] == randomy && snake1[0][len-1] >= WIDTH-1) || (dir1 == down && snake1[1][len-1] == randomy && snake1[0][len-1] <= 0)){
         dir1 = nextDir(dir1, LEFT);
         e = (e+2)%2+1;
       }
-      else if((dir1 == down && snake1[1][len-1] == randomy && snake1[0][len-1] >= width-1) || (dir1 == up && snake1[1][len-1] == randomy && snake1[0][len-1] <= 0)){
+      else if((dir1 == down && snake1[1][len-1] == randomy && snake1[0][len-1] >= WIDTH-1) || (dir1 == up && snake1[1][len-1] == randomy && snake1[0][len-1] <= 0)){
         dir1 = nextDir(dir1, RIGHT);
         e = (e+2)%2+1;
       }
-      else if((dir1 == left && snake1[0][len-1] == randomx && snake1[1][len-1] <= 0) || (dir1 == right && snake1[0][len-1] == randomx && snake1[1][len-1] >= height-1)){
+      else if((dir1 == left && snake1[0][len-1] == randomx && snake1[1][len-1] <= 0) || (dir1 == right && snake1[0][len-1] == randomx && snake1[1][len-1] >= HEIGHT-1)){
         dir1 = nextDir(dir1, LEFT);
         e = (e+2)%2+1;
       }
-      else if((dir1 == right && snake1[0][len-1] == randomx && snake1[1][len-1] <= 0) || (dir1 == left && snake1[0][len-1] == randomx && snake1[1][len-1] >= height-1)){
+      else if((dir1 == right && snake1[0][len-1] == randomx && snake1[1][len-1] <= 0) || (dir1 == left && snake1[0][len-1] == randomx && snake1[1][len-1] >= HEIGHT-1)){
         dir1 = nextDir(dir1, RIGHT);
         e = (e+2)%2+1;
       }
@@ -415,7 +415,7 @@ int tetris(bool init){
                                             {0,0,1},
                                             {1,1,1}}};
   // local game screen buffer
-  static uint8_t screen[height+3][width]; 
+  static uint8_t screen[HEIGHT+3][WIDTH]; 
   // current number of blocks on the screen
   static int counterID;
   // indicate if the game was lost
@@ -425,8 +425,8 @@ int tetris(bool init){
   if(init || gameover){
     logger.logString("Init Tetris: init=" + String(init) + ", gameover=" +  String(gameover));
     // clear local game screen
-    for(int h = 0; h < height+3; h++){
-      for(int w = 0; w < width; w++){
+    for(int h = 0; h < HEIGHT+3; h++){
+      for(int w = 0; w < WIDTH; w++){
         screen[h][w] = 0;
       }
     }
@@ -442,12 +442,12 @@ int tetris(bool init){
     for(int i = 0; i < numBlocks; i++) tomove[i+1] =  i < counterID;
     
     // identify tiles which can move down (no collision below)
-    for(int c = 0; c < width; c++){ // columns
-      for(int r = 0; r < height+3; r++){ // rows
+    for(int c = 0; c < WIDTH; c++){ // columns
+      for(int r = 0; r < HEIGHT+3; r++){ // rows
         // only check pixels which are occupied
         if(screen[r][c] != 0){
           // every tile which has a pixel in last row -> no mover
-          if(r == height+2){
+          if(r == HEIGHT+2){
             tomove[screen[r][c]] = false;
           }
           // or every pixel
@@ -477,7 +477,7 @@ int tetris(bool init){
       logger.logString("Tetris: No more Mover");
       gameover = false;
       // check if game was lost -> one pixel active in 4rd row (top row on the led grid)
-      for(int s = 0; s < width; s++){
+      for(int s = 0; s < WIDTH; s++){
         if(screen[3][s] != 0) gameover = true;
       }
       if(gameover || counterID >= (numBlocks-1)){
@@ -491,7 +491,7 @@ int tetris(bool init){
       // select random shape for new block
       uint8_t randShape = random(1,9);
       // select random position (column) for spawn of new block
-      uint8_t randx = random(0,width - 3);
+      uint8_t randx = random(0,WIDTH - 3);
       // copy shape to screen (c1 - column of block, c2 - column of screen)
       // write the id of block on the screen
       logger.logString("newBlock: " + String(randShape) + ", " + String(randx));
@@ -502,9 +502,9 @@ int tetris(bool init){
       }
 
 
-      for(int r = 0; r < (height+3); r++){ // rows
+      for(int r = 0; r < (HEIGHT+3); r++){ // rows
         String row = "";
-        for(int c = 0; c < width; c++){ // columns
+        for(int c = 0; c < WIDTH; c++){ // columns
           row += String(screen[r][c]) + ",";
         }
         logger.logString(row);
@@ -514,13 +514,13 @@ int tetris(bool init){
       logger.logString("Tetris: num of blocks = " + String(counterID));
     }
     else{
-      uint8_t tempscreen[height+3][width] = {0};
-      uint8_t moveX = width-1;
-      uint8_t moveY = height+2;
+      uint8_t tempscreen[HEIGHT+3][WIDTH] = {0};
+      uint8_t moveX = WIDTH-1;
+      uint8_t moveY = HEIGHT+2;
       // moving blocks exists -> move them one pixel down
       // loop over pixels and move every pixel down, which belongs to a moving block
-      for(int c = width-1; c >= 0; c--){
-        for(int r = height+1; r >= 0; r--){
+      for(int c = WIDTH-1; c >= 0; c--){
+        for(int r = HEIGHT+1; r >= 0; r--){
           if((screen[r][c] != 0) && tomove[screen[r][c]]){
             tempscreen[r+1][c] = screen[r][c];
             screen[r+1][c] = screen[r][c];
@@ -534,9 +534,9 @@ int tetris(bool init){
 
       /*logger.logString("rotation point: " + String(moveX) + ", " + String(moveY));
       delay(5);
-      for(int r = 0; r < (height+3); r++){ // rows
+      for(int r = 0; r < (HEIGHT+3); r++){ // rows
         String row = "";
-        for(int c = 0; c < width; c++){ // columns
+        for(int c = 0; c < WIDTH; c++){ // columns
           
           row += String(tempscreen[r][c]) + ",";
         }
@@ -546,8 +546,8 @@ int tetris(bool init){
     }    
 
     // draw/copy screen values to led grid (r - row, c - column)
-    for(int c = 0; c < width; c++){
-      for(int r = 0; r < height; r++){
+    for(int c = 0; c < WIDTH; c++){
+      for(int r = 0; r < HEIGHT; r++){
         if(screen[r+3][c] != 0){
           // screen is 3 pixels higher than led grid, so drop the upper three lines
           gridAddPixel(c,r,colors24bit[(screen[r+3][c] % NUM_COLORS)]);
