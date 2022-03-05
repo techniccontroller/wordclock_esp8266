@@ -200,7 +200,12 @@ void showDigitalClock(uint8_t hours, uint8_t minutes, uint32_t color){
   ledmatrix.printNumber(6, 6, sndDigitM, color);
 }
 
-
+/**
+ * @brief Run random tetris animation
+ * 
+ * @param init marks if call is the initial step of the animation
+ * @return int 1 when animation is finished, else 0
+ */
 int randomtetris(bool init){
   // total number of blocks which can be displayed
   const static uint8_t numBlocks = 30;
