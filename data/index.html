@@ -41,6 +41,11 @@
 	  display: flex;
       align-items: center;
       justify-content: center;
+	  -moz-user-select: none; 
+	  -webkit-user-select: none; 
+	  -ms-user-select:none; 
+	  user-select:none;
+	  -o-user-select:none;
 	}
 
 	.buttonClass:hover {
@@ -265,11 +270,11 @@
 				SNAKE controls
 			</div>
 			<div class="control-container">
-				<div class="buttonClass snake-button-top" onclick="sendCommand('./cmd?snake=left')"><img src = "./icons/arrow_left.svg" style="height:50px"/></div>
-				<div class="buttonClass snake-button-top" onclick="sendCommand('./cmd?snake=right')"><img src = "./icons/arrow_right.svg" style="height:50px"/></div>
+				<div class="buttonClass snake-button-top" onclick="sendCommand('./cmd?snake=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:50px"/></div>
+				<div class="buttonClass snake-button-top" onclick="sendCommand('./cmd?snake=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:50px"/></div>
 			</div>
 			<div class="control-container">
-				<div class="buttonClass snake-button-bottom" onclick="sendCommand('./cmd?snake=new')"><img src = "./icons/refresh.svg" style="height:30px"/></div>
+				<div class="buttonClass snake-button-bottom" onclick="sendCommand('./cmd?snake=new')" unselectable="on"><img src = "./icons/refresh.svg" style="height:30px"/></div>
 			</div>
 		</div>
 
@@ -283,37 +288,37 @@
 			<div class="control-container">
 				<div class="grid-container">
 					<div class="grid-item" style="grid-column: 2; grid-row: 1;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=up')"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
 					</div>
 					
 					<div class="grid-item" style="grid-column: 1; grid-row: 2;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=left')"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
 					</div>
 					<div class="grid-item" style="grid-column: 2; grid-row: 2;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=down')"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
 					</div>
 					<div class="grid-item" style="grid-column: 3; grid-row: 2;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=right')"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
 					</div>
 				</div>
 			</div>
 			<div class="control-container">
-				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=play')"><img src = "./icons/refresh.svg" style="height:20px"/></div>
-				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=pause')"><img src = "./icons/playpause.svg" style="height:20px"/></div>
+				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=play')" unselectable="on"><img src = "./icons/refresh.svg" style="height:20px"/></div>
+				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=pause')" unselectable="on"><img src = "./icons/playpause.svg" style="height:20px"/></div>
 			</div>
 		</div>
 		
 
 		<script>
 
-			console.log();
 			var xmlhttp = new XMLHttpRequest();
 			var url = "./data?key=mode";
+			var myVar = null;
 
 			xmlhttp.onreadystatechange = function() {
 				if (this.readyState == 4 && this.status == 200) {
 					console.log(this.responseText);
-					var myVar = JSON.parse(this.responseText);
+					myVar = JSON.parse(this.responseText);
 					// set mode button state
 					var state = myVar.modeid;
 					var modebuttons = document.getElementsByClassName("dot-mode");
@@ -381,26 +386,29 @@
 				for (const element of maincontainer){
 					element.classList.add("hidden");
 				}
-				switch(modeid){
-					case 0: // clock
-						document.getElementById("colorcontainer").classList.remove("hidden");
-						break;
-					case 1: // diclock
-						document.getElementById("colorcontainer").classList.remove("hidden");
-						break;
-					case 2: // spiral
-						break;
-					case 3: // tetris
-						document.getElementById("tetriscontainer").classList.remove("hidden");
-						break;
-					case 4: // snake
-						document.getElementById("snakecontainer").classList.remove("hidden");
-						break;
-					case 5: // pingping
-						document.getElementById("colorcontainer").classList.remove("hidden");
-						break;
+				if(myVar != null && myVar.stateAutoChange == "0"){
+					switch(modeid){
+						case 0: // clock
+							document.getElementById("colorcontainer").classList.remove("hidden");
+							break;
+						case 1: // diclock
+							document.getElementById("colorcontainer").classList.remove("hidden");
+							break;
+						case 2: // spiral
+							break;
+						case 3: // tetris
+							document.getElementById("tetriscontainer").classList.remove("hidden");
+							break;
+						case 4: // snake
+							document.getElementById("snakecontainer").classList.remove("hidden");
+							break;
+						case 5: // pingping
+							document.getElementById("colorcontainer").classList.remove("hidden");
+							break;
 
+					}
 				}
+				
 			}
 
 			function sendCommand(command){

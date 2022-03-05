@@ -138,6 +138,7 @@ bool stateAutoChange = false;
 bool nightMode = false;
 uint32_t maincolor_clock = colors24bit[2];
 uint32_t maincolor_snake = colors24bit[1];
+bool apmode = false;
 
 
 // ----------------------------------------------------------------------------------
@@ -174,7 +175,7 @@ void setup() {
     ledmatrix.setMinIndicator(15, colors24bit[6]);
     ledmatrix.drawOnMatrixInstant();
     delay(250);
-    ledmatrix.setMinIndicator(0, colors24bit[6]);
+    ledmatrix.setMinIndicator(15, 0);
     ledmatrix.drawOnMatrixInstant();
     delay(250);
     Serial.print(".");
@@ -194,6 +195,7 @@ void setup() {
     // no wifi found -> open access point
     WiFi.mode(WIFI_AP);
     WiFi.softAP(AP_SSID + WiFi.macAddress(), AP_PASS);
+    apmode = true;
 
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
@@ -266,6 +268,8 @@ void setup() {
   snake(true, 8, colors24bit[1], -1);
   // init spiral
   spiral(true, sprialDir, WIDTH-6);
+  // init random tetris
+  randomtetris(true);
 
   // show countdown
   /*for(int i = 9; i > 0; i--){
@@ -344,7 +348,12 @@ void loop() {
       // state tetris
       case st_tetris:
         {
-          mytetris.loopCycle();
+          if(stateAutoChange){
+            randomtetris(false);
+          }
+          else{
+            mytetris.loopCycle();
+          }
         }
         break;
       // state snake
@@ -375,7 +384,7 @@ void loop() {
     lastAnimationStep = millis();
   }
 
-  // handle putton press
+  // handle button press
   handleButton();
 
   // handle state changes
@@ -398,6 +407,12 @@ void loop() {
       Serial.println("NTP-Update not successful");
     }
     lastNTPUpdate = millis();
+  }
+
+  // Check wifi status
+  if(apmode && WiFi.status() != WL_CONNECTED){
+    Serial.println("connection lost");
+    ledmatrix.gridAddPixel(1, 1, colors24bit[4]);
   }
   
 }
@@ -422,7 +437,12 @@ void entryAction(uint8_t state){
       break;
     case st_tetris:
       filterFactor = 1.0;
-      mytetris.ctrlStart();
+      if(stateAutoChange){
+        randomtetris(true);
+      }
+      else{
+        mytetris.ctrlStart();
+      }
       break;
   }
 }

@@ -201,7 +201,7 @@ void showDigitalClock(uint8_t hours, uint8_t minutes, uint32_t color){
 }
 
 
-int tetris(bool init){
+int randomtetris(bool init){
   // total number of blocks which can be displayed
   const static uint8_t numBlocks = 30;
   // all different block shapes
@@ -285,10 +285,6 @@ int tetris(bool init){
         noMoreMover = false;
       }
     }
-
-    String test = "";
-    for(int i = 0; i < numBlocks; i++) test+=String(tomove[i+1]);
-    logger.logString(test);
     
     if(noMoreMover){
       // no more moving blocks -> check if game over or spawn new block
@@ -312,7 +308,6 @@ int tetris(bool init){
       uint8_t randx = random(0,WIDTH - 3);
       // copy shape to screen (c1 - column of block, c2 - column of screen)
       // write the id of block on the screen
-      logger.logString("newBlock: " + String(randShape) + ", " + String(randx));
       for(int c1 = 0, c2 = randx; c1 < 3; c1++, c2++){
         for(int r = 0; r < 3; r++){
           if(blockshapes[randShape][r][c1]) screen[r][c2] = counterID;
@@ -328,8 +323,6 @@ int tetris(bool init){
         logger.logString(row);
         delay(5);
       }
-      
-      logger.logString("Tetris: num of blocks = " + String(counterID));
     }
     else{
       uint8_t tempscreen[HEIGHT+3][WIDTH] = {0};
@@ -349,18 +342,6 @@ int tetris(bool init){
           }
         }
       }
-
-      /*logger.logString("rotation point: " + String(moveX) + ", " + String(moveY));
-      delay(5);
-      for(int r = 0; r < (HEIGHT+3); r++){ // rows
-        String row = "";
-        for(int c = 0; c < WIDTH; c++){ // columns
-          
-          row += String(tempscreen[r][c]) + ",";
-        }
-        logger.logString(row);
-        delay(5);
-      }*/
     }    
 
     // draw/copy screen values to led grid (r - row, c - column)
@@ -369,33 +350,11 @@ int tetris(bool init){
         if(screen[r+3][c] != 0){
           // screen is 3 pixels higher than led grid, so drop the upper three lines
           ledmatrix.gridAddPixel(c,r,colors24bit[(screen[r+3][c] % NUM_COLORS)]);
-          //logger.logString("x: " + String(c) + ", y= " + String(r));
         }
       }
     }
     return 0; 
   }
   return 0; 
-}
-
-
-int rotate90X(int oldX, int oldY, bool clockwise){
-  int newX = 0;
-  if(clockwise){
-    newX = oldY;
-  }else{
-    newX = -1 * oldY;
-  }
-  return newX;
-}
-
-int rotate90Y(int oldX, int oldY, bool clockwise){
-  int newY = 0;
-  if(clockwise){
-    newY = -1 * oldX;
-  }else{
-    newY = oldX;
-  }
-  return newY;
 }
 
