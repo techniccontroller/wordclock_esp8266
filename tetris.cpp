@@ -1,213 +1,206 @@
+/**
+ * @file tetris.cpp
+ * @author techniccontroller (mail[at]techniccontroller.com)
+ * @brief Class implementation for tetris game
+ * @version 0.1
+ * @date 2022-03-05
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ * main tetris code originally written by Klaas De Craemer, Ing. David Hrbaty
+ * 
+ */
 #include "tetris.h"
 
 Tetris::Tetris(){
-    resetLEDs();
-    zustand = 0;
-    tnureinmal = true;
 }
 
+/**
+ * @brief Construct a new Tetris:: Tetris object
+ * 
+ * @param myledmatrix pointer to ledmatrix object, need to provide gridAddPixel(x, y, col), drawOnMatrix(), gridFlush() and printNumber(x,y,n,col)
+ * @param mylogger pointer to UDPLogger object, need to provide a function logString(message)
+ */
 Tetris::Tetris(LEDMatrix *myledmatrix, UDPLogger *mylogger){
     logger = *mylogger;
     ledmatrix = myledmatrix;
-    zustand = 0;
-    tnureinmal = true;
+    gameStatet = GAME_STATE_READYt;
 }
 
+/**
+ * @brief Run main loop for one cycle
+ * 
+ */
 void Tetris::loopCycle(){
-    Serial.println("hi" + String(zustand));
-    if (zustand == 0 && tnureinmal == true) {
-        tnureinmal = false;
-        resetLEDs();
-    }
+    switch (gameStatet) {
+        case GAME_STATE_READYt:
 
-    if (zustand == 10) {
-        switch (gameStatet) {
-            case GAME_STATE_READYt:
+            break;
+        case GAME_STATE_INITt:
+            tetrisInit();
 
-                break;
-            case GAME_STATE_INITt:
-                tetrisInit();
-
-                break;
-            case GAME_STATE_RUNNINGt:
-                //If brick is still "on the loose", then move it down by one
-                if (activeBrick.enabled) {
-
-                    if (fallenerlaubt) {
-                        if (millis() > zeitfallen + 50 ) {
-                            zeitfallen = millis();
-                            shiftActiveBrick(DIR_DOWN);
-                            printField();
-                        }
-                    }
-
-
-                    if ((millis() - prevUpdateTime) > (brickSpeed * speedtetris / 100)) {
-                            prevUpdateTime = millis();
-
-                            shiftActiveBrick(DIR_DOWN);
-                            Serial.println("es geht abwärts");
-                            printField();
+            break;
+        case GAME_STATE_RUNNINGt:
+            //If brick is still "on the loose", then move it down by one
+            if (activeBrick.enabled) {
+                // move faster down when allow drop
+                if (allowdrop) {
+                    if (millis() > droptime + 50) {
+                        droptime = millis();
+                        shiftActiveBrick(DIR_DOWN);
+                        printField();
                     }
                 }
-                else {
-                    fallenerlaubt = false;
-                    //Active brick has "crashed", check for full lines
-                    //and create new brick at top of field
-                    checkFullLines();
-                    newActiveBrick();
-                    prevUpdateTime = millis();//Reset update time to avoid brick dropping two spaces
-                    logger.logString("Tetris: angekommen");
-                    Serial.println("angekommen");
-                }
-                break;
-            case GAME_STATE_PAUSEDt:
 
-                break;
-            case GAME_STATE_ENDt:
-
-                if (tetrisGameOver == true) {
-                    tetrisGameOver = false;
-                    logger.logString("Tetris: ende");
-                    Serial.println("ende");
-                    allesrot();
-                    tetrisshowscore = millis();
-                    nureinmalscore = true;
+                // move down with regular speed
+                if ((millis() - prevUpdateTime) > (brickSpeed * speedtetris / 100)) {
+                        prevUpdateTime = millis();
+                        shiftActiveBrick(DIR_DOWN);
+                        printField();
                 }
+            }
+            else {
+                allowdrop = false;
+                //Active brick has "crashed", check for full lines
+                //and create new brick at top of field
+                checkFullLines();
+                newActiveBrick();
+                prevUpdateTime = millis();//Reset update time to avoid brick dropping two spaces
+            }
+            break;
+        case GAME_STATE_PAUSEDt:
 
-                if (millis() > tetrisshowscore + 1500 && nureinmalscore == true) {
-                    nureinmalscore = false;
-                    resetLEDs();
-                    score = nbRowsTotal;
-                    showscore();
-                }
-                break;
-        }
+            break;
+        case GAME_STATE_ENDt:
+            // at game end show all bricks on field in red color for 1.5 seconds, then show score
+            if (tetrisGameOver == true) {
+                tetrisGameOver = false;
+                logger.logString("Tetris: end");
+                everythingRed();
+                tetrisshowscore = millis();
+            }
+
+            if (millis() > (tetrisshowscore + RED_END_TIME)) {
+                resetLEDs();
+                score = nbRowsTotal;
+                showscore();
+                gameStatet = GAME_STATE_READYt;
+            }
+            break;
     }
 }
 
-
-void Tetris::onTetrisstartChange(boolean b) {
+/**
+ * @brief Trigger control: START (& restart)
+ * 
+ */
+void Tetris::ctrlStart() {
     if (millis() > lastButtonClick + DEBOUNCE_TIME)
     {
-        Serial.printf("onTetrisstartChange: b: %d\n", b);
-        if (b == true) {
-            randomSeed(5);
-            lastButtonClick = millis();
-            zustand = 10;
-            resetLEDs();
-            gameStatet = GAME_STATE_READYt;
-        }
+        lastButtonClick = millis();
+        gameStatet = GAME_STATE_INITt;
     }
 }
 
-void Tetris::onPlayChange(boolean b) {
+/**
+ * @brief Trigger control: PAUSE/PLAY
+ * 
+ */
+void Tetris::ctrlPlayPause() {
     if (millis() > lastButtonClick + DEBOUNCE_TIME)
     {
-        if (b) {
-            Serial.printf("onPlayChange: b: %d\n", b);
-
-            lastButtonClick = millis();
-            gameStatet = GAME_STATE_INITt;
-            tonpause = millis();
-
-        }
-    }
-}
-
-void Tetris::onPauseChange(boolean b) {
-    if (millis() > lastButtonClick + 500)
-    {
-
-        Serial.printf("onPauseChange: b: %d\n", b);
-
         lastButtonClick = millis();
         if (gameStatet == GAME_STATE_PAUSEDt) {
-            Serial.println("jetzt gehts weiter");
-            logger.logString("jetzt gehts weiter");
+            logger.logString("Tetris: continue");
 
             gameStatet = GAME_STATE_RUNNINGt;
 
         } else if (gameStatet == GAME_STATE_RUNNINGt) {
-            Serial.println("jetzt ist pause");
-            logger.logString("jetzt ist pause");
+            logger.logString("Tetris: pause");
 
             gameStatet = GAME_STATE_PAUSEDt;
         }
-
     }
 }
 
-void Tetris::onExitChange(boolean b) {
-    if (millis() > lastButtonClick + DEBOUNCE_TIME)
-    {
-        Serial.printf("onExitChange: b: %d\n", b);
-
-        lastButtonClick = millis();
-        tnureinmal = true;
-        zustand = 0;
-    }
-}
-
-void Tetris::onRechtsChange(boolean b) {
+/**
+ * @brief Trigger control: RIGHT
+ * 
+ */
+void Tetris::ctrlRight() {
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameStatet == GAME_STATE_RUNNINGt)
     {
-        Serial.printf("onRechtsChange: b: %d\n", b);
-
         lastButtonClick = millis();
         shiftActiveBrick(DIR_RIGHT);
         printField();
     }
 }
 
-void Tetris::onLinksChange(boolean b) {
+/**
+ * @brief Trigger control: LEFT
+ * 
+ */
+void Tetris::ctrlLeft() {
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameStatet == GAME_STATE_RUNNINGt)
     {
-        Serial.printf("onLinksChange: b: %d\n", b);
-
         lastButtonClick = millis();
         shiftActiveBrick(DIR_LEFT);
         printField();
-
     }
 }
 
-void Tetris::onHochChange(boolean b) {
+/**
+ * @brief Trigger control: UP (rotate)
+ * 
+ */
+void Tetris::ctrlUp() {
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameStatet == GAME_STATE_RUNNINGt)
     {
-        Serial.printf("onHochChange: b: %d\n", b);
-
         lastButtonClick = millis();
         rotateActiveBrick();
         printField();
     }
 }
 
-void Tetris::onRunterChange(boolean b) {
-    if (millis() > lastButtonClickr + 500 && gameStatet == GAME_STATE_RUNNINGt)
+/**
+ * @brief Trigger control: DOWN (drop)
+ * 
+ */
+void Tetris::ctrlDown() {
+    // longer debounce time, to prevent immediate drop
+    if (millis() > lastButtonClickr + DEBOUNCE_TIME*5 && gameStatet == GAME_STATE_RUNNINGt)
     {
-        Serial.printf("onRunterChange: b: %d\n", b);
-        fallenerlaubt = true;
+        allowdrop = true;
         lastButtonClickr = millis();
-        // shiftActiveBrick(DIR_DOWN);
-        //    printField();
     }
 }
 
-void Tetris::onSpeedChange(int32_t i) {
-    Serial.printf("onSpeedChange: i: %d\n", i);
+/**
+ * @brief Set game speed
+ * 
+ * @param i new speed value
+ */
+void Tetris::setSpeed(int32_t i) {
+    logger.logString("setSpeed: " + String(i));
     speedtetris = -10 * i + 150;
 }
 
+/**
+ * @brief Clear the led matrix (turn all leds off)
+ * 
+ */
 void Tetris::resetLEDs()
 {
     (*ledmatrix).gridFlush();
     (*ledmatrix).drawOnMatrixInstant();
 }
 
+/**
+ * @brief Initialize the tetris game
+ * 
+ */
 void Tetris::tetrisInit() {
-    Serial.println("Tetris init");
-    logger.logString("Tetris init");
+    logger.logString("Tetris: init");
     
     clearField();
     brickSpeed = INIT_SPEED;
@@ -221,11 +214,11 @@ void Tetris::tetrisInit() {
     gameStatet = GAME_STATE_RUNNINGt;
 }
 
-
+/**
+ * @brief Draw current field representation to led matrix
+ * 
+ */
 void Tetris::printField() {
-    Serial.println("im printfield");
-    logger.logString("im printfield");
-
     int x, y;
     for (x = 0; x < WIDTH; x++) {
         for (y = 0; y < HEIGHT; y++) {
@@ -238,36 +231,37 @@ void Tetris::printField() {
                 }
             }
             if (field.pix[x][y] == 1) {
-                projizieren(x, y, field.color[x][y]);
+                (*ledmatrix).gridAddPixel(x, y, field.color[x][y]);
             } else if (activeBrickPix == 1) {
-                projizieren(x, y, activeBrick.col);
+                (*ledmatrix).gridAddPixel(x, y, activeBrick.col);
             } else {
-                projizieren(x, y, 0x000000);
+                (*ledmatrix).gridAddPixel(x, y, 0x000000);
             }
         }
     }
     (*ledmatrix).drawOnMatrixInstant();
 }
 
-void Tetris::projizieren(int x, int y, uint32_t color) {
-    (*ledmatrix).gridAddPixel(x, y, color);
-}
 
 /* *** Game functions *** */
-
+/**
+ * @brief Spawn new (random) brick
+ * 
+ */
 void Tetris::newActiveBrick() {
-    //    uint8_t selectedBrick = 3;
+    uint8_t selectedBrick = 0;
+    static uint8_t lastselectedBrick = 0;
 
+    // choose random next brick, but not the same as before
     do {
-        thisselectedBrick = random(7);
-    //    thisselectedBrick = 1;
+        selectedBrick = random(7);
     }
-    while (lastselectedBrick == thisselectedBrick);
+    while (lastselectedBrick == selectedBrick);
 
-     lastselectedBrick = thisselectedBrick;
-    selectedBrick = thisselectedBrick;
+    // Save selected brick for next round
+    lastselectedBrick = selectedBrick;
 
-    //    uint8_t selectedBrick = random(7);
+    // every brick has its color, select corresponding color
     uint32_t selectedCol = brickLib[selectedBrick].col;
     // Set properties of brick
     activeBrick.siz = brickLib[selectedBrick].siz;
@@ -296,7 +290,12 @@ void Tetris::newActiveBrick() {
     }
 }
 
-// Check collision between bricks in the field and the specified brick
+/**
+ * @brief Check collision between bricks in the field and the specified brick
+ * 
+ * @param brick brick to be checked for collision
+ * @return boolean true if collision occured
+ */
 boolean Tetris::checkFieldCollision(struct Brick * brick) {
     uint8_t bx, by;
     uint8_t fx, fy;
@@ -313,7 +312,12 @@ boolean Tetris::checkFieldCollision(struct Brick * brick) {
     return false;
 }
 
-// Check collision between specified brick and all sides of the playing field
+/**
+ * @brief Check collision between specified brick and all sides of the playing field
+ * 
+ * @param brick brick to be checked for collision
+ * @return boolean true if collision occured
+ */
 boolean Tetris::checkSidesCollision(struct Brick * brick) {
     //Check vertical collision with sides of field
     uint8_t bx, by;
@@ -332,9 +336,14 @@ boolean Tetris::checkSidesCollision(struct Brick * brick) {
     return false;
 }
 
+/**
+ * @brief Rotate current active brick
+ * 
+ */
 void Tetris::rotateActiveBrick() {
     //Copy active brick pix array to temporary pix array
     uint8_t x, y;
+    Brick tmpBrick;
     for (y = 0; y < MAX_BRICK_SIZE; y++) {
         for (x = 0; x < MAX_BRICK_SIZE; x++) {
             tmpBrick.pix[x][y] = activeBrick.pix[x][y];
@@ -384,8 +393,7 @@ void Tetris::rotateActiveBrick() {
         tmpBrick.pix[3][2] = activeBrick.pix[2][0];
         tmpBrick.pix[3][3] = activeBrick.pix[3][0];
     } else {
-        Serial.println("Brick size error");
-        logger.logString("Brick size error");
+        logger.logString("Tetris: Brick size error");
     }
 
     // Now validate by checking collision.
@@ -403,7 +411,11 @@ void Tetris::rotateActiveBrick() {
     }
 }
 
-// Shift brick left/right/down by one if possible
+/**
+ * @brief Shift brick left/right/down by one if possible
+ * 
+ * @param dir direction to be shifted
+ */
 void Tetris::shiftActiveBrick(int dir) {
     // Change position of active brick (no copy to temporary needed)
     if (dir == DIR_LEFT) {
@@ -432,7 +444,10 @@ void Tetris::shiftActiveBrick(int dir) {
     }
 }
 
-// Copy active pixels to field, including color
+/**
+ * @brief Copy active pixels to field, including color
+ * 
+ */
 void Tetris::addActiveBrickToField() {
     uint8_t bx, by;
     uint8_t fx, fy;
@@ -450,7 +465,11 @@ void Tetris::addActiveBrickToField() {
     }
 }
 
-// Move all pix from the field above startRow down by one. startRow is overwritten
+/**
+ * @brief Move all pix from the field above startRow down by one. startRow is overwritten
+ * 
+ * @param startRow 
+ */
 void Tetris::moveFieldDownOne(uint8_t startRow) {
     if (startRow == 0) { // Topmost row has nothing on top to move...
         return;
@@ -464,6 +483,10 @@ void Tetris::moveFieldDownOne(uint8_t startRow) {
     }
 }
 
+/**
+ * @brief Check if a line is complete
+ * 
+ */
 void Tetris::checkFullLines() {
     int x, y;
     int minY = 0;
@@ -500,6 +523,10 @@ void Tetris::checkFullLines() {
     }
 }
 
+/**
+ * @brief Clear field
+ * 
+ */
 void Tetris::clearField() {
     uint8_t x, y;
     for (y = 0; y < HEIGHT; y++) {
@@ -513,8 +540,11 @@ void Tetris::clearField() {
     }
 }
 
-void Tetris::allesrot() {
-
+/**
+ * @brief Color all bricks on the field red
+ * 
+ */
+void Tetris::everythingRed() {
     int x, y;
     for (x = 0; x < WIDTH; x++) {
         for (y = 0; y < HEIGHT; y++) {
@@ -527,18 +557,21 @@ void Tetris::allesrot() {
                 }
             }
             if (field.pix[x][y] == 1) {
-                projizieren(x, y, 0xFF0000);
+                (*ledmatrix).gridAddPixel(x, y, RED);
             } else if (activeBrickPix == 1) {
-                projizieren(x, y, 0xFF0000);
+                (*ledmatrix).gridAddPixel(x, y, RED);
             } else {
-                projizieren(x, y, 0x000000);
+                (*ledmatrix).gridAddPixel(x, y, 0x000000);
             }
         }
     }
     (*ledmatrix).drawOnMatrixInstant();
 }
 
-
+/**
+ * @brief Draw score to led matrix
+ * 
+ */
 void Tetris::showscore() {
     uint32_t color = LEDMatrix::Color24bit(255, 170, 0);
     (*ledmatrix).gridFlush();

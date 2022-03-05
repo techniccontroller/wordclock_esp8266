@@ -1,16 +1,18 @@
 /**
- * Wordclock 2.0 - Wordclock with ESP8266 and NTP time
+ * Wordclock 2.0 - Wordclock with ESP8266 and NTP time update
  * 
  * created by techniccontroller 04.12.2021
  * 
  * components:
- * - ESP8266 (ESP-01)
+ * - ESP8266
  * - Neopixelstrip
  *  
  * 
  * with code parts from:
  * - Adafruit NeoPixel strandtest.ino, https://github.com/adafruit/Adafruit_NeoPixel/blob/master/examples/strandtest/strandtest.ino
- * - Esp8266 und Esp32 https://fipsok.de/
+ * - Esp8266 und Esp32 webserver https://fipsok.de/
+ * - https://github.com/pmerlin/PMR-LED-Table/blob/master/tetrisGame.ino
+ * 
  */
 
 #include "secrets.h"
@@ -420,9 +422,7 @@ void entryAction(uint8_t state){
       break;
     case st_tetris:
       filterFactor = 1.0;
-      mytetris.onTetrisstartChange(true);
-      delay(110);
-      mytetris.onPlayChange(true);
+      mytetris.ctrlStart();
       break;
   }
 }
@@ -603,22 +603,22 @@ void handleCommand() {
     String cmdstr = server.arg(0);
     logger.logString("Tetris cmd via Webserver to: " + cmdstr);
     if(cmdstr == "up"){
-      mytetris.onHochChange(true);
+      mytetris.ctrlUp();
     }
     else if(cmdstr == "left"){
-      mytetris.onLinksChange(true);
+      mytetris.ctrlLeft();
     }
     else if(cmdstr == "right"){
-      mytetris.onRechtsChange(true);
+      mytetris.ctrlRight();
     }
     else if(cmdstr == "down"){
-      mytetris.onRunterChange(true);
+      mytetris.ctrlDown();
     }
     else if(cmdstr == "play"){
-      mytetris.onPlayChange(true);
+      mytetris.ctrlStart();
     }
     else if(cmdstr == "pause"){
-      mytetris.onPauseChange(true);
+      mytetris.ctrlPlayPause();
     }
   }
   else if(server.argName(0) == "snake"){

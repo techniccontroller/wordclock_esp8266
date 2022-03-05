@@ -1,3 +1,15 @@
+/**
+ * @file tetris.h
+ * @author techniccontroller (mail[at]techniccontroller.com)
+ * @brief Class definition for tetris game
+ * @version 0.1
+ * @date 2022-03-05
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ * main tetris code originally written by Klaas De Craemer, Ing. David Hrbaty
+ * 
+ */
 #ifndef tetris_h
 #define tetris_h
 
@@ -6,6 +18,7 @@
 #include "udplogger.h"
 
 #define DEBOUNCE_TIME 100
+#define RED_END_TIME 1500
 #define GAME_STATE_RUNNINGt 1
 #define GAME_STATE_ENDt     2
 #define GAME_STATE_INITt    3
@@ -73,20 +86,21 @@ class Tetris{
     public:
         Tetris();
         Tetris(LEDMatrix *myledmatrix, UDPLogger *mylogger);
-        void onTetrisstartChange(boolean b);
-        void onPlayChange(boolean b);
-        void onPauseChange(boolean b);
-        void onExitChange(boolean b);
-        void onRechtsChange(boolean b);
-        void onLinksChange(boolean b);
-        void onHochChange(boolean b);
-        void onRunterChange(boolean b);
-        void onSpeedChange(int32_t i);
-        void grundzustand();
+
+        void ctrlStart();
+        void ctrlPlayPause();
+        void ctrlRight();
+        void ctrlLeft();
+        void ctrlUp();
+        void ctrlDown();
+        void setSpeed(int32_t i);
+
+        void loopCycle();
+
+    private:
         void resetLEDs();
         void tetrisInit();
         void printField();
-        void projizieren(int x, int y, uint32_t color);
 
         /* *** Game functions *** */
         void newActiveBrick();
@@ -99,31 +113,22 @@ class Tetris{
         void checkFullLines();
 
         void clearField();
-        void allesrot();
+        void everythingRed();
         void showscore();
-        void loopCycle();
 
-    private:
 
         LEDMatrix *ledmatrix;
         UDPLogger logger;
         Brick activeBrick;
         Field field;
 
-
-        bool tnureinmal = true;
         long lastButtonClick = 0;
-        int zustand = 0;
+        long lastButtonClickr = 0;
         int score = 0;
-        int  frot = 0;
-        int fgruen = 0;
-        int fblau = 0;
         int gameStatet = GAME_STATE_INITt;
         uint16_t brickSpeed;
         unsigned long nbRowsThisLevel;
         unsigned long nbRowsTotal;
-
-        long tonpause = 0;
 
         boolean tetrisGameOver;
 
@@ -131,21 +136,9 @@ class Tetris{
         unsigned long curTime;
 
         long tetrisshowscore;
-        bool nureinmalscore = true;
-        uint8_t thisselectedBrick = 0;
-        uint8_t lastselectedBrick = 0;
-        uint8_t selectedBrick;
-        long zeitfallen = 0;
+        long droptime = 0;
         int speedtetris = 80;
-        long lastButtonClickr = 0;
-        bool fallenerlaubt;
-
-        Brick tmpBrick;
-
-        //void (*addPixel)(uint8_t, uint8_t, uint32_t);
-        void (*drawMatrix)();
-        //void (*flushGrid)();
-
+        bool allowdrop;
         
         // color library
         uint32_t colorLib[10] = {RED, GREEN, BLUE, YELLOW, CHOCOLATE, PURPLE, WHITE, AQUA, HOTPINK, DARKORANGE};
