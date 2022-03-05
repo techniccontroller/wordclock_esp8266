@@ -69,7 +69,7 @@ int spiral(bool init, bool empty, uint8_t size){
 }
 
 
-int snake(bool init, const uint8_t len, const uint32_t color, int numSteps){
+int randomsnake(bool init, const uint8_t len, const uint32_t color, int numSteps){
   static direction dir1;
   static int snake1[2][10];
   static int randomy;

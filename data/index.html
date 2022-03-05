@@ -267,11 +267,24 @@
 			<div class="verticalline">
 			</div>
 			<div class="headline">
-				SNAKE controls
+				SNAKE
 			</div>
 			<div class="control-container">
-				<div class="buttonClass snake-button-top" onclick="sendCommand('./cmd?snake=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:50px"/></div>
-				<div class="buttonClass snake-button-top" onclick="sendCommand('./cmd?snake=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:50px"/></div>
+				<div class="grid-container">
+					<div class="grid-item" style="grid-column: 2; grid-row: 1;">
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?snake=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
+					</div>
+					
+					<div class="grid-item" style="grid-column: 1; grid-row: 2;">
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?snake=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
+					</div>
+					<div class="grid-item" style="grid-column: 2; grid-row: 2;">
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?snake=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
+					</div>
+					<div class="grid-item" style="grid-column: 3; grid-row: 2;">
+						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?snake=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
+					</div>
+				</div>
 			</div>
 			<div class="control-container">
 				<div class="buttonClass snake-button-bottom" onclick="sendCommand('./cmd?snake=new')" unselectable="on"><img src = "./icons/refresh.svg" style="height:30px"/></div>
@@ -283,7 +296,7 @@
 			<div class="verticalline">
 			</div>
 			<div class="headline">
-				TETRIS controls
+				TETRIS
 			</div>
 			<div class="control-container">
 				<div class="grid-container">

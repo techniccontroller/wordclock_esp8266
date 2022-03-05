@@ -30,6 +30,7 @@
 #include "ntp_client_plus.h"
 #include "ledmatrix.h"
 #include "tetris.h"
+#include "snake.h"
 
 
 // ----------------------------------------------------------------------------------
@@ -133,6 +134,7 @@ NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 float filterFactor = 0.5;
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
 Tetris mytetris = Tetris(&ledmatrix, &logger);
+Snake mysnake = Snake(&ledmatrix, &logger);
 
 bool stateAutoChange = false;
 bool nightMode = false;
@@ -265,7 +267,7 @@ void setup() {
 
   // init all animation modes
   // init snake
-  snake(true, 8, colors24bit[1], -1);
+  randomsnake(true, 8, colors24bit[1], -1);
   // init spiral
   spiral(true, sprialDir, WIDTH-6);
   // init random tetris
@@ -359,11 +361,16 @@ void loop() {
       // state snake
       case st_snake:
         {
-          ledmatrix.gridFlush();
-          res = snake(false, 8, colors24bit[1], -1);
-          if(res){
-            // init snake for next run
-            snake(true, 8, colors24bit[1], -1);
+          if(stateAutoChange){
+            ledmatrix.gridFlush();
+            res = randomsnake(false, 8, maincolor_snake, -1);
+            if(res){
+              // init snake for next run
+              randomsnake(true, 8, maincolor_snake, -1);
+            }
+          }
+          else{
+            mysnake.loopCycle();
           }
         }
         break;
@@ -442,6 +449,15 @@ void entryAction(uint8_t state){
       }
       else{
         mytetris.ctrlStart();
+      }
+      break;
+    case st_snake:
+      filterFactor = 1.0;
+      if(stateAutoChange){
+        randomsnake(true, 8, colors24bit[1], -1);
+      }
+      else{
+        mysnake.initGame();
       }
       break;
   }
@@ -644,6 +660,21 @@ void handleCommand() {
   else if(server.argName(0) == "snake"){
     String cmdstr = server.arg(0);
     logger.logString("Snake cmd via Webserver to: " + cmdstr);
+    if(cmdstr == "up"){
+      mysnake.ctrlUp();
+    }
+    else if(cmdstr == "left"){
+      mysnake.ctrlLeft();
+    }
+    else if(cmdstr == "right"){
+      mysnake.ctrlRight();
+    }
+    else if(cmdstr == "down"){
+      mysnake.ctrlDown();
+    }
+    else if(cmdstr == "new"){
+      mysnake.initGame();
+    }
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
