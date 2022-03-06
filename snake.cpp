@@ -28,7 +28,7 @@ void Snake::loopCycle()
 void Snake::ctrlUp(){
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
         logger.logString("Snake: UP");
-        userDirection = DIRECTION_DOWN;
+        userDirection = DIRECTION_DOWN; // need to swap direction as field is rotated 180deg
         lastButtonClick = millis();
     }
 }
@@ -36,7 +36,7 @@ void Snake::ctrlUp(){
 void Snake::ctrlDown(){
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
         logger.logString("Snake: DOWN");
-        userDirection = DIRECTION_UP;
+        userDirection = DIRECTION_UP; // need to swap direction as field is rotated 180deg
         lastButtonClick = millis();
     }
 }
@@ -44,7 +44,7 @@ void Snake::ctrlDown(){
 void Snake::ctrlRight(){
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
         logger.logString("Snake: RIGHT");
-        userDirection = DIRECTION_LEFT;
+        userDirection = DIRECTION_LEFT; // need to swap direction as field is rotated 180deg
         lastButtonClick = millis();
     }
 }
@@ -52,7 +52,7 @@ void Snake::ctrlRight(){
 void Snake::ctrlLeft(){
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
         logger.logString("Snake: LEFT");
-        userDirection = DIRECTION_RIGHT;
+        userDirection = DIRECTION_RIGHT; // need to swap direction as field is rotated 180deg
         lastButtonClick = millis();
     }
 }
