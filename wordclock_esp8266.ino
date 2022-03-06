@@ -26,6 +26,7 @@
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
 #include <Base64_.h>                    // https://github.com/Xander-Electronics/Base64
+#include <DNSServer.h>
 #include "udplogger.h"
 #include "ntp_client_plus.h"
 #include "ledmatrix.h"
@@ -93,11 +94,21 @@ const uint16_t PERIODS[2][NUM_STATES] = { { PERIOD_TIMEVISUUPDATE, // stateAutoC
 const unsigned int localPort = 2390;
 const unsigned int HTTPPort = 80;
 const unsigned int logMulticastPort = 8123;
+const unsigned int DNSPort = 53;
 
-// ip addresses
+// ip addresses for multicast logging
 IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
+
+// ip addresses for Access Point
+IPAddress IPAdress_AccessPoint(192,168,10,2);
+IPAddress Gateway_AccessPoint(192,168,10,0);
+IPAddress Subnetmask_AccessPoint(255,255,255,0);
+
 // hostname
 String hostname = "wordclock";
+
+// URL DNS server
+const char WebserverURL[] = "www.wordclock.local";
 
 // ----------------------------------------------------------------------------------
 //                                        GLOBAL VARIABLES
@@ -105,6 +116,9 @@ String hostname = "wordclock";
 
 // Webserver
 ESP8266WebServer server(HTTPPort);
+
+//DNS Server
+DNSServer DnsServer;
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
@@ -203,12 +217,18 @@ void setup() {
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP()); 
     WiFi.setAutoReconnect(true);
+    WiFi.persistent(true);
   
   } else {
     // no wifi found -> open access point
     WiFi.mode(WIFI_AP);
-    WiFi.softAP(AP_SSID + WiFi.macAddress(), AP_PASS);
+    WiFi.softAPConfig(IPAdress_AccessPoint, Gateway_AccessPoint, Subnetmask_AccessPoint);
+    WiFi.softAP(AP_SSID, AP_PASS);
     apmode = true;
+
+    // start DNS Server
+    DnsServer.setTTL(300);
+    DnsServer.start(DNSPort, WebserverURL, IPAdress_AccessPoint);
 
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
@@ -319,6 +339,13 @@ void loop() {
   if(millis() - lastheartbeat > PERIOD_HEARTBEAT){
     logger.logString("Heartbeat, state: " + stateNames[currentState] + "\n");
     lastheartbeat = millis();
+
+    // Check wifi status (only of no apmode)
+    if(!apmode && WiFi.status() != WL_CONNECTED){
+      Serial.println("connection lost");
+      ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
+      ledmatrix.drawOnMatrixInstant();
+    }
   }
   int res = 0;
   if(!nightMode && (millis() - lastStep > PERIODS[stateAutoChange][currentState]) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
@@ -426,13 +453,7 @@ void loop() {
     }
     lastNTPUpdate = millis();
   }
-
-  // Check wifi status
-  if(apmode && WiFi.status() != WL_CONNECTED){
-    Serial.println("connection lost");
-    ledmatrix.gridAddPixel(1, 1, colors24bit[4]);
-  }
-  
+ 
 }
 
 
