@@ -42,13 +42,13 @@
 #define MAX_TAIL_LENGTH X_MAX * Y_MAX
 #define MIN_TAIL_LENGTH 3
 
-struct Coords {
-  int x;
-  int y;
-};
-
-
 class Snake{
+
+    struct Coords {
+      int x;
+      int y;
+    };
+
     public:
         Snake();
         Snake(LEDMatrix *myledmatrix, UDPLogger *mylogger);
