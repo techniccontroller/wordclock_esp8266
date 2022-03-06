@@ -23,13 +23,13 @@ Snake::Snake(){
 /**
  * @brief Construct a new Snake:: Snake object
  * 
- * @param myledmatrix pointer to ledmatrix object, need to provide gridAddPixel(x, y, col), gridFlush()
+ * @param myledmatrix pointer to _ledmatrix object, need to provide gridAddPixel(x, y, col), gridFlush()
  * @param mylogger pointer to UDPLogger object, need to provide a function logString(message)
  */
 Snake::Snake(LEDMatrix *myledmatrix, UDPLogger *mylogger){
-    logger = mylogger;
-    ledmatrix = myledmatrix;
-    gameState = GAME_STATE_END;
+    _logger = mylogger;
+    _ledmatrix = myledmatrix;
+    _gameState = GAME_STATE_END;
 }
 
 /**
@@ -38,7 +38,7 @@ Snake::Snake(LEDMatrix *myledmatrix, UDPLogger *mylogger){
  */
 void Snake::loopCycle()
 {
-  switch(gameState)
+  switch(_gameState)
   {
     case GAME_STATE_INIT:
       initGame();
@@ -56,10 +56,10 @@ void Snake::loopCycle()
  * 
  */
 void Snake::ctrlUp(){
-    if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
-        logger.logString("Snake: UP");
-        userDirection = DIRECTION_DOWN; // need to swap direction as field is rotated 180deg
-        lastButtonClick = millis();
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameState == GAME_STATE_RUNNING) {
+        (*_logger).logString("Snake: UP");
+        _userDirection = DIRECTION_DOWN; // need to swap direction as field is rotated 180deg
+        _lastButtonClick = millis();
     }
 }
 
@@ -68,10 +68,10 @@ void Snake::ctrlUp(){
  * 
  */
 void Snake::ctrlDown(){
-    if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
-        logger.logString("Snake: DOWN");
-        userDirection = DIRECTION_UP; // need to swap direction as field is rotated 180deg
-        lastButtonClick = millis();
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameState == GAME_STATE_RUNNING) {
+        (*_logger).logString("Snake: DOWN");
+        _userDirection = DIRECTION_UP; // need to swap direction as field is rotated 180deg
+        _lastButtonClick = millis();
     }
 }
 
@@ -80,10 +80,10 @@ void Snake::ctrlDown(){
  * 
  */
 void Snake::ctrlRight(){
-    if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
-        logger.logString("Snake: RIGHT");
-        userDirection = DIRECTION_LEFT; // need to swap direction as field is rotated 180deg
-        lastButtonClick = millis();
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameState == GAME_STATE_RUNNING) {
+        (*_logger).logString("Snake: RIGHT");
+        _userDirection = DIRECTION_LEFT; // need to swap direction as field is rotated 180deg
+        _lastButtonClick = millis();
     }
 }
 
@@ -92,10 +92,10 @@ void Snake::ctrlRight(){
  * 
  */
 void Snake::ctrlLeft(){
-    if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
-        logger.logString("Snake: LEFT");
-        userDirection = DIRECTION_RIGHT; // need to swap direction as field is rotated 180deg
-        lastButtonClick = millis();
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameState == GAME_STATE_RUNNING) {
+        (*_logger).logString("Snake: LEFT");
+        _userDirection = DIRECTION_RIGHT; // need to swap direction as field is rotated 180deg
+        _lastButtonClick = millis();
     }
 }
 
@@ -105,7 +105,7 @@ void Snake::ctrlLeft(){
  */
 void Snake::resetLEDs()
 {
-    (*ledmatrix).gridFlush();
+    (*_ledmatrix).gridFlush();
 }
 
 /**
@@ -114,22 +114,22 @@ void Snake::resetLEDs()
  */
 void Snake::initGame()
 {
-    logger.logString("Snake: init");
+    (*_logger).logString("Snake: init");
     resetLEDs();
-    head.x = 0;
-    head.y = 0;
-    food.x = -1;
-    food.y = -1;
-    wormLength = MIN_TAIL_LENGTH;
-    userDirection = DIRECTION_LEFT;
-    lastButtonClick = millis();
+    _head.x = 0;
+    _head.y = 0;
+    _food.x = -1;
+    _food.y = -1;
+    _wormLength = MIN_TAIL_LENGTH;
+    _userDirection = DIRECTION_LEFT;
+    _lastButtonClick = millis();
 
     for(int i=0; i<MAX_TAIL_LENGTH; i++) {
-        tail[i].x = -1;
-        tail[i].y = -1;
+        _tail[i].x = -1;
+        _tail[i].y = -1;
     }
     updateFood();
-    gameState = GAME_STATE_RUNNING;
+    _gameState = GAME_STATE_RUNNING;
 }
 
 /**
@@ -138,28 +138,28 @@ void Snake::initGame()
  */
 void Snake::updateGame()
 {
-  if ((millis() - lastDrawUpdate) > GAME_DELAY) {
-    logger.logString("Snake: update game");
-    toggleLed(tail[wormLength-1].x, tail[wormLength-1].y, LED_TYPE_OFF);
-    switch(userDirection) {
+  if ((millis() - _lastDrawUpdate) > GAME_DELAY) {
+    (*_logger).logString("Snake: update game");
+    toggleLed(_tail[_wormLength-1].x, _tail[_wormLength-1].y, LED_TYPE_OFF);
+    switch(_userDirection) {
       case DIRECTION_RIGHT:
-        if (head.x > 0) {
-          head.x--;
+        if (_head.x > 0) {
+          _head.x--;
         }
         break;
       case DIRECTION_LEFT:
-        if (head.x < X_MAX-1) {
-          head.x++;
+        if (_head.x < X_MAX-1) {
+          _head.x++;
         }
         break;
       case DIRECTION_DOWN:
-        if (head.y > 0) {
-          head.y--;
+        if (_head.y > 0) {
+          _head.y--;
         }
         break;
       case DIRECTION_UP:
-        if (head.y < Y_MAX-1) {
-          head.y++;
+        if (_head.y < Y_MAX-1) {
+          _head.y++;
         }
         break;
     }
@@ -171,49 +171,49 @@ void Snake::updateGame()
 
     updateTail();
 
-    if (head.x == food.x && head.y == food.y) {
-      if (wormLength < MAX_TAIL_LENGTH) {
-        wormLength++;
+    if (_head.x == _food.x && _head.y == _food.y) {
+      if (_wormLength < MAX_TAIL_LENGTH) {
+        _wormLength++;
       }
       updateFood();
     }
 
-    lastDrawUpdate = millis();
+    _lastDrawUpdate = millis();
   }
 }
 
 /**
- * @brief Game over, draw head red
+ * @brief Game over, draw _head red
  * 
  */
 void Snake::endGame()
 {
-  gameState = GAME_STATE_END;
-  toggleLed(head.x, head.y, LED_TYPE_BLOOD);
+  _gameState = GAME_STATE_END;
+  toggleLed(_head.x, _head.y, LED_TYPE_BLOOD);
 }
 
 /**
- * @brief Update tail led positions
+ * @brief Update _tail led positions
  * 
  */
 void Snake::updateTail()
 {
-  for(int i=wormLength-1; i>0; i--) {
-    tail[i].x = tail[i-1].x;
-    tail[i].y = tail[i-1].y;
+  for(int i=_wormLength-1; i>0; i--) {
+    _tail[i].x = _tail[i-1].x;
+    _tail[i].y = _tail[i-1].y;
   }
-  tail[0].x = head.x;
-  tail[0].y = head.y;
+  _tail[0].x = _head.x;
+  _tail[0].y = _head.y;
 
-  for(int i=0; i<wormLength; i++) {
-    if (tail[i].x > -1) {
-      toggleLed(tail[i].x, tail[i].y, LED_TYPE_SNAKE);
+  for(int i=0; i<_wormLength; i++) {
+    if (_tail[i].x > -1) {
+      toggleLed(_tail[i].x, _tail[i].y, LED_TYPE_SNAKE);
     }
   }
 }
 
 /**
- * @brief Update food position (generate new one if found)
+ * @brief Update _food position (generate new one if found)
  * 
  */
 void Snake::updateFood()
@@ -221,15 +221,15 @@ void Snake::updateFood()
   bool found = true;
   do {
     found = true;
-    food.x = random(0, X_MAX);
-    food.y = random(0, Y_MAX);
-    for(int i=0; i<wormLength; i++) {
-      if (tail[i].x == food.x && tail[i].y == food.y) {
+    _food.x = random(0, X_MAX);
+    _food.y = random(0, Y_MAX);
+    for(int i=0; i<_wormLength; i++) {
+      if (_tail[i].x == _food.x && _tail[i].y == _food.y) {
          found = false;
       }
     }
   } while(found == false);
-  toggleLed(food.x, food.y, LED_TYPE_FOOD);
+  toggleLed(_food.x, _food.y, LED_TYPE_FOOD);
 }
 
 /**
@@ -240,14 +240,14 @@ void Snake::updateFood()
  */
 bool Snake::isCollision()
 {
-  if (head.x < 0 || head.x >= X_MAX) {
+  if (_head.x < 0 || _head.x >= X_MAX) {
     return true;
   }
-  if (head.y < 0 || head.y >= Y_MAX) {
+  if (_head.y < 0 || _head.y >= Y_MAX) {
     return true;
   }
-  for(int i=1; i<wormLength; i++) {
-    if (tail[i].x == head.x && tail[i].y == head.y) {
+  for(int i=1; i<_wormLength; i++) {
+    if (_tail[i].x == _head.x && _tail[i].y == _head.y) {
        return true;
     }
   }
@@ -280,5 +280,5 @@ void Snake::toggleLed(uint8_t x, uint8_t y, uint8_t type)
       break;
   }
 
-  (*ledmatrix).gridAddPixel(x, y, color);
+  (*_ledmatrix).gridAddPixel(x, y, color);
 }

@@ -60,17 +60,16 @@ class Snake{
         void ctrlRight();
         
     private:
-        LEDMatrix *ledmatrix;
-        UDPLogger logger;
-        uint8_t incomingByte = 0;
-        uint8_t userDirection;
-        uint8_t gameState;
-        Coords head;
-        Coords tail[MAX_TAIL_LENGTH];
-        Coords food;
-        unsigned long lastDrawUpdate = 0;
-        unsigned long lastButtonClick;
-        unsigned int wormLength = 0;
+        LEDMatrix *_ledmatrix;
+        UDPLogger *_logger;
+        uint8_t _userDirection;
+        uint8_t _gameState;
+        Coords _head;
+        Coords _tail[MAX_TAIL_LENGTH];
+        Coords _food;
+        unsigned long _lastDrawUpdate = 0;
+        unsigned long _lastButtonClick;
+        unsigned int _wormLength = 0;
 
         void resetLEDs();
         void updateGame();
