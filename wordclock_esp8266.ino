@@ -12,6 +12,7 @@
  * - Adafruit NeoPixel strandtest.ino, https://github.com/adafruit/Adafruit_NeoPixel/blob/master/examples/strandtest/strandtest.ino
  * - Esp8266 und Esp32 webserver https://fipsok.de/
  * - https://github.com/pmerlin/PMR-LED-Table/blob/master/tetrisGame.ino
+ * - https://randomnerdtutorials.com/wifimanager-with-esp8266-autoconnect-custom-parameter-and-manage-your-ssid-and-password/ 
  * 
  */
 
@@ -27,6 +28,7 @@
 #include <ESP8266WebServer.h>
 #include <Base64_.h>                    // https://github.com/Xander-Electronics/Base64
 #include <DNSServer.h>
+#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 #include "udplogger.h"
 #include "ntp_client_plus.h"
 #include "ledmatrix.h"
@@ -105,7 +107,7 @@ IPAddress Gateway_AccessPoint(192,168,10,0);
 IPAddress Subnetmask_AccessPoint(255,255,255,0);
 
 // hostname
-String hostname = "wordclock";
+const String hostname = "wordclock";
 
 // URL DNS server
 const char WebserverURL[] = "www.wordclock.local";
@@ -186,6 +188,42 @@ void setup() {
   // setup Matrix LED functions
   ledmatrix.setupMatrix();
 
+  // Turn off minutes leds
+  ledmatrix.setMinIndicator(15, colors24bit[6]);
+  ledmatrix.drawOnMatrixInstant();
+
+
+  /** Use WiFiMaanger for handling initial Wifi setup **/
+
+  // Local intialization. Once its business is done, there is no need to keep it around
+  WiFiManager wifiManager;
+
+  // Uncomment and run it once, if you want to erase all the stored information
+  //wifiManager.resetSettings();
+
+  // set custom ip for portal
+  //wifiManager.setAPStaticIPConfig(IPAdress_AccessPoint, Gateway_AccessPoint, Subnetmask_AccessPoint);
+
+  // fetches ssid and pass from eeprom and tries to connect
+  // if it does not connect it starts an access point with the specified name
+  // here "wordclockAP"
+  // and goes into a blocking loop awaiting configuration
+  wifiManager.autoConnect(AP_SSID);
+
+  // if you get here you have connected to the WiFi
+  Serial.println("Connected.");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP()); 
+
+  // Turn off minutes leds
+  ledmatrix.setMinIndicator(15, 0);
+  ledmatrix.drawOnMatrixInstant();
+
+   
+  
+  /** (alternative) Use directly STA/AP Mode of ESP8266   **/
+  
+  /* 
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(WIFI_SSID);
@@ -233,7 +271,7 @@ void setup() {
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(myIP);
-  }
+  }*/
 
   // init ESP8266 File manager
   spiffs();
@@ -247,10 +285,16 @@ void setup() {
   //server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
   server.begin();
   
+  // create UDP Logger to send logging messages via UDP multicast
   logger = UDPLogger(WiFi.localIP(), logMulticastIP, logMulticastPort);
-  logger.setName(WiFi.localIP().toString());
+  logger.setName("Wordclock 2.0");
   logger.logString("Start program\n");
-  logger.logString("Sketchname: "+ String(__FILE__) +"; Build: " + String(__TIMESTAMP__) + "");
+  delay(10);
+  logger.logString("Sketchname: "+ String(__FILE__));
+  delay(10);
+  logger.logString("Build: " + String(__TIMESTAMP__));
+  delay(10);
+  logger.logString("IP: " + WiFi.localIP().toString());
 
   for(int r = 0; r < HEIGHT; r++){
     for(int c = 0; c < WIDTH; c++){
