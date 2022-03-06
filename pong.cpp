@@ -264,6 +264,13 @@ void Pong::resetLEDs()
     (*_ledmatrix).gridFlush();
 }
 
+/**
+ * @brief Turn on LED on matrix
+ * 
+ * @param x x position of led
+ * @param y y position of led
+ * @param type type of pixel {PADDLE, BALL_RED, BALL, OFF}
+ */
 void Pong::toggleLed(uint8_t x, uint8_t y, uint8_t type)
 {
     uint32_t color;
