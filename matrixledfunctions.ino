@@ -1,12 +1,13 @@
 const int8_t dx[] = {1, -1, 0, 0};
 const int8_t dy[] = {0, 0, -1, 1};
 
-//! Function to draw a spiral step (from center)
-/*! 
- * \param init marks if call is the initial step of the spiral
- * \param empty marks if the spiral should 'draw' empty leds
- * \param size the size of the spiral in leds
- * \returns 1 if end is reached, else 0
+/**
+ * @brief Function to draw a spiral step (from center)
+ * 
+ * @param init marks if call is the initial step of the spiral
+ * @param empty marks if the spiral should 'draw' empty leds
+ * @param size the size of the spiral in leds
+ * @return int - 1 if end is reached, else 0
  */
 int spiral(bool init, bool empty, uint8_t size){
   static direction dir1;   // current direction
@@ -68,7 +69,15 @@ int spiral(bool init, bool empty, uint8_t size){
   return 0;
 }
 
-
+/**
+ * @brief Run random snake animation
+ * 
+ * @param init marks if call is the initial step of the animation
+ * @param len length of the snake
+ * @param color color of the snake
+ * @param numSteps number of animation steps
+ * @return int - 1 when animation is finished, else 0
+ */
 int randomsnake(bool init, const uint8_t len, const uint32_t color, int numSteps){
   static direction dir1;
   static int snake1[2][10];
@@ -144,11 +153,12 @@ int randomsnake(bool init, const uint8_t len, const uint32_t color, int numSteps
   return 0;
 }
 
-//! calc the next direction for led movement (snake and spiral)
-/*!
- * \param dir direction of the current led movement
- * \param d action to be executed
- * \returns next direction
+/**
+ * @brief Calc the next direction for led movement (snake and spiral)
+ * 
+ * @param dir direction of the current led movement
+ * @param d action to be executed
+ * @return direction - next direction
  */
 direction nextDir(direction dir, int d){
   // d = 0 -> continue straight on
@@ -182,7 +192,7 @@ direction nextDir(direction dir, int d){
 }
 
 /**
- * @brief show the time as digits on the wordclock
+ * @brief Show the time as digits on the wordclock
  * 
  * @param hours hours of time to display
  * @param minutes minutes of time to display
@@ -204,7 +214,7 @@ void showDigitalClock(uint8_t hours, uint8_t minutes, uint32_t color){
  * @brief Run random tetris animation
  * 
  * @param init marks if call is the initial step of the animation
- * @return int 1 when animation is finished, else 0
+ * @return int - 1 when animation is finished, else 0
  */
 int randomtetris(bool init){
   // total number of blocks which can be displayed
