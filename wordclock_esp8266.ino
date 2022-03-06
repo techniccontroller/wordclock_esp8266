@@ -48,6 +48,8 @@
 #define PERIOD_HEARTBEAT 1000
 #define PERIOD_ANIMATION 200
 #define PERIOD_TETRIS 50
+#define PERIOD_SNAKE 50
+#define PERIOD_PONG 50
 #define TIMEOUT_LEDDIRECT 5000
 #define PERIOD_STATECHANGE 10000
 #define PERIOD_NTPUPDATE 30000
@@ -72,12 +74,19 @@ enum direction {right, left, up, down};
 #define NUM_STATES 6
 enum ClockState {st_clock, st_diclock, st_spiral, st_tetris, st_snake, st_pingpong};
 const String stateNames[] = {"Clock", "DiClock", "Sprial", "Tetris", "Snake", "PingPong"};
-const uint16_t PERIODS[NUM_STATES] = {PERIOD_TIMEVISUUPDATE, 
-                                      PERIOD_TIMEVISUUPDATE, 
-                                      PERIOD_ANIMATION,
-                                      PERIOD_TETRIS, 
-                                      PERIOD_ANIMATION,  
-                                      PERIOD_ANIMATION};
+// PERIODS for each state (different for stateAutoChange or Manual mode)
+const uint16_t PERIODS[2][NUM_STATES] = { { PERIOD_TIMEVISUUPDATE, // stateAutoChange = 0
+                                            PERIOD_TIMEVISUUPDATE, 
+                                            PERIOD_ANIMATION,
+                                            PERIOD_TETRIS, 
+                                            PERIOD_SNAKE,  
+                                            PERIOD_PONG},
+                                          { PERIOD_TIMEVISUUPDATE, // stateAutoChange = 1
+                                            PERIOD_TIMEVISUUPDATE, 
+                                            PERIOD_ANIMATION,
+                                            PERIOD_ANIMATION, 
+                                            PERIOD_ANIMATION,  
+                                            PERIOD_ANIMATION}};
 
 // ports
 const unsigned int localPort = 2390;
@@ -105,7 +114,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, HEIGHT+1, NEOPIXELPIN,
   NEO_GRB            + NEO_KHZ800);
 
 
-// seven predefined colors24bit (black, red, yellow, purple, orange, green, blue) 
+// seven predefined colors24bit (green, red, yellow, purple, orange, lightgreen, blue) 
 const uint32_t colors24bit[NUM_COLORS] = {
   LEDMatrix::Color24bit(0, 255, 0),
   LEDMatrix::Color24bit(255, 0, 0),
@@ -310,7 +319,7 @@ void loop() {
     lastheartbeat = millis();
   }
   int res = 0;
-  if(!nightMode && (millis() - lastStep > PERIODS[currentState]) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
+  if(!nightMode && (millis() - lastStep > PERIODS[stateAutoChange][currentState]) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     switch(currentState){
       // state clock
       case st_clock:
@@ -443,7 +452,7 @@ void entryAction(uint8_t state){
       spiral(true, sprialDir, WIDTH-6);
       break;
     case st_tetris:
-      filterFactor = 1.0;
+      filterFactor = 1.0; // no smoothing
       if(stateAutoChange){
         randomtetris(true);
       }
@@ -452,11 +461,11 @@ void entryAction(uint8_t state){
       }
       break;
     case st_snake:
-      filterFactor = 1.0;
       if(stateAutoChange){
         randomsnake(true, 8, colors24bit[1], -1);
       }
       else{
+        filterFactor = 1.0; // no smoothing
         mysnake.initGame();
       }
       break;
