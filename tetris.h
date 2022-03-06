@@ -52,36 +52,33 @@
 #define WIDTH 11
 #define HEIGHT 11
 
-// Playing field
-struct Field {
-  uint8_t pix[WIDTH][HEIGHT + 1]; //Make field one larger so that collision detection with bottom of field can be done in a uniform way
-  uint32_t color[WIDTH][HEIGHT];
-};
-
-
-//Structure to represent active brick on screen
-struct Brick {
-  boolean enabled;//Brick is disabled when it has landed
-  int xpos, ypos;
-  int yOffset;//Y-offset to use when placing brick at top of field
-  uint8_t siz;
-  uint8_t pix[MAX_BRICK_SIZE][MAX_BRICK_SIZE];
-
-  uint32_t col;
-};
-
-//Struct to contain the different choices of blocks
-struct AbstractBrick {
-  int yOffset;//Y-offset to use when placing brick at top of field
-  uint8_t siz;
-  uint8_t pix[MAX_BRICK_SIZE][MAX_BRICK_SIZE];
-  uint32_t col;
-};
-
-
-/////////////////////////////////////
-
 class Tetris{
+
+    // Playing field
+    struct Field {
+        uint8_t pix[WIDTH][HEIGHT + 1]; //Make field one larger so that collision detection with bottom of field can be done in a uniform way
+        uint32_t color[WIDTH][HEIGHT];
+    };
+
+
+    //Structure to represent active brick on screen
+    struct Brick {
+        boolean enabled;//Brick is disabled when it has landed
+        int xpos, ypos;
+        int yOffset;//Y-offset to use when placing brick at top of field
+        uint8_t siz;
+        uint8_t pix[MAX_BRICK_SIZE][MAX_BRICK_SIZE];
+
+        uint32_t col;
+    };
+
+    //Struct to contain the different choices of blocks
+    struct AbstractBrick {
+        int yOffset;//Y-offset to use when placing brick at top of field
+        uint8_t siz;
+        uint8_t pix[MAX_BRICK_SIZE][MAX_BRICK_SIZE];
+        uint32_t col;
+    };
 
     public:
         Tetris();
