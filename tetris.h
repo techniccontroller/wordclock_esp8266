@@ -114,34 +114,33 @@ class Tetris{
         void showscore();
 
 
-        LEDMatrix *ledmatrix;
-        UDPLogger *logger;
-        Brick activeBrick;
-        Field field;
+        LEDMatrix *_ledmatrix;
+        UDPLogger *_logger;
+        Brick _activeBrick;
+        Field _field;
 
-        long lastButtonClick = 0;
-        long lastButtonClickr = 0;
-        int score = 0;
-        int gameStatet = GAME_STATE_INITt;
-        uint16_t brickSpeed;
-        unsigned long nbRowsThisLevel;
-        unsigned long nbRowsTotal;
+        long _lastButtonClick = 0;
+        long _lastButtonClickr = 0;
+        int _score = 0;
+        int _gameStatet = GAME_STATE_INITt;
+        uint16_t _brickSpeed;
+        unsigned long _nbRowsThisLevel;
+        unsigned long _nbRowsTotal;
 
-        boolean tetrisGameOver;
+        bool _tetrisGameOver;
 
-        unsigned long prevUpdateTime = 0;
-        unsigned long curTime;
+        unsigned long _prevUpdateTime = 0;
 
-        long tetrisshowscore;
-        long droptime = 0;
-        int speedtetris = 80;
-        bool allowdrop;
+        long _tetrisshowscore;
+        long _droptime = 0;
+        int _speedtetris = 80;
+        bool _allowdrop;
         
         // color library
-        uint32_t colorLib[10] = {RED, GREEN, BLUE, YELLOW, CHOCOLATE, PURPLE, WHITE, AQUA, HOTPINK, DARKORANGE};
+        uint32_t _colorLib[10] = {RED, GREEN, BLUE, YELLOW, CHOCOLATE, PURPLE, WHITE, AQUA, HOTPINK, DARKORANGE};
 
         // Brick "library"
-        AbstractBrick brickLib[7] = {
+        AbstractBrick _brickLib[7] = {
             {
                 1,//yoffset when adding brick to field
                 4,

@@ -18,13 +18,13 @@ Tetris::Tetris(){
 /**
  * @brief Construct a new Tetris:: Tetris object
  * 
- * @param myledmatrix pointer to ledmatrix object, need to provide gridAddPixel(x, y, col), drawOnMatrix(), gridFlush() and printNumber(x,y,n,col)
+ * @param myledmatrix pointer to LEDMatrix object, need to provide gridAddPixel(x, y, col), drawOnMatrix(), gridFlush() and printNumber(x,y,n,col)
  * @param mylogger pointer to UDPLogger object, need to provide a function logString(message)
  */
 Tetris::Tetris(LEDMatrix *myledmatrix, UDPLogger *mylogger){
-    logger = mylogger;
-    ledmatrix = myledmatrix;
-    gameStatet = GAME_STATE_READYt;
+    _logger = mylogger;
+    _ledmatrix = myledmatrix;
+    _gameStatet = GAME_STATE_READYt;
 }
 
 /**
@@ -32,7 +32,7 @@ Tetris::Tetris(LEDMatrix *myledmatrix, UDPLogger *mylogger){
  * 
  */
 void Tetris::loopCycle(){
-    switch (gameStatet) {
+    switch (_gameStatet) {
         case GAME_STATE_READYt:
 
             break;
@@ -42,30 +42,30 @@ void Tetris::loopCycle(){
             break;
         case GAME_STATE_RUNNINGt:
             //If brick is still "on the loose", then move it down by one
-            if (activeBrick.enabled) {
+            if (_activeBrick.enabled) {
                 // move faster down when allow drop
-                if (allowdrop) {
-                    if (millis() > droptime + 50) {
-                        droptime = millis();
+                if (_allowdrop) {
+                    if (millis() > _droptime + 50) {
+                        _droptime = millis();
                         shiftActiveBrick(DIR_DOWN);
                         printField();
                     }
                 }
 
                 // move down with regular speed
-                if ((millis() - prevUpdateTime) > (brickSpeed * speedtetris / 100)) {
-                        prevUpdateTime = millis();
+                if ((millis() - _prevUpdateTime) > (_brickSpeed * _speedtetris / 100)) {
+                        _prevUpdateTime = millis();
                         shiftActiveBrick(DIR_DOWN);
                         printField();
                 }
             }
             else {
-                allowdrop = false;
+                _allowdrop = false;
                 //Active brick has "crashed", check for full lines
                 //and create new brick at top of field
                 checkFullLines();
                 newActiveBrick();
-                prevUpdateTime = millis();//Reset update time to avoid brick dropping two spaces
+                _prevUpdateTime = millis();//Reset update time to avoid brick dropping two spaces
             }
             break;
         case GAME_STATE_PAUSEDt:
@@ -73,18 +73,18 @@ void Tetris::loopCycle(){
             break;
         case GAME_STATE_ENDt:
             // at game end show all bricks on field in red color for 1.5 seconds, then show score
-            if (tetrisGameOver == true) {
-                tetrisGameOver = false;
-                (*logger).logString("Tetris: end");
+            if (_tetrisGameOver == true) {
+                _tetrisGameOver = false;
+                (*_logger).logString("Tetris: end");
                 everythingRed();
-                tetrisshowscore = millis();
+                _tetrisshowscore = millis();
             }
 
-            if (millis() > (tetrisshowscore + RED_END_TIME)) {
+            if (millis() > (_tetrisshowscore + RED_END_TIME)) {
                 resetLEDs();
-                score = nbRowsTotal;
+                _score = _nbRowsTotal;
                 showscore();
-                gameStatet = GAME_STATE_READYt;
+                _gameStatet = GAME_STATE_READYt;
             }
             break;
     }
@@ -95,10 +95,10 @@ void Tetris::loopCycle(){
  * 
  */
 void Tetris::ctrlStart() {
-    if (millis() > lastButtonClick + DEBOUNCE_TIME)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME)
     {
-        lastButtonClick = millis();
-        gameStatet = GAME_STATE_INITt;
+        _lastButtonClick = millis();
+        _gameStatet = GAME_STATE_INITt;
     }
 }
 
@@ -107,18 +107,18 @@ void Tetris::ctrlStart() {
  * 
  */
 void Tetris::ctrlPlayPause() {
-    if (millis() > lastButtonClick + DEBOUNCE_TIME)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME)
     {
-        lastButtonClick = millis();
-        if (gameStatet == GAME_STATE_PAUSEDt) {
-            (*logger).logString("Tetris: continue");
+        _lastButtonClick = millis();
+        if (_gameStatet == GAME_STATE_PAUSEDt) {
+            (*_logger).logString("Tetris: continue");
 
-            gameStatet = GAME_STATE_RUNNINGt;
+            _gameStatet = GAME_STATE_RUNNINGt;
 
-        } else if (gameStatet == GAME_STATE_RUNNINGt) {
-            (*logger).logString("Tetris: pause");
+        } else if (_gameStatet == GAME_STATE_RUNNINGt) {
+            (*_logger).logString("Tetris: pause");
 
-            gameStatet = GAME_STATE_PAUSEDt;
+            _gameStatet = GAME_STATE_PAUSEDt;
         }
     }
 }
@@ -128,9 +128,9 @@ void Tetris::ctrlPlayPause() {
  * 
  */
 void Tetris::ctrlRight() {
-    if (millis() > lastButtonClick + DEBOUNCE_TIME && gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameStatet == GAME_STATE_RUNNINGt)
     {
-        lastButtonClick = millis();
+        _lastButtonClick = millis();
         shiftActiveBrick(DIR_RIGHT);
         printField();
     }
@@ -141,9 +141,9 @@ void Tetris::ctrlRight() {
  * 
  */
 void Tetris::ctrlLeft() {
-    if (millis() > lastButtonClick + DEBOUNCE_TIME && gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameStatet == GAME_STATE_RUNNINGt)
     {
-        lastButtonClick = millis();
+        _lastButtonClick = millis();
         shiftActiveBrick(DIR_LEFT);
         printField();
     }
@@ -154,9 +154,9 @@ void Tetris::ctrlLeft() {
  * 
  */
 void Tetris::ctrlUp() {
-    if (millis() > lastButtonClick + DEBOUNCE_TIME && gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameStatet == GAME_STATE_RUNNINGt)
     {
-        lastButtonClick = millis();
+        _lastButtonClick = millis();
         rotateActiveBrick();
         printField();
     }
@@ -168,10 +168,10 @@ void Tetris::ctrlUp() {
  */
 void Tetris::ctrlDown() {
     // longer debounce time, to prevent immediate drop
-    if (millis() > lastButtonClickr + DEBOUNCE_TIME*5 && gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClickr + DEBOUNCE_TIME*5 && _gameStatet == GAME_STATE_RUNNINGt)
     {
-        allowdrop = true;
-        lastButtonClickr = millis();
+        _allowdrop = true;
+        _lastButtonClickr = millis();
     }
 }
 
@@ -181,8 +181,8 @@ void Tetris::ctrlDown() {
  * @param i new speed value
  */
 void Tetris::setSpeed(int32_t i) {
-    (*logger).logString("setSpeed: " + String(i));
-    speedtetris = -10 * i + 150;
+    (*_logger).logString("setSpeed: " + String(i));
+    _speedtetris = -10 * i + 150;
 }
 
 /**
@@ -191,8 +191,8 @@ void Tetris::setSpeed(int32_t i) {
  */
 void Tetris::resetLEDs()
 {
-    (*ledmatrix).gridFlush();
-    (*ledmatrix).drawOnMatrixInstant();
+    (*_ledmatrix).gridFlush();
+    (*_ledmatrix).drawOnMatrixInstant();
 }
 
 /**
@@ -200,18 +200,18 @@ void Tetris::resetLEDs()
  * 
  */
 void Tetris::tetrisInit() {
-    (*logger).logString("Tetris: init");
+    (*_logger).logString("Tetris: init");
     
     clearField();
-    brickSpeed = INIT_SPEED;
-    nbRowsThisLevel = 0;
-    nbRowsTotal = 0;
-    tetrisGameOver = false;
+    _brickSpeed = INIT_SPEED;
+    _nbRowsThisLevel = 0;
+    _nbRowsTotal = 0;
+    _tetrisGameOver = false;
 
     newActiveBrick();
-    prevUpdateTime = millis();
+    _prevUpdateTime = millis();
 
-    gameStatet = GAME_STATE_RUNNINGt;
+    _gameStatet = GAME_STATE_RUNNINGt;
 }
 
 /**
@@ -223,23 +223,23 @@ void Tetris::printField() {
     for (x = 0; x < WIDTH; x++) {
         for (y = 0; y < HEIGHT; y++) {
             uint8_t activeBrickPix = 0;
-            if (activeBrick.enabled) { //Only draw brick if it is enabled
+            if (_activeBrick.enabled) { //Only draw brick if it is enabled
                 //Now check if brick is "in view"
-                if ((x >= activeBrick.xpos) && (x < (activeBrick.xpos + (activeBrick.siz)))
-                        && (y >= activeBrick.ypos) && (y < (activeBrick.ypos + (activeBrick.siz)))) {
-                    activeBrickPix = (activeBrick.pix)[x - activeBrick.xpos][y - activeBrick.ypos];
+                if ((x >= _activeBrick.xpos) && (x < (_activeBrick.xpos + (_activeBrick.siz)))
+                        && (y >= _activeBrick.ypos) && (y < (_activeBrick.ypos + (_activeBrick.siz)))) {
+                    activeBrickPix = (_activeBrick.pix)[x - _activeBrick.xpos][y - _activeBrick.ypos];
                 }
             }
-            if (field.pix[x][y] == 1) {
-                (*ledmatrix).gridAddPixel(x, y, field.color[x][y]);
+            if (_field.pix[x][y] == 1) {
+                (*_ledmatrix).gridAddPixel(x, y, _field.color[x][y]);
             } else if (activeBrickPix == 1) {
-                (*ledmatrix).gridAddPixel(x, y, activeBrick.col);
+                (*_ledmatrix).gridAddPixel(x, y, _activeBrick.col);
             } else {
-                (*ledmatrix).gridAddPixel(x, y, 0x000000);
+                (*_ledmatrix).gridAddPixel(x, y, 0x000000);
             }
         }
     }
-    (*ledmatrix).drawOnMatrixInstant();
+    (*_ledmatrix).drawOnMatrixInstant();
 }
 
 
@@ -262,30 +262,30 @@ void Tetris::newActiveBrick() {
     lastselectedBrick = selectedBrick;
 
     // every brick has its color, select corresponding color
-    uint32_t selectedCol = brickLib[selectedBrick].col;
+    uint32_t selectedCol = _brickLib[selectedBrick].col;
     // Set properties of brick
-    activeBrick.siz = brickLib[selectedBrick].siz;
-    activeBrick.yOffset = brickLib[selectedBrick].yOffset;
-    activeBrick.xpos = WIDTH / 2 - activeBrick.siz / 2;
-    activeBrick.ypos = BRICKOFFSET - activeBrick.yOffset;
-    activeBrick.enabled = true;
+    _activeBrick.siz = _brickLib[selectedBrick].siz;
+    _activeBrick.yOffset = _brickLib[selectedBrick].yOffset;
+    _activeBrick.xpos = WIDTH / 2 - _activeBrick.siz / 2;
+    _activeBrick.ypos = BRICKOFFSET - _activeBrick.yOffset;
+    _activeBrick.enabled = true;
 
     // Set color of brick
-    activeBrick.col = selectedCol;
-    // activeBrick.color = colorLib[1];
+    _activeBrick.col = selectedCol;
+    // _activeBrick.color = _colorLib[1];
 
     // Copy pix array of selected Brick
     uint8_t x, y;
     for (y = 0; y < MAX_BRICK_SIZE; y++) {
         for (x = 0; x < MAX_BRICK_SIZE; x++) {
-            activeBrick.pix[x][y] = (brickLib[selectedBrick]).pix[x][y];
+            _activeBrick.pix[x][y] = (_brickLib[selectedBrick]).pix[x][y];
         }
     }
 
     // Check collision, if already, then game is over
-    if (checkFieldCollision(&activeBrick)) {
-        tetrisGameOver = true;
-        gameStatet = GAME_STATE_ENDt;
+    if (checkFieldCollision(&_activeBrick)) {
+        _tetrisGameOver = true;
+        _gameStatet = GAME_STATE_ENDt;
 
     }
 }
@@ -304,7 +304,7 @@ boolean Tetris::checkFieldCollision(struct Brick * brick) {
             fx = (*brick).xpos + bx;
             fy = (*brick).ypos + by;
             if (( (*brick).pix[bx][by] == 1)
-                    && ( field.pix[fx][fy] == 1)) {
+                    && ( _field.pix[fx][fy] == 1)) {
                 return true;
             }
         }
@@ -346,25 +346,25 @@ void Tetris::rotateActiveBrick() {
     Brick tmpBrick;
     for (y = 0; y < MAX_BRICK_SIZE; y++) {
         for (x = 0; x < MAX_BRICK_SIZE; x++) {
-            tmpBrick.pix[x][y] = activeBrick.pix[x][y];
+            tmpBrick.pix[x][y] = _activeBrick.pix[x][y];
         }
     }
-    tmpBrick.xpos = activeBrick.xpos;
-    tmpBrick.ypos = activeBrick.ypos;
-    tmpBrick.siz = activeBrick.siz;
+    tmpBrick.xpos = _activeBrick.xpos;
+    tmpBrick.ypos = _activeBrick.ypos;
+    tmpBrick.siz = _activeBrick.siz;
 
     //Depending on size of the active brick, we will rotate differently
-    if (activeBrick.siz == 3) {
+    if (_activeBrick.siz == 3) {
         //Perform rotation around center pix
-        tmpBrick.pix[0][0] = activeBrick.pix[0][2];
-        tmpBrick.pix[0][1] = activeBrick.pix[1][2];
-        tmpBrick.pix[0][2] = activeBrick.pix[2][2];
-        tmpBrick.pix[1][0] = activeBrick.pix[0][1];
-        tmpBrick.pix[1][1] = activeBrick.pix[1][1];
-        tmpBrick.pix[1][2] = activeBrick.pix[2][1];
-        tmpBrick.pix[2][0] = activeBrick.pix[0][0];
-        tmpBrick.pix[2][1] = activeBrick.pix[1][0];
-        tmpBrick.pix[2][2] = activeBrick.pix[2][0];
+        tmpBrick.pix[0][0] = _activeBrick.pix[0][2];
+        tmpBrick.pix[0][1] = _activeBrick.pix[1][2];
+        tmpBrick.pix[0][2] = _activeBrick.pix[2][2];
+        tmpBrick.pix[1][0] = _activeBrick.pix[0][1];
+        tmpBrick.pix[1][1] = _activeBrick.pix[1][1];
+        tmpBrick.pix[1][2] = _activeBrick.pix[2][1];
+        tmpBrick.pix[2][0] = _activeBrick.pix[0][0];
+        tmpBrick.pix[2][1] = _activeBrick.pix[1][0];
+        tmpBrick.pix[2][2] = _activeBrick.pix[2][0];
         //Keep other parts of temporary block clear
         tmpBrick.pix[0][3] = 0;
         tmpBrick.pix[1][3] = 0;
@@ -374,26 +374,26 @@ void Tetris::rotateActiveBrick() {
         tmpBrick.pix[3][1] = 0;
         tmpBrick.pix[3][0] = 0;
 
-    } else if (activeBrick.siz == 4) {
+    } else if (_activeBrick.siz == 4) {
         //Perform rotation around center "cross"
-        tmpBrick.pix[0][0] = activeBrick.pix[0][3];
-        tmpBrick.pix[0][1] = activeBrick.pix[1][3];
-        tmpBrick.pix[0][2] = activeBrick.pix[2][3];
-        tmpBrick.pix[0][3] = activeBrick.pix[3][3];
-        tmpBrick.pix[1][0] = activeBrick.pix[0][2];
-        tmpBrick.pix[1][1] = activeBrick.pix[1][2];
-        tmpBrick.pix[1][2] = activeBrick.pix[2][2];
-        tmpBrick.pix[1][3] = activeBrick.pix[3][2];
-        tmpBrick.pix[2][0] = activeBrick.pix[0][1];
-        tmpBrick.pix[2][1] = activeBrick.pix[1][1];
-        tmpBrick.pix[2][2] = activeBrick.pix[2][1];
-        tmpBrick.pix[2][3] = activeBrick.pix[3][1];
-        tmpBrick.pix[3][0] = activeBrick.pix[0][0];
-        tmpBrick.pix[3][1] = activeBrick.pix[1][0];
-        tmpBrick.pix[3][2] = activeBrick.pix[2][0];
-        tmpBrick.pix[3][3] = activeBrick.pix[3][0];
+        tmpBrick.pix[0][0] = _activeBrick.pix[0][3];
+        tmpBrick.pix[0][1] = _activeBrick.pix[1][3];
+        tmpBrick.pix[0][2] = _activeBrick.pix[2][3];
+        tmpBrick.pix[0][3] = _activeBrick.pix[3][3];
+        tmpBrick.pix[1][0] = _activeBrick.pix[0][2];
+        tmpBrick.pix[1][1] = _activeBrick.pix[1][2];
+        tmpBrick.pix[1][2] = _activeBrick.pix[2][2];
+        tmpBrick.pix[1][3] = _activeBrick.pix[3][2];
+        tmpBrick.pix[2][0] = _activeBrick.pix[0][1];
+        tmpBrick.pix[2][1] = _activeBrick.pix[1][1];
+        tmpBrick.pix[2][2] = _activeBrick.pix[2][1];
+        tmpBrick.pix[2][3] = _activeBrick.pix[3][1];
+        tmpBrick.pix[3][0] = _activeBrick.pix[0][0];
+        tmpBrick.pix[3][1] = _activeBrick.pix[1][0];
+        tmpBrick.pix[3][2] = _activeBrick.pix[2][0];
+        tmpBrick.pix[3][3] = _activeBrick.pix[3][0];
     } else {
-        (*logger).logString("Tetris: Brick size error");
+        (*_logger).logString("Tetris: Brick size error");
     }
 
     // Now validate by checking collision.
@@ -405,7 +405,7 @@ void Tetris::rotateActiveBrick() {
         //Copy temporary brick pix array to active pix array
         for (y = 0; y < MAX_BRICK_SIZE; y++) {
             for (x = 0; x < MAX_BRICK_SIZE; x++) {
-                activeBrick.pix[x][y] = tmpBrick.pix[x][y];
+                _activeBrick.pix[x][y] = tmpBrick.pix[x][y];
             }
         }
     }
@@ -419,27 +419,27 @@ void Tetris::rotateActiveBrick() {
 void Tetris::shiftActiveBrick(int dir) {
     // Change position of active brick (no copy to temporary needed)
     if (dir == DIR_LEFT) {
-        activeBrick.xpos--;
+        _activeBrick.xpos--;
     } else if (dir == DIR_RIGHT) {
-        activeBrick.xpos++;
+        _activeBrick.xpos++;
     } else if (dir == DIR_DOWN) {
-        activeBrick.ypos++;
+        _activeBrick.ypos++;
     }
 
     // Check position of active brick
     // Two possibilities when collision is detected:
     //   - Direction was LEFT/RIGHT, just revert position back
     //   - Direction was DOWN, revert position and fix block to field on collision
-    // When no collision, keep activeBrick coordinates
-    if ((checkSidesCollision(&activeBrick)) || (checkFieldCollision(&activeBrick))) {
+    // When no collision, keep _activeBrick coordinates
+    if ((checkSidesCollision(&_activeBrick)) || (checkFieldCollision(&_activeBrick))) {
         if (dir == DIR_LEFT) {
-            activeBrick.xpos++;
+            _activeBrick.xpos++;
         } else if (dir == DIR_RIGHT) {
-            activeBrick.xpos--;
+            _activeBrick.xpos--;
         } else if (dir == DIR_DOWN) {
-            activeBrick.ypos--;// Go back up one
+            _activeBrick.ypos--;// Go back up one
             addActiveBrickToField();
-            activeBrick.enabled = false;// Disable brick, it is no longer moving
+            _activeBrick.enabled = false;// Disable brick, it is no longer moving
         }
     }
 }
@@ -453,13 +453,13 @@ void Tetris::addActiveBrickToField() {
     uint8_t fx, fy;
     for (by = 0; by < MAX_BRICK_SIZE; by++) {
         for (bx = 0; bx < MAX_BRICK_SIZE; bx++) {
-            fx = activeBrick.xpos + bx;
-            fy = activeBrick.ypos + by;
+            fx = _activeBrick.xpos + bx;
+            fy = _activeBrick.ypos + by;
 
-            if (fx >= 0 && fy >= 0 && fx < WIDTH && fy < HEIGHT && activeBrick.pix[bx][by]) { // Check if inside playing field
-                // field.pix[fx][fy] = field.pix[fx][fy] || activeBrick.pix[bx][by];
-                field.pix[fx][fy] = activeBrick.pix[bx][by];
-                field.color[fx][fy] = activeBrick.col;
+            if (fx >= 0 && fy >= 0 && fx < WIDTH && fy < HEIGHT && _activeBrick.pix[bx][by]) { // Check if inside playing field
+                // _field.pix[fx][fy] = _field.pix[fx][fy] || _activeBrick.pix[bx][by];
+                _field.pix[fx][fy] = _activeBrick.pix[bx][by];
+                _field.color[fx][fy] = _activeBrick.col;
             }
         }
     }
@@ -477,8 +477,8 @@ void Tetris::moveFieldDownOne(uint8_t startRow) {
     uint8_t x, y;
     for (y = startRow - 1; y > 0; y--) {
         for (x = 0; x < WIDTH; x++) {
-            field.pix[x][y + 1] = field.pix[x][y];
-            field.color[x][y + 1] = field.color[x][y];
+            _field.pix[x][y + 1] = _field.pix[x][y];
+            _field.color[x][y + 1] = _field.color[x][y];
         }
     }
 }
@@ -493,14 +493,14 @@ void Tetris::checkFullLines() {
     for (y = (HEIGHT - 1); y >= minY; y--) {
         uint8_t rowSum = 0;
         for (x = 0; x < WIDTH; x++) {
-            rowSum = rowSum + (field.pix[x][y]);
+            rowSum = rowSum + (_field.pix[x][y]);
         }
         if (rowSum >= WIDTH) {
             // Found full row, animate its removal
-            activeBrick.enabled = false;
+            _activeBrick.enabled = false;
 
             for (x = 0; x < WIDTH; x++) {
-                field.pix[x][y] = 0;
+                _field.pix[x][y] = 0;
                 printField();
                 delay(100);
             }
@@ -511,12 +511,12 @@ void Tetris::checkFullLines() {
             delay(100);
 
 
-            nbRowsThisLevel++; nbRowsTotal++;
-            if (nbRowsThisLevel >= LEVELUP) {
-                nbRowsThisLevel = 0;
-                brickSpeed = brickSpeed - SPEED_STEP;
-                if (brickSpeed < 200) {
-                    brickSpeed = 200;
+            _nbRowsThisLevel++; _nbRowsTotal++;
+            if (_nbRowsThisLevel >= LEVELUP) {
+                _nbRowsThisLevel = 0;
+                _brickSpeed = _brickSpeed - SPEED_STEP;
+                if (_brickSpeed < 200) {
+                    _brickSpeed = 200;
                 }
             }
         }
@@ -531,12 +531,12 @@ void Tetris::clearField() {
     uint8_t x, y;
     for (y = 0; y < HEIGHT; y++) {
         for (x = 0; x < WIDTH; x++) {
-            field.pix[x][y] = 0;
-            field.color[x][y] = 0;
+            _field.pix[x][y] = 0;
+            _field.color[x][y] = 0;
         }
     }
     for (x = 0; x < WIDTH; x++) { //This last row is invisible to the player and only used for the collision detection routine
-        field.pix[x][HEIGHT] = 1;
+        _field.pix[x][HEIGHT] = 1;
     }
 }
 
@@ -549,23 +549,23 @@ void Tetris::everythingRed() {
     for (x = 0; x < WIDTH; x++) {
         for (y = 0; y < HEIGHT; y++) {
             uint8_t activeBrickPix = 0;
-            if (activeBrick.enabled) { //Only draw brick if it is enabled
+            if (_activeBrick.enabled) { //Only draw brick if it is enabled
                 //Now check if brick is "in view"
-                if ((x >= activeBrick.xpos) && (x < (activeBrick.xpos + (activeBrick.siz)))
-                        && (y >= activeBrick.ypos) && (y < (activeBrick.ypos + (activeBrick.siz)))) {
-                    activeBrickPix = (activeBrick.pix)[x - activeBrick.xpos][y - activeBrick.ypos];
+                if ((x >= _activeBrick.xpos) && (x < (_activeBrick.xpos + (_activeBrick.siz)))
+                        && (y >= _activeBrick.ypos) && (y < (_activeBrick.ypos + (_activeBrick.siz)))) {
+                    activeBrickPix = (_activeBrick.pix)[x - _activeBrick.xpos][y - _activeBrick.ypos];
                 }
             }
-            if (field.pix[x][y] == 1) {
-                (*ledmatrix).gridAddPixel(x, y, RED);
+            if (_field.pix[x][y] == 1) {
+                (*_ledmatrix).gridAddPixel(x, y, RED);
             } else if (activeBrickPix == 1) {
-                (*ledmatrix).gridAddPixel(x, y, RED);
+                (*_ledmatrix).gridAddPixel(x, y, RED);
             } else {
-                (*ledmatrix).gridAddPixel(x, y, 0x000000);
+                (*_ledmatrix).gridAddPixel(x, y, 0x000000);
             }
         }
     }
-    (*ledmatrix).drawOnMatrixInstant();
+    (*_ledmatrix).drawOnMatrixInstant();
 }
 
 /**
@@ -574,12 +574,12 @@ void Tetris::everythingRed() {
  */
 void Tetris::showscore() {
     uint32_t color = LEDMatrix::Color24bit(255, 170, 0);
-    (*ledmatrix).gridFlush();
-    if(score > 9){
-        (*ledmatrix).printNumber(2, 3, score/10, color);
-        (*ledmatrix).printNumber(6, 3, score%10, color);
+    (*_ledmatrix).gridFlush();
+    if(_score > 9){
+        (*_ledmatrix).printNumber(2, 3, _score/10, color);
+        (*_ledmatrix).printNumber(6, 3, _score%10, color);
     }else{
-        (*ledmatrix).printNumber(4, 3, score, color);
+        (*_ledmatrix).printNumber(4, 3, _score, color);
     }
-    (*ledmatrix).drawOnMatrixInstant();
+    (*_ledmatrix).drawOnMatrixInstant();
 }
