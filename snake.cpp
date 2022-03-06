@@ -1,15 +1,41 @@
+/**
+ * @file snake.cpp
+ * @author techniccontroller (mail[at]techniccontroller.com)
+ * @brief Class implementation of snake game
+ * @version 0.1
+ * @date 2022-03-05
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ * main code from https://elektro.turanis.de/html/prj099/index.html
+ * 
+ */
 #include "snake.h"
 
+/**
+ * @brief Construct a new Snake:: Snake object
+ * 
+ */
 Snake::Snake(){
 
 }
 
+/**
+ * @brief Construct a new Snake:: Snake object
+ * 
+ * @param myledmatrix pointer to ledmatrix object, need to provide gridAddPixel(x, y, col), gridFlush()
+ * @param mylogger pointer to UDPLogger object, need to provide a function logString(message)
+ */
 Snake::Snake(LEDMatrix *myledmatrix, UDPLogger *mylogger){
-    logger = *mylogger;
+    logger = mylogger;
     ledmatrix = myledmatrix;
     gameState = GAME_STATE_END;
 }
 
+/**
+ * @brief Run main loop for one cycle
+ * 
+ */
 void Snake::loopCycle()
 {
   switch(gameState)
@@ -25,6 +51,10 @@ void Snake::loopCycle()
   }
 }
 
+/**
+ * @brief Trigger control: UP
+ * 
+ */
 void Snake::ctrlUp(){
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
         logger.logString("Snake: UP");
@@ -33,6 +63,10 @@ void Snake::ctrlUp(){
     }
 }
 
+/**
+ * @brief Trigger control: DOWN
+ * 
+ */
 void Snake::ctrlDown(){
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
         logger.logString("Snake: DOWN");
@@ -41,6 +75,10 @@ void Snake::ctrlDown(){
     }
 }
 
+/**
+ * @brief Trigger control: RIGHT
+ * 
+ */
 void Snake::ctrlRight(){
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
         logger.logString("Snake: RIGHT");
@@ -49,6 +87,10 @@ void Snake::ctrlRight(){
     }
 }
 
+/**
+ * @brief Trigger control: LEFT
+ * 
+ */
 void Snake::ctrlLeft(){
     if (millis() > lastButtonClick + DEBOUNCE_TIME && gameState == GAME_STATE_RUNNING) {
         logger.logString("Snake: LEFT");
@@ -64,9 +106,12 @@ void Snake::ctrlLeft(){
 void Snake::resetLEDs()
 {
     (*ledmatrix).gridFlush();
-    (*ledmatrix).drawOnMatrixInstant();
 }
 
+/**
+ * @brief Initialize a new game
+ * 
+ */
 void Snake::initGame()
 {
     logger.logString("Snake: init");
@@ -87,6 +132,10 @@ void Snake::initGame()
     gameState = GAME_STATE_RUNNING;
 }
 
+/**
+ * @brief Update game representation
+ * 
+ */
 void Snake::updateGame()
 {
   if ((millis() - lastDrawUpdate) > GAME_DELAY) {
@@ -130,17 +179,23 @@ void Snake::updateGame()
     }
 
     lastDrawUpdate = millis();
-    (*ledmatrix).drawOnMatrixInstant();
   }
 }
 
+/**
+ * @brief Game over, draw head red
+ * 
+ */
 void Snake::endGame()
 {
   gameState = GAME_STATE_END;
   toggleLed(head.x, head.y, LED_TYPE_BLOOD);
-  (*ledmatrix).drawOnMatrixInstant();
 }
 
+/**
+ * @brief Update tail led positions
+ * 
+ */
 void Snake::updateTail()
 {
   for(int i=wormLength-1; i>0; i--) {
@@ -157,6 +212,10 @@ void Snake::updateTail()
   }
 }
 
+/**
+ * @brief Update food position (generate new one if found)
+ * 
+ */
 void Snake::updateFood()
 {
   bool found = true;
@@ -173,6 +232,12 @@ void Snake::updateFood()
   toggleLed(food.x, food.y, LED_TYPE_FOOD);
 }
 
+/**
+ * @brief Check for collisison between snake and border or itself
+ * 
+ * @return true 
+ * @return false 
+ */
 bool Snake::isCollision()
 {
   if (head.x < 0 || head.x >= X_MAX) {
@@ -189,6 +254,13 @@ bool Snake::isCollision()
   return false;
 }
 
+/**
+ * @brief Turn on LED on matrix
+ * 
+ * @param x x position of led
+ * @param y y position of led
+ * @param type type of pixel {SNAKE, OFF, FOOD, BLOOD}
+ */
 void Snake::toggleLed(uint8_t x, uint8_t y, uint8_t type)
 {
   uint32_t color;

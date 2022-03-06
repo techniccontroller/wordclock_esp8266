@@ -1,7 +1,7 @@
 /**
  * @file snake.h
  * @author techniccontroller (mail[at]techniccontroller.com)
- * @brief Class definition of Snake game
+ * @brief Class declaration of snake game
  * @version 0.1
  * @date 2022-03-05
  * 
