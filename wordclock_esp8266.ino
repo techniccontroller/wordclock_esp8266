@@ -150,7 +150,7 @@ long lastStep = millis();           // time of last animation step
 long lastLEDdirect = 0;             // time of last direct LED command (=> fall back to normal mode after timeout)
 long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis();      // time of last NTP update
-long lastAnimationStep = millis();       // time of last Matrix update
+long lastAnimationStep = millis();  // time of last Matrix update
 long buttonPressStart = 0;
 bool lastButtonState = false;
 UDPLogger logger;

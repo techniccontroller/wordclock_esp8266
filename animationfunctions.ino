@@ -328,16 +328,6 @@ int randomtetris(bool init){
           if(blockshapes[randShape][r][c1]) screen[r][c2] = counterID;
         }
       }
-
-
-      for(int r = 0; r < (HEIGHT+3); r++){ // rows
-        String row = "";
-        for(int c = 0; c < WIDTH; c++){ // columns
-          row += String(screen[r][c]) + ",";
-        }
-        logger.logString(row);
-        delay(5);
-      }
     }
     else{
       uint8_t tempscreen[HEIGHT+3][WIDTH] = {0};
