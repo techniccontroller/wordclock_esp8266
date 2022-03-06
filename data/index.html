@@ -17,6 +17,34 @@
 			"Helvetica Neue", 
 			sans-serif;
 		color: white;
+		background: linear-gradient(90deg, #ffa9a9, #64a1e0, #ffa9a9, #64a1e0);
+		background-size: 400% 400%;
+		-webkit-animation: gradientBG 14s ease infinite forwards;
+		animation: gradientBG 14s ease infinite forwards;
+	}
+	/** Animated background: Code By Webdevtrick ( https://webdevtrick.com ) **/
+	@-webkit-keyframes gradientBG {
+		0% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
+		100% {
+			background-position: 0% 50%;
+		}
+	}
+	
+	@keyframes gradientBG {
+		0% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
+		100% {
+			background-position: 0% 50%;
+		}
 	}
 	
 	h1 {
@@ -39,11 +67,11 @@
 	  border-bottom-left-radius:14px;
 	  border-bottom-right-radius:14px;
 	  display: flex;
-      align-items: center;
-      justify-content: center;
-	  -moz-user-select: none; 
-	  -webkit-user-select: none; 
-	  -ms-user-select:none; 
+	  align-items: center;
+	  justify-content: center;
+	  -moz-user-select: none;
+	  -webkit-user-select: none;
+	  -ms-user-select:none;
 	  user-select:none;
 	  -o-user-select:none;
 	}
@@ -60,7 +88,6 @@
 	  grid-row-gap: 5px;
 	  grid-template-columns: auto auto auto;
 	  padding: 10px;
-	  /* width: 170px; */
 	}
 
 	.grid-item {
@@ -87,7 +114,7 @@
 	}
 
 	.mode-item{
-		background: rgb(59, 57, 57);
+		background: rgba(59, 57, 57, 0.308);
 	}
 
 	.mode-item:hover{
@@ -116,8 +143,8 @@
 		display: inline-block;
 		position: relative;
 		margin: 0;
-		border: 2px solid #474755;
-		background: linear-gradient(180deg, #2D2F39 0%, #1F2027 100%);
+		border: 2px solid #474755ab;
+		background: linear-gradient(180deg, #2d2f39ab 0%, #1f2027ab 100%);
 		transition: all .2s ease;
 	}
 
@@ -175,39 +202,39 @@
 		justify-content: center;
 	}
 
-	.snake-button-top{
-		width: 40%; 
-		height: 100px;  
-		margin: 5px;
-		background-color: #93939e;
-	}
-
-	.snake-button-bottom{
+	.wide-button-bottom{
 		width: 80%; 
 		height: 40px; 
 		margin: 10px; 
 		padding: 5px;
-		background-color: #93939e;
+		background-color: rgba(147, 147, 158, 0.4);
 	}
 
-	.tetris-button-top{
+	.arrow-button{
 		width: 70px; 
 		height: 70px;
-		background-color: #93939e;
+		background-color: rgba(147, 147, 158, 0.4);
 	}
 
 	.tetris-button-bottom{
 		width: 105px; 
 		height: 40px; 
 		margin: 5px;
-		background-color: #93939e;
+		background-color: rgba(147, 147, 158, 0.4);
+	}
+
+	img{
+		-moz-user-select: none;
+		-webkit-user-select: none;	
+		user-select: none;
 	}
   
 	</style>
 	<title>WORDCLOCK 2.0</title>
+	<link rel="icon" type="image/svg" href="./icons/clock.svg">
 	</head>
 
-	<body>
+	<body oncontextmenu="return false"> <!-- prevent opening of contextmenu --> 
 		<h1 id="headline">WORDCLOCK 2.0</h1>
 		
 
@@ -272,22 +299,22 @@
 			<div class="control-container">
 				<div class="grid-container">
 					<div class="grid-item" style="grid-column: 2; grid-row: 1;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?snake=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
+						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?snake=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
 					</div>
 					
 					<div class="grid-item" style="grid-column: 1; grid-row: 2;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?snake=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
+						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?snake=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
 					</div>
 					<div class="grid-item" style="grid-column: 2; grid-row: 2;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?snake=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
+						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?snake=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
 					</div>
 					<div class="grid-item" style="grid-column: 3; grid-row: 2;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?snake=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
+						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?snake=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
 					</div>
 				</div>
 			</div>
 			<div class="control-container">
-				<div class="buttonClass snake-button-bottom" onclick="sendCommand('./cmd?snake=new')" unselectable="on"><img src = "./icons/refresh.svg" style="height:30px"/></div>
+				<div class="buttonClass wide-button-bottom" onclick="sendCommand('./cmd?snake=new')" unselectable="on"><img src = "./icons/refresh.svg" style="height:30px"/></div>
 			</div>
 		</div>
 
@@ -301,23 +328,47 @@
 			<div class="control-container">
 				<div class="grid-container">
 					<div class="grid-item" style="grid-column: 2; grid-row: 1;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
+						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?tetris=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
 					</div>
 					
 					<div class="grid-item" style="grid-column: 1; grid-row: 2;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
+						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?tetris=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
 					</div>
 					<div class="grid-item" style="grid-column: 2; grid-row: 2;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
+						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?tetris=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
 					</div>
 					<div class="grid-item" style="grid-column: 3; grid-row: 2;">
-						<div class="buttonClass tetris-button-top" onclick="sendCommand('./cmd?tetris=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
+						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?tetris=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
 					</div>
 				</div>
 			</div>
 			<div class="control-container">
 				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=play')" unselectable="on"><img src = "./icons/refresh.svg" style="height:20px"/></div>
 				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=pause')" unselectable="on"><img src = "./icons/playpause.svg" style="height:20px"/></div>
+			</div>
+		</div>
+
+		<div class="main-container hidden" id="pongcontainer">
+			<div class="verticalline">
+			</div>
+			<div class="headline">
+				PONG
+			</div>
+			<div class="control-container">
+				<div class="grid-container">
+
+					<div class="grid-item" style="grid-column: 1; grid-row: 1;">
+						<div class="buttonClass arrow-button" style="width: 140px" onclick="sendCommand('./cmd?pong=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
+					</div>
+
+					<div class="grid-item" style="grid-column: 1; grid-row: 2;">
+						<div class="buttonClass arrow-button" style="width: 140px" onclick="sendCommand('./cmd?pong=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
+					</div>
+
+				</div>
+			</div>
+			<div class="control-container">
+				<div class="buttonClass wide-button-bottom" onclick="sendCommand('./cmd?pong=new')" unselectable="on"><img src = "./icons/refresh.svg" style="height:30px"/></div>
 			</div>
 		</div>
 		
@@ -416,7 +467,7 @@
 							document.getElementById("snakecontainer").classList.remove("hidden");
 							break;
 						case 5: // pingping
-							document.getElementById("colorcontainer").classList.remove("hidden");
+							document.getElementById("pongcontainer").classList.remove("hidden");
 							break;
 
 					}

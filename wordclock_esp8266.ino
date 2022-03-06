@@ -31,6 +31,7 @@
 #include "ledmatrix.h"
 #include "tetris.h"
 #include "snake.h"
+#include "pong.h"
 
 
 // ----------------------------------------------------------------------------------
@@ -49,7 +50,7 @@
 #define PERIOD_ANIMATION 200
 #define PERIOD_TETRIS 50
 #define PERIOD_SNAKE 50
-#define PERIOD_PONG 50
+#define PERIOD_PONG 10
 #define TIMEOUT_LEDDIRECT 5000
 #define PERIOD_STATECHANGE 10000
 #define PERIOD_NTPUPDATE 30000
@@ -86,7 +87,7 @@ const uint16_t PERIODS[2][NUM_STATES] = { { PERIOD_TIMEVISUUPDATE, // stateAutoC
                                             PERIOD_ANIMATION,
                                             PERIOD_ANIMATION, 
                                             PERIOD_ANIMATION,  
-                                            PERIOD_ANIMATION}};
+                                            PERIOD_PONG}};
 
 // ports
 const unsigned int localPort = 2390;
@@ -144,6 +145,7 @@ float filterFactor = 0.5;
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
 Tetris mytetris = Tetris(&ledmatrix, &logger);
 Snake mysnake = Snake(&ledmatrix, &logger);
+Pong mypong = Pong(&ledmatrix, &logger);
 
 bool stateAutoChange = false;
 bool nightMode = false;
@@ -386,7 +388,7 @@ void loop() {
       // state pingpong
       case st_pingpong:
         {
-
+          mypong.loopCycle();
         }
         break;
     }    
@@ -467,6 +469,15 @@ void entryAction(uint8_t state){
       else{
         filterFactor = 1.0; // no smoothing
         mysnake.initGame();
+      }
+      break;
+    case st_pingpong:
+      if(stateAutoChange){
+        mypong.initGame(2);
+      }
+      else{
+        filterFactor = 1.0; // no smoothing
+        mypong.initGame(1);
       }
       break;
   }
@@ -683,6 +694,19 @@ void handleCommand() {
     }
     else if(cmdstr == "new"){
       mysnake.initGame();
+    }
+  }
+  else if(server.argName(0) == "pong"){
+    String cmdstr = server.arg(0);
+    logger.logString("Pong cmd via Webserver to: " + cmdstr);
+    if(cmdstr == "up"){
+      mypong.ctrlUp(1);
+    }
+    else if(cmdstr == "down"){
+      mypong.ctrlDown(1);
+    }
+    else if(cmdstr == "new"){
+      mypong.initGame(1);
     }
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
