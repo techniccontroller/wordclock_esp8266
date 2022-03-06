@@ -22,7 +22,7 @@ Tetris::Tetris(){
  * @param mylogger pointer to UDPLogger object, need to provide a function logString(message)
  */
 Tetris::Tetris(LEDMatrix *myledmatrix, UDPLogger *mylogger){
-    logger = *mylogger;
+    logger = mylogger;
     ledmatrix = myledmatrix;
     gameStatet = GAME_STATE_READYt;
 }
@@ -75,7 +75,7 @@ void Tetris::loopCycle(){
             // at game end show all bricks on field in red color for 1.5 seconds, then show score
             if (tetrisGameOver == true) {
                 tetrisGameOver = false;
-                logger.logString("Tetris: end");
+                (*logger).logString("Tetris: end");
                 everythingRed();
                 tetrisshowscore = millis();
             }
@@ -111,12 +111,12 @@ void Tetris::ctrlPlayPause() {
     {
         lastButtonClick = millis();
         if (gameStatet == GAME_STATE_PAUSEDt) {
-            logger.logString("Tetris: continue");
+            (*logger).logString("Tetris: continue");
 
             gameStatet = GAME_STATE_RUNNINGt;
 
         } else if (gameStatet == GAME_STATE_RUNNINGt) {
-            logger.logString("Tetris: pause");
+            (*logger).logString("Tetris: pause");
 
             gameStatet = GAME_STATE_PAUSEDt;
         }
@@ -181,7 +181,7 @@ void Tetris::ctrlDown() {
  * @param i new speed value
  */
 void Tetris::setSpeed(int32_t i) {
-    logger.logString("setSpeed: " + String(i));
+    (*logger).logString("setSpeed: " + String(i));
     speedtetris = -10 * i + 150;
 }
 
@@ -200,7 +200,7 @@ void Tetris::resetLEDs()
  * 
  */
 void Tetris::tetrisInit() {
-    logger.logString("Tetris: init");
+    (*logger).logString("Tetris: init");
     
     clearField();
     brickSpeed = INIT_SPEED;
@@ -393,7 +393,7 @@ void Tetris::rotateActiveBrick() {
         tmpBrick.pix[3][2] = activeBrick.pix[2][0];
         tmpBrick.pix[3][3] = activeBrick.pix[3][0];
     } else {
-        logger.logString("Tetris: Brick size error");
+        (*logger).logString("Tetris: Brick size error");
     }
 
     // Now validate by checking collision.

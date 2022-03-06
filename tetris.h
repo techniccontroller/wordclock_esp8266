@@ -115,7 +115,7 @@ class Tetris{
 
 
         LEDMatrix *ledmatrix;
-        UDPLogger logger;
+        UDPLogger *logger;
         Brick activeBrick;
         Field field;
 
