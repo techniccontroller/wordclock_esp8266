@@ -23,7 +23,7 @@ Pong::Pong(){
 /**
  * @brief Construct a new Pong:: Pong object
  * 
- * @param myledmatrix pointer to ledmatrix object, need to provide gridAddPixel(x, y, col), gridFlush()
+ * @param myledmatrix pointer to LEDMatrix object, need to provide gridAddPixel(x, y, col), gridFlush()
  * @param mylogger pointer to UDPLogger object, need to provide a function logString(message)
  */
 Pong::Pong(LEDMatrix *myledmatrix, UDPLogger *mylogger){

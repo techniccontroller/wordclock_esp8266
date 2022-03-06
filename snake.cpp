@@ -23,7 +23,7 @@ Snake::Snake(){
 /**
  * @brief Construct a new Snake:: Snake object
  * 
- * @param myledmatrix pointer to _ledmatrix object, need to provide gridAddPixel(x, y, col), gridFlush()
+ * @param myledmatrix pointer to LEDMatrix object, need to provide gridAddPixel(x, y, col), gridFlush()
  * @param mylogger pointer to UDPLogger object, need to provide a function logString(message)
  */
 Snake::Snake(LEDMatrix *myledmatrix, UDPLogger *mylogger){
