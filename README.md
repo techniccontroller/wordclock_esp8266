@@ -1,4 +1,4 @@
-# Wordclock 2.0 (wordclock_esp8266)
+# Wordclock 2.0
 
 Wordclock 2.0 with ESP8266 and NTP time
 
