@@ -75,6 +75,8 @@
 #define SHORTPRESS 100
 #define LONGPRESS 2000
 
+#define CURRENT_LIMIT_LED 2500 // limit the total current sonsumed by LEDs (mA)
+
 // number of colors in colors array
 #define NUM_COLORS 7
 
@@ -208,6 +210,7 @@ void setup() {
 
   // setup Matrix LED functions
   ledmatrix.setupMatrix();
+  ledmatrix.setCurrentLimit(CURRENT_LIMIT_LED);
 
   // Turn on minutes leds (blue)
   ledmatrix.setMinIndicator(15, colors24bit[6]);

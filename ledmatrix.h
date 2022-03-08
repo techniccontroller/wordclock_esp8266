@@ -11,6 +11,8 @@
 // height of the led matrix
 #define HEIGHT 11
 
+#define DEFAULT_CURRENT_LIMIT 9999
+
 class LEDMatrix{
     public:
         LEDMatrix(Adafruit_NeoMatrix *mymatrix, uint8_t mybrightness, UDPLogger *mylogger);
@@ -27,13 +29,15 @@ class LEDMatrix{
         void printNumber(uint8_t xpos, uint8_t ypos, uint8_t number, uint32_t color);
         void printChar(uint8_t xpos, uint8_t ypos, char character, uint32_t color);
         void setBrightness(uint8_t mybrightness);
+        void setCurrentLimit(uint16_t mycurrentLimit);
 
     private:
 
         Adafruit_NeoMatrix *neomatrix;
-        UDPLogger logger;
+        UDPLogger *logger;
 
         uint8_t brightness;
+        uint16_t currentLimit;
 
         // target representation of matrix as 2D array
         uint32_t targetgrid[HEIGHT][WIDTH] = {{0,0,0,0,0,0,0,0,0,0,0},
@@ -68,6 +72,7 @@ class LEDMatrix{
         uint32_t currentindicators[4] = {0, 0, 0, 0};
 
         void drawOnMatrix(float factor);
+        uint16_t calcEstimatedLEDCurrent(uint32_t color);
 
 
 };

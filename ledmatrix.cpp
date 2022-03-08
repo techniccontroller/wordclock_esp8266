@@ -4,7 +4,8 @@
 LEDMatrix::LEDMatrix(Adafruit_NeoMatrix *mymatrix, uint8_t mybrightness, UDPLogger *mylogger){
     neomatrix = mymatrix;
     brightness = mybrightness;
-    logger = *mylogger;
+    logger = mylogger;
+    currentLimit = DEFAULT_CURRENT_LIMIT;
 }
 
 /**
@@ -131,7 +132,7 @@ void LEDMatrix::gridAddPixel(uint8_t x, uint8_t y, uint32_t color)
     targetgrid[y][x] = color;
   }
   else{
-    logger.logString("Index out of Range: " + String(x) + ", " + String(y));
+    //logger->logString("Index out of Range: " + String(x) + ", " + String(y));
   }
 }
 
@@ -177,12 +178,14 @@ void LEDMatrix::drawOnMatrixSmooth(float factor){
  * @param factor factor between 0 and 1 (1.0 = hard, 0.1 = smooth)
  */
 void LEDMatrix::drawOnMatrix(float factor){
+  uint16_t totalCurrent = 0;
   for(int s = 0; s < WIDTH; s++){
     for(int z = 0; z < HEIGHT; z++){
       // inplement momentum as smooth transistion function
       uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], factor);
       (*neomatrix).drawPixel(s, z, color24to16bit(filteredColor)); 
       currentgrid[z][s] = filteredColor;
+      totalCurrent += calcEstimatedLEDCurrent(filteredColor);
     } 
   }
 
@@ -190,6 +193,14 @@ void LEDMatrix::drawOnMatrix(float factor){
     uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], factor);
     (*neomatrix).drawPixel(WIDTH - (1+i), HEIGHT, color24to16bit(filteredColor));
     currentindicators[i] = filteredColor;
+    totalCurrent += calcEstimatedLEDCurrent(filteredColor);
+  }
+
+  // Check if totalCurrent reaches CURRENTLIMIT -> if yes reduce brightness
+  if(totalCurrent > currentLimit){
+    uint8_t newBrightness = brightness * float(currentLimit)/float(totalCurrent);
+    //logger->logString("CurrentLimit reached!!!: " + String(totalCurrent) + ", new: " + String(newBrightness));
+    (*neomatrix).setBrightness(newBrightness);
   }
   (*neomatrix).show();
 }
@@ -248,4 +259,38 @@ void LEDMatrix::printChar(uint8_t xpos, uint8_t ypos, char character, uint32_t c
 void LEDMatrix::setBrightness(uint8_t mybrightness){
   brightness = mybrightness;
   (*neomatrix).setBrightness(brightness);
+}
+
+/**
+ * @brief Calc estimated current for one pixel with the given color and brightness
+ * 
+ * @param color 
+ * @return uint16_t 
+ */
+uint16_t LEDMatrix::calcEstimatedLEDCurrent(uint32_t color){
+  uint8_t red = color >> 16 & 0xff;
+  uint8_t green = color >> 8 & 0xff;
+  uint8_t blue = color & 0xff;
+  
+  uint32_t estimatedCurrent = 0;
+
+  // Linear estimation: 20mA for full brightness per LED
+  estimatedCurrent += 20 * red;
+  estimatedCurrent += 20 * green;
+  estimatedCurrent += 20 * blue;
+
+  estimatedCurrent /= 255;
+  estimatedCurrent = (estimatedCurrent * brightness)/255;
+
+  // +1 => every LED consumes 1mA in IDLE
+  return estimatedCurrent;
+}
+
+/**
+ * @brief Set the current limit
+ * 
+ * @param mycurrentLimit 
+ */
+void LEDMatrix::setCurrentLimit(uint16_t mycurrentLimit){
+  currentLimit = mycurrentLimit;
 }
