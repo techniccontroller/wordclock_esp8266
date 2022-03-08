@@ -4,12 +4,16 @@ Wordclock 2.0 with ESP8266 and NTP time
 
 **Features:**
 - 6 modes (Clock, Digital Clock, SPIRAL animation, TETRIS, SNAKE, PONG)
+- time update via NTP server
+- automatic summer/wintertime change
 - easy WIFI setup with WifiManager
-- configurable night mode
+- configurable color
+- configurable night mode (start and end time)
+- configurable brightness
 - automatic mode change
-- webserver interface for control
+- webserver interface for configuration and control
 - physical button to change mode or enable night mode without webserver
-- automatic current limiting of LEDs 
+- automatic current limiting of LEDs
 
 ## Pictures of clock
 ![modes_images2](https://user-images.githubusercontent.com/36072504/156947689-dd90874d-a887-4254-bede-4947152d85c1.png)
