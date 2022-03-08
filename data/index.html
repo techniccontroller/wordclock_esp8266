@@ -21,6 +21,7 @@
 		background-size: 400% 400%;
 		-webkit-animation: gradientBG 14s ease infinite forwards;
 		animation: gradientBG 14s ease infinite forwards;
+		font-weight: lighter;
 	}
 	/** Animated background: Code By Webdevtrick ( https://webdevtrick.com ) **/
 	@-webkit-keyframes gradientBG {
@@ -48,11 +49,12 @@
 	}
 	
 	h1 {
-	  font-weight: normal;
+	  font-weight: lighter;
 	  letter-spacing: .125rem;
 	  text-transform: uppercase;
 	  color: white;
 	  text-align: center;
+	  font-size: x-large;
 	}
 	
 	.buttonClass {
@@ -265,7 +267,7 @@
 	</head>
 
 	<body oncontextmenu="return false"> <!-- prevent opening of contextmenu --> 
-		<div class="setting-button" onclick="toggleSettings()"><img src = "./icons/settings.svg" style="height:30px"/></div>
+		<div class="setting-button" onclick="toggleSettings()"><img src = "./icons/settings.svg" style="height:20px"/></div>
 		
 		<h1 id="headline">WORDCLOCK 2.0</h1>
 		
