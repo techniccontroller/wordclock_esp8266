@@ -61,7 +61,7 @@
 	  width:70px;
 	  height:70px;
 	  color:#fff;
-	  font-weight:bold;
+	  font-weight:200;
 	  border-top-left-radius:14px;
 	  border-top-right-radius:14px;
 	  border-bottom-left-radius:14px;
@@ -228,6 +228,36 @@
 		-webkit-user-select: none;	
 		user-select: none;
 	}
+
+	.setting-button{
+		position: absolute;
+		padding: 10px;
+	}
+
+	.settings-container{
+		height: 0px;
+		transition: height 1s;
+		overflow: hidden;
+	}
+
+	.show{
+		height: 150px;
+		transition: height 1s;
+	}
+
+	.number-container{
+		display:flex;
+		flex-direction: row;
+		justify-content: left;
+		align-items: center;
+		margin: 10px;
+	}
+
+	.save-button{
+		height: 30px; 
+		margin: 5px; 
+		background-color: rgba(147, 147, 158, 0.4);
+	}
   
 	</style>
 	<title>WORDCLOCK 2.0</title>
@@ -235,8 +265,25 @@
 	</head>
 
 	<body oncontextmenu="return false"> <!-- prevent opening of contextmenu --> 
+		<div class="setting-button" onclick="toggleSettings()"><img src = "./icons/settings.svg" style="height:30px"/></div>
+		
 		<h1 id="headline">WORDCLOCK 2.0</h1>
 		
+		<div id="settings-container" class="settings-container">
+			<div class="number-container">
+				<label for="brightness">Brightness:</label>
+				<input type="range" id="brightness" name="volume" min="10" max="255">
+			</div>
+			<div class="number-container">
+				<label for="nm_start" style="align-self: flex-start">Nightmode start time: </label> 
+				<input type="time" id="nm_start" name="nm_start" min="00:00" max="23:59">
+			</div>
+			<div class="number-container">
+				<label for="nm_end" style="align-self: flex-start">Nightmode end time: </label>
+				<input type="time" id="nm_end" name="nm_end" min="00:00" max="23:59">
+			</div>
+			<div class="buttonClass save-button" onclick="saveSettings()">SAVE</div>
+		</div>
 
 		<div class="verticalline">
 		</div>
@@ -425,6 +472,10 @@
 							sendCommand("./cmd?stateautochange=0");
 						}
 					});
+					
+					document.getElementById("nm_start").value = myVar.nightModeStart.replace("-", ":");
+					document.getElementById("nm_end").value = myVar.nightModeEnd.replace("-", ":");
+					document.getElementById("brightness").value = parseInt(myVar.brightness);
 
 					updateDisplay(parseInt(myVar.modeid));
 					console.log(myVar);
@@ -479,6 +530,31 @@
 				var xmlhttp = new XMLHttpRequest();
 				xmlhttp.open("GET", command, true);
 				xmlhttp.send();
+			}
+
+			function saveSettings(){
+				var nmStart = document.getElementById("nm_start");
+				var nmEnd = document.getElementById("nm_end");
+				var brightnessElmt = document.getElementById("brightness");
+				var cmdstr = "./cmd?setting=";
+				cmdstr += nmStart.value.replace(":", "-");
+				cmdstr += "-";
+				cmdstr += nmEnd.value.replace(":", "-");
+				cmdstr += "-";
+				cmdstr += brightnessElmt.value;
+				console.log(cmdstr);
+				sendCommand(cmdstr);
+				toggleSettings();
+			}
+
+			function toggleSettings(){
+				var container = document.getElementById("settings-container");
+				if(container.classList.contains("show")){
+					container.classList.remove("show");
+				}
+				else {
+					container.classList.add("show");
+				}
 			}
 			
 		</script>

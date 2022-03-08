@@ -239,3 +239,13 @@ void LEDMatrix::printChar(uint8_t xpos, uint8_t ypos, char character, uint32_t c
     }
   }
 }
+
+/**
+ * @brief Set Brightness
+ * 
+ * @param mybrightness 
+ */
+void LEDMatrix::setBrightness(uint8_t mybrightness){
+  brightness = mybrightness;
+  (*neomatrix).setBrightness(brightness);
+}

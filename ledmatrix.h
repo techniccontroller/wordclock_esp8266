@@ -26,6 +26,7 @@ class LEDMatrix{
         void drawOnMatrixSmooth(float factor);
         void printNumber(uint8_t xpos, uint8_t ypos, uint8_t number, uint32_t color);
         void printChar(uint8_t xpos, uint8_t ypos, char character, uint32_t color);
+        void setBrightness(uint8_t mybrightness);
 
     private:
 

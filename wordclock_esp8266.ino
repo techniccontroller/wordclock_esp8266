@@ -17,9 +17,9 @@
  */
 
 #include "secrets.h"
-#include <Adafruit_GFX.h>
-#include <Adafruit_NeoMatrix.h>
-#include <Adafruit_NeoPixel.h>          // NeoPixel library used to run the NeoPixel LEDs
+#include <Adafruit_GFX.h>               // https://github.com/adafruit/Adafruit-GFX-Library
+#include <Adafruit_NeoMatrix.h>         // https://github.com/adafruit/Adafruit_NeoMatrix
+#include <Adafruit_NeoPixel.h>          // NeoPixel library used to run the NeoPixel LEDs: https://github.com/adafruit/Adafruit_NeoPixel
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 //#include <WiFiClient.h>
@@ -28,7 +28,10 @@
 #include <ESP8266WebServer.h>
 #include <Base64_.h>                    // https://github.com/Xander-Electronics/Base64
 #include <DNSServer.h>
-#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
+#include <WiFiManager.h>                //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
+#include <EEPROM.h>                     //https://github.com/esp8266/Arduino/tree/master/libraries/EEPROM
+
+// own libraries
 #include "udplogger.h"
 #include "ntp_client_plus.h"
 #include "ledmatrix.h"
@@ -40,6 +43,14 @@
 // ----------------------------------------------------------------------------------
 //                                        CONSTANTS
 // ----------------------------------------------------------------------------------
+
+#define EEPROM_SIZE 20      // size of EEPROM to save persistent variables
+#define ADR_NM_START_H 0
+#define ADR_NM_END_H 4
+#define ADR_NM_START_M 8
+#define ADR_NM_END_M 12
+#define ADR_BRIGHTNESS 16
+
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
 #define NUMPIXELS 125       // number of pixels attached to Attiny85
@@ -59,6 +70,7 @@
 #define PERIOD_NTPUPDATE 30000
 #define PERIOD_TIMEVISUUPDATE 1000
 #define PERIOD_MATRIXUPDATE 100
+#define PERIOD_NIGHTMODECHECK 20000
 
 #define SHORTPRESS 100
 #define LONGPRESS 2000
@@ -151,6 +163,7 @@ long lastLEDdirect = 0;             // time of last direct LED command (=> fall 
 long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis();      // time of last NTP update
 long lastAnimationStep = millis();  // time of last Matrix update
+long lastNightmodeCheck = millis(); // time of last nightmode check
 long buttonPressStart = 0;
 bool lastButtonState = false;
 UDPLogger logger;
@@ -169,6 +182,11 @@ uint32_t maincolor_clock = colors24bit[2];
 uint32_t maincolor_snake = colors24bit[1];
 bool apmode = false;
 
+// nightmode settings
+int nightModeStartHour = -1;
+int nightModeStartMin = -1;
+int nightModeEndHour = -1;
+int nightModeEndMin = -1;
 
 // ----------------------------------------------------------------------------------
 //                                        SETUP
@@ -182,13 +200,16 @@ void setup() {
   Serial.printf("\nSketchname: %s\nBuild: %s\n", (__FILE__), (__TIMESTAMP__));
   Serial.println();
 
-  // button pin as input
+  //Init EEPROM
+  EEPROM.begin(EEPROM_SIZE);
+
+  // configure button pin as input
   pinMode(BUTTONPIN, INPUT);
 
   // setup Matrix LED functions
   ledmatrix.setupMatrix();
 
-  // Turn off minutes leds
+  // Turn on minutes leds (blue)
   ledmatrix.setMinIndicator(15, colors24bit[6]);
   ledmatrix.drawOnMatrixInstant();
 
@@ -358,14 +379,19 @@ void setup() {
     delay(1000);
   }*/
 
-  
-}
+  // Read nightmode setting from EEPROM
+  nightModeStartHour = readIntEEPROM(ADR_NM_START_H);
+  nightModeStartMin = readIntEEPROM(ADR_NM_START_M);
+  nightModeEndHour = readIntEEPROM(ADR_NM_END_H);
+  nightModeEndMin = readIntEEPROM(ADR_NM_END_M);
+  logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
+  logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
 
-void logColor(uint32_t color){
-  uint8_t resultRed = color >> 16 & 0xff;
-  uint8_t resultGreen = color >> 8 & 0xff;
-  uint8_t resultBlue = color & 0xff;
-  logger.logString(String(resultRed) + ", " + String(resultGreen) + ", " + String(resultBlue));
+  // Read brightness setting from EEPROM
+  brightness = readIntEEPROM(ADR_BRIGHTNESS);
+  logger.logString("Brightness: " + String(brightness));
+  ledmatrix.setBrightness(brightness);
+  
 }
 
 
@@ -380,18 +406,20 @@ void loop() {
   // handle Webserver
   server.handleClient();
 
+  // send regularly heartbeat messages via UDP multicast
   if(millis() - lastheartbeat > PERIOD_HEARTBEAT){
     logger.logString("Heartbeat, state: " + stateNames[currentState] + "\n");
     lastheartbeat = millis();
 
-    // Check wifi status (only of no apmode)
+    // Check wifi status (only if no apmode)
     if(!apmode && WiFi.status() != WL_CONNECTED){
       Serial.println("connection lost");
       ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
       ledmatrix.drawOnMatrixInstant();
     }
   }
-  int res = 0;
+
+  // handle mode behaviours (trigger loopCycles of different modes depending on current mode)
   if(!nightMode && (millis() - lastStep > PERIODS[stateAutoChange][currentState]) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     switch(currentState){
       // state clock
@@ -414,7 +442,7 @@ void loop() {
       // state spiral
       case st_spiral:
         {
-          res = spiral(false, sprialDir, WIDTH-6);
+          int res = spiral(false, sprialDir, WIDTH-6);
           if(res && sprialDir == 0){
             // change spiral direction to closing (draw empty leds)
             sprialDir = 1;
@@ -445,7 +473,7 @@ void loop() {
         {
           if(stateAutoChange){
             ledmatrix.gridFlush();
-            res = randomsnake(false, 8, maincolor_snake, -1);
+            int res = randomsnake(false, 8, maincolor_snake, -1);
             if(res){
               // init snake for next run
               randomsnake(true, 8, maincolor_snake, -1);
@@ -496,6 +524,21 @@ void loop() {
       Serial.println("NTP-Update not successful");
     }
     lastNTPUpdate = millis();
+  }
+
+  // check if nightmode need to be activated
+  if(millis() - lastNightmodeCheck > PERIOD_NIGHTMODECHECK){
+    int hours = ntp.getHours24();
+    int minutes = ntp.getMinutes();
+    
+    if(hours == nightModeStartHour && minutes == nightModeStartMin){
+      setNightmode(true);
+    }
+    else if(hours == nightModeEndHour && minutes == nightModeEndMin){
+      setNightmode(false);
+    }
+    
+    lastNightmodeCheck = millis();
   }
  
 }
@@ -714,6 +757,24 @@ void handleCommand() {
     if(modestr == "1") setNightmode(true);
     else setNightmode(false);
   }
+  else if(server.argName(0) == "setting"){
+    String timestr = server.arg(0) + "-";
+    logger.logString("Nightmode setting change via Webserver to: " + timestr);
+    nightModeStartHour = split(timestr, '-', 0).toInt();
+    nightModeStartMin = split(timestr, '-', 1).toInt();
+    nightModeEndHour = split(timestr, '-', 2).toInt();
+    nightModeEndMin = split(timestr, '-', 3).toInt();
+    brightness = split(timestr, '-', 4).toInt();
+    writeIntEEPROM(ADR_NM_START_H, nightModeStartHour);
+    writeIntEEPROM(ADR_NM_START_M, nightModeStartMin);
+    writeIntEEPROM(ADR_NM_END_H, nightModeEndHour);
+    writeIntEEPROM(ADR_NM_END_M, nightModeEndMin);
+    writeIntEEPROM(ADR_BRIGHTNESS, brightness);
+    logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
+    logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
+    logger.logString("Brightness: " + String(brightness));
+    ledmatrix.setBrightness(brightness);
+  }
   else if(server.argName(0) == "stateautochange"){
     String modestr = server.arg(0);
     logger.logString("stateAutoChange change via Webserver to: " + modestr);
@@ -813,6 +874,12 @@ void handleDataRequest() {
       message += "\"stateAutoChange\":\"" + String(stateAutoChange) + "\"";
       message += ",";
       message += "\"nightMode\":\"" + String(nightMode) + "\"";
+      message += ",";
+      message += "\"nightModeStart\":\"" + leadingZero2Digit(nightModeStartHour) + "-" + leadingZero2Digit(nightModeStartMin) + "\"";
+      message += ",";
+      message += "\"nightModeEnd\":\"" + leadingZero2Digit(nightModeEndHour) + "-" + leadingZero2Digit(nightModeEndMin) + "\"";
+      message += ",";
+      message += "\"brightness\":\"" + String(brightness) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
@@ -823,4 +890,25 @@ void setNightmode(bool on){
   ledmatrix.gridFlush();
   ledmatrix.drawOnMatrixInstant();
   nightMode = on;
+}
+
+
+void writeIntEEPROM(int address, int value){
+  EEPROM.put(address, value);
+  EEPROM.commit();
+}
+
+int readIntEEPROM(int address){
+  int value;
+  EEPROM.get(address, value);
+  return value;
+}
+
+String leadingZero2Digit(int value){
+  String msg = "";
+  if(value < 10){
+    msg = "0";
+  }
+  msg += String(value);
+  return msg;
 }
