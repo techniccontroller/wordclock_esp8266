@@ -17,7 +17,7 @@
 class NTPClientPlus{
 
     public:
-        NTPClientPlus(UDP &udp, const char* poolServerName, int utcx, bool swChange);
+        NTPClientPlus(UDP &udp, const char* poolServerName, int utcx, bool _swChange);
         void setupNTPClient();
         bool updateNTP();
         void end();
@@ -46,7 +46,7 @@ class NTPClientPlus{
         unsigned int  _port           = NTP_DEFAULT_LOCAL_PORT;
         long          _timeOffset     = 0;
         int           _utcx           = 0;
-        bool          swChange        = 1;
+        bool          _swChange        = 1;
 
         unsigned long _updateInterval = 60000;  // In ms
 

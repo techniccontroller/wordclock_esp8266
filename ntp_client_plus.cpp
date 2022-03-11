@@ -6,15 +6,15 @@
  * @param udp   UDP client
  * @param poolServerName    time server name
  * @param utcx  UTC offset (in 1h)
- * @param swChange should summer/winter time be considered
+ * @param _swChange should summer/winter time be considered
  */
-NTPClientPlus::NTPClientPlus(UDP &udp, const char *poolServerName, int utcx, bool swChange)
+NTPClientPlus::NTPClientPlus(UDP &udp, const char *poolServerName, int utcx, bool _swChange)
 {
     this->_udp = &udp;
     this->_utcx = utcx;
     this->_timeOffset = this->secondperhour * this->_utcx;
     this->_poolServerName = poolServerName;
-    this->swChange = swChange;
+    this->_swChange = _swChange;
 }
 
 /**
@@ -476,7 +476,6 @@ int NTPClientPlus::getMonth(int dayOfYear)
  * @brief (private) Send NTP Packet to NTP server
  * 
  */
-void NTPClientPlus::sendNTPPacket()
 {
     // set all bytes in the buffer to 0
     memset(this->_packetBuffer, 0, NTP_PACKET_SIZE);
@@ -532,7 +531,7 @@ void NTPClientPlus::updateSWChange()
     unsigned int dateDay = this->_dateDay; 
     unsigned dateMonth = this->_dateMonth;
     
-    if (this->swChange)
+    if (this->_swChange)
     {
         //Start: Set summer-/ winter time
 
