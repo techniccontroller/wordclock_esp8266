@@ -75,6 +75,8 @@
 
 #define CURRENT_LIMIT_LED 2500 // limit the total current sonsumed by LEDs (mA)
 
+#define DEFAULT_SMOOTHING_FACTOR 0.5
+
 // number of colors in colors array
 #define NUM_COLORS 7
 
@@ -164,23 +166,24 @@ long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis();      // time of last NTP update
 long lastAnimationStep = millis();  // time of last Matrix update
 long lastNightmodeCheck = millis(); // time of last nightmode check
-long buttonPressStart = 0;
-bool lastButtonState = false;
+long buttonPressStart = 0;          // time of push button press start 
+
+// Create necessary global objects
 UDPLogger logger;
-uint8_t currentState = st_clock;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
-float filterFactor = 0.5;
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
 Tetris mytetris = Tetris(&ledmatrix, &logger);
 Snake mysnake = Snake(&ledmatrix, &logger);
 Pong mypong = Pong(&ledmatrix, &logger);
 
-bool stateAutoChange = false;
-bool nightMode = false;
-uint32_t maincolor_clock = colors24bit[2];
-uint32_t maincolor_snake = colors24bit[1];
-bool apmode = false;
+float filterFactor = DEFAULT_SMOOTHING_FACTOR;// stores smoothing factor for led transition
+uint8_t currentState = st_clock;              // stores current state
+bool stateAutoChange = false;                 // stores state of automatic state change
+bool nightMode = false;                       // stores state of nightmode
+uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital clock
+uint32_t maincolor_snake = colors24bit[1];    // color of the random snake animation
+bool apmode = false;                          // stores if WiFi AP mode is active
 
 // nightmode settings
 int nightModeStartHour = -1;
@@ -669,6 +672,7 @@ void handleLEDDirect() {
  * 
  */
 void handleButton(){
+  static bool lastButtonState = false;
   bool buttonPressed = !digitalRead(BUTTONPIN);
   // check rising edge
   if(buttonPressed == true && lastButtonState == false){
