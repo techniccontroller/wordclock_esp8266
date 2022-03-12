@@ -22,8 +22,6 @@
 #include <Adafruit_NeoPixel.h>          // NeoPixel library used to run the NeoPixel LEDs: https://github.com/adafruit/Adafruit_NeoPixel
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
-//#include <WiFiClient.h>
-#include <ESP8266HTTPClient.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
 #include <Base64_.h>                    // https://github.com/Xander-Electronics/Base64
