@@ -17,6 +17,7 @@
  */
 
 #include "secrets.h"
+#include <LittleFS.h>
 #include <Adafruit_GFX.h>               // https://github.com/adafruit/Adafruit-GFX-Library
 #include <Adafruit_NeoMatrix.h>         // https://github.com/adafruit/Adafruit_NeoMatrix
 #include <Adafruit_NeoPixel.h>          // NeoPixel library used to run the NeoPixel LEDs: https://github.com/adafruit/Adafruit_NeoPixel
@@ -186,10 +187,10 @@ uint32_t maincolor_snake = colors24bit[1];    // color of the random snake anima
 bool apmode = false;                          // stores if WiFi AP mode is active
 
 // nightmode settings
-int nightModeStartHour = -1;
-int nightModeStartMin = -1;
-int nightModeEndHour = -1;
-int nightModeEndMin = -1;
+int nightModeStartHour = 22;
+int nightModeStartMin = 0;
+int nightModeEndHour = 7;
+int nightModeEndMin = 0;
 
 // ----------------------------------------------------------------------------------
 //                                        SETUP
@@ -298,8 +299,8 @@ void setup() {
     Serial.println(myIP);
   }*/
 
-  // init ESP8266 File manager
-  spiffs();
+  // init ESP8266 File manager (LittleFS)
+  setupFS();
 
   // setup OTA
   setupOTA();
