@@ -1,7 +1,12 @@
 
 const String clockStringGerman =  "ESPISTAFUNFVIERTELZEHNZWANZIGUVORTECHNICNACHHALBMELFUNFXCONTROLLEREINSEAWZWEIDREITUMVIERSECHSQYACHTSIEBENZWOLFZEHNEUNJUHR";
 
-
+/**
+ * @brief control the four minute indicator LEDs
+ * 
+ * @param minutes minutes to be displayed [0 ... 59]
+ * @param color 24bit color value
+ */
 void drawMinuteIndicator(uint8_t minutes, uint32_t color){
   //separate LEDs for minutes in an additional row
   {
@@ -29,6 +34,13 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
   }
 }
 
+/**
+ * @brief Draw the given sentence to the word clock
+ * 
+ * @param message sentence to be displayed
+ * @param color 24bit color value
+ * @return int: 0 if successful, -1 if sentence not possible to display
+ */
 int showStringOnClock(String message, uint32_t color){
     int messageStart = 0;
     String word = "";
@@ -77,8 +89,13 @@ int showStringOnClock(String message, uint32_t color){
     return 0;
 }
 
-
-// Converts the given time as sentence (String)
+/**
+ * @brief Converts the given time as sentence (String)
+ * 
+ * @param hours hours of the time value
+ * @param minutes minutes of the time value
+ * @return String time as sentence
+ */
 String timeToString(uint8_t hours,uint8_t minutes){
   Serial.println(hours);
   Serial.println(minutes);
