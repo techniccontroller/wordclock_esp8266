@@ -1,6 +1,13 @@
 #include "ledmatrix.h"
 #include "own_font.h"
 
+/**
+ * @brief Construct a new LEDMatrix::LEDMatrix object
+ * 
+ * @param mymatrix pointer to Adafruit_NeoMatrix object
+ * @param mybrightness the initial brightness of the leds
+ * @param mylogger pointer to the UDPLogger object
+ */
 LEDMatrix::LEDMatrix(Adafruit_NeoMatrix *mymatrix, uint8_t mybrightness, UDPLogger *mylogger){
     neomatrix = mymatrix;
     brightness = mybrightness;
@@ -9,7 +16,7 @@ LEDMatrix::LEDMatrix(Adafruit_NeoMatrix *mymatrix, uint8_t mybrightness, UDPLogg
 }
 
 /**
- * @brief convert RGB value to 24bit color value
+ * @brief Convert RGB value to 24bit color value
  * 
  * @param r red value (0-255)
  * @param g green value (0-255)
@@ -78,7 +85,7 @@ uint32_t LEDMatrix::interpolateColor24bit(uint32_t color1, uint32_t color2, floa
 }
 
 /**
- * @brief setup function for LED matrix
+ * @brief Setup function for LED matrix
  * 
  */
 void LEDMatrix::setupMatrix() 
@@ -90,7 +97,7 @@ void LEDMatrix::setupMatrix()
 }
 
 /**
- * @brief turn on the minutes indicator leds with the provided pattern (binary encoded)
+ * @brief Turn on the minutes indicator leds with the provided pattern (binary encoded)
  * 
  * @param pattern the binary encoded pattern of the minute indicator
  * @param color color to be displayed
@@ -119,7 +126,7 @@ void LEDMatrix::setMinIndicator(uint8_t pattern, uint32_t color)
 }
 
 /**
- * @brief "activates" a pixel in targetgrid with color
+ * @brief "Activates" a pixel in targetgrid with color
  * 
  * @param x x-position of pixel
  * @param y y-position of pixel
@@ -137,7 +144,7 @@ void LEDMatrix::gridAddPixel(uint8_t x, uint8_t y, uint32_t color)
 }
 
 /**
- * @brief "deactivates" all pixels in targetgrid
+ * @brief "Deactivates" all pixels in targetgrid
  * 
  */
 void LEDMatrix::gridFlush(void)
@@ -156,7 +163,7 @@ void LEDMatrix::gridFlush(void)
 }
 
 /**
- * @brief write target pixels directly to leds
+ * @brief Write target pixels directly to leds
  * 
  */
 void LEDMatrix::drawOnMatrixInstant(){
@@ -164,7 +171,7 @@ void LEDMatrix::drawOnMatrixInstant(){
 }
 
 /**
- * @brief write target pixels with low pass filter to leds
+ * @brief Write target pixels with low pass filter to leds
  * 
  * @param factor factor between 0 and 1 (1.0 = hard, 0.1 = smooth)
  */
@@ -173,12 +180,13 @@ void LEDMatrix::drawOnMatrixSmooth(float factor){
 }
 
 /**
- * @brief draws the targetgrid to the ledmatrix
+ * @brief Draws the targetgrid to the ledmatrix
  * 
  * @param factor factor between 0 and 1 (1.0 = hard, 0.1 = smooth)
  */
 void LEDMatrix::drawOnMatrix(float factor){
   uint16_t totalCurrent = 0;
+  // loop over all leds in matrix
   for(int s = 0; s < WIDTH; s++){
     for(int z = 0; z < HEIGHT; z++){
       // inplement momentum as smooth transistion function
@@ -189,6 +197,7 @@ void LEDMatrix::drawOnMatrix(float factor){
     } 
   }
 
+  // loop over all minute indicator leds
   for(int i = 0; i < 4; i++){
     uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], factor);
     (*neomatrix).drawPixel(WIDTH - (1+i), HEIGHT, color24to16bit(filteredColor));
@@ -206,7 +215,7 @@ void LEDMatrix::drawOnMatrix(float factor){
 }
 
 /**
- * @brief show a 1-digit number on LED matrix (5x3)
+ * @brief Shows a 1-digit number on LED matrix (5x3)
  * 
  * @param xpos x of left top corner of digit
  * @param ypos y of left top corner of digit
@@ -225,7 +234,7 @@ void LEDMatrix::printNumber(uint8_t xpos, uint8_t ypos, uint8_t number, uint32_t
 }
 
 /**
- * @brief show a character on LED matrix (5x3), supports currently only 'I' and 'P'
+ * @brief Shows a character on LED matrix (5x3), supports currently only 'I' and 'P'
  * 
  * @param xpos x of left top corner of character
  * @param ypos y of left top corner of character
@@ -254,7 +263,7 @@ void LEDMatrix::printChar(uint8_t xpos, uint8_t ypos, char character, uint32_t c
 /**
  * @brief Set Brightness
  * 
- * @param mybrightness 
+ * @param mybrightness brightness to be set [0..255]
  */
 void LEDMatrix::setBrightness(uint8_t mybrightness){
   brightness = mybrightness;
@@ -262,34 +271,30 @@ void LEDMatrix::setBrightness(uint8_t mybrightness){
 }
 
 /**
- * @brief Calc estimated current for one pixel with the given color and brightness
+ * @brief Calc estimated current (mA) for one pixel with the given color and brightness
  * 
- * @param color 
- * @return uint16_t 
+ * @param color 24bit color value of the pixel for which the current should be calculated
+ * @return the current in mA
  */
 uint16_t LEDMatrix::calcEstimatedLEDCurrent(uint32_t color){
+  // extract rgb values
   uint8_t red = color >> 16 & 0xff;
   uint8_t green = color >> 8 & 0xff;
   uint8_t blue = color & 0xff;
   
-  uint32_t estimatedCurrent = 0;
-
-  // Linear estimation: 20mA for full brightness per LED
-  estimatedCurrent += 20 * red;
-  estimatedCurrent += 20 * green;
-  estimatedCurrent += 20 * blue;
-
+  // Linear estimation: 20mA for full brightness per LED 
+  // (calculation avoids float numbers)
+  uint32_t estimatedCurrent = (20 * red) + (20 * green) + (20 * blue);
   estimatedCurrent /= 255;
   estimatedCurrent = (estimatedCurrent * brightness)/255;
 
-  // +1 => every LED consumes 1mA in IDLE
   return estimatedCurrent;
 }
 
 /**
  * @brief Set the current limit
  * 
- * @param mycurrentLimit 
+ * @param mycurrentLimit the total current limit for whole matrix
  */
 void LEDMatrix::setCurrentLimit(uint16_t mycurrentLimit){
   currentLimit = mycurrentLimit;

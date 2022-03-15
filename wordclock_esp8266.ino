@@ -307,8 +307,7 @@ void setup() {
 
   server.on("/cmd", handleCommand); // process commands
   server.on("/data", handleDataRequest); // process datarequests
-  //server.on("/ledvideo", HTTP_POST, handleLEDVideo); // Call the 'handleLEDVideo' function when a POST request is made to URI "/ledvideo"
-  //server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
+  server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
   server.begin();
   
   // create UDP Logger to send logging messages via UDP multicast
@@ -616,7 +615,14 @@ void stateChange(uint8_t newState){
   logger.logString("FreeMemory=" + String(ESP.getFreeHeap()));
 }
 
-
+/**
+ * @brief Handler for POST requests to /leddirect.
+ * 
+ * Allows the control of all LEDs from external source. 
+ * It will overwrite the normal program for 5 seconds.
+ * A 11x11 picture can be sent as base64 encoded string to be displayed on matrix.
+ * 
+ */
 void handleLEDDirect() {
   if (server.method() != HTTP_POST) {
     server.send(405, "text/plain", "Method Not Allowed");
@@ -653,23 +659,18 @@ void handleLEDDirect() {
         uint8_t red = byteArray[i]; // red
         uint8_t green = byteArray[i + 1]; // green
         uint8_t blue = byteArray[i + 2]; // blue
-        matrix.drawPixel((i/4) % 11, (i/4) / 11, matrix.Color(red, green, blue));
+        ledmatrix.gridAddPixel((i/4) % WIDTH, (i/4) / HEIGHT, LEDMatrix::Color24bit(red, green, blue));
       }
-      matrix.show();
+      ledmatrix.drawOnMatrixInstant();
 
       lastLEDdirect = millis();
-
-
-      
-
     }
-    
     server.send(200, "text/plain", message);
   }
 }
 
 /**
- * @brief check button commands
+ * @brief Check button commands
  * 
  */
 void handleButton(){
@@ -709,7 +710,7 @@ void handleButton(){
 }
 
 /**
- * @brief handler for handling commands sent to "/cmd" url
+ * @brief Handler for handling commands sent to "/cmd" url
  * 
  */
 void handleCommand() {
@@ -844,6 +845,14 @@ void handleCommand() {
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
+/**
+ * @brief Splits a string at given character and return specified element
+ * 
+ * @param s string to split
+ * @param parser separating character
+ * @param index index of the element to return
+ * @return String 
+ */
 String split(String s, char parser, int index) {
   String rs="";
   int parserIndex = index;
@@ -860,6 +869,10 @@ String split(String s, char parser, int index) {
   return rs;
 }
 
+/**
+ * @brief Handler for GET requests
+ * 
+ */
 void handleDataRequest() {
   // receive data request and handle accordingly
   for (uint8_t i = 0; i < server.args(); i++) {
@@ -892,24 +905,46 @@ void handleDataRequest() {
   }
 }
 
+/**
+ * @brief Set the nightmode state
+ * 
+ * @param on true -> nightmode on
+ */
 void setNightmode(bool on){
   ledmatrix.gridFlush();
   ledmatrix.drawOnMatrixInstant();
   nightMode = on;
 }
 
-
+/**
+ * @brief Write value to EEPROM
+ * 
+ * @param address address to write the value
+ * @param value value to write
+ */
 void writeIntEEPROM(int address, int value){
   EEPROM.put(address, value);
   EEPROM.commit();
 }
 
+/**
+ * @brief Read value from EEPROM
+ * 
+ * @param address address
+ * @return int value
+ */
 int readIntEEPROM(int address){
   int value;
   EEPROM.get(address, value);
   return value;
 }
 
+/**
+ * @brief Convert Integer to String with leading zero
+ * 
+ * @param value 
+ * @return String 
+ */
 String leadingZero2Digit(int value){
   String msg = "";
   if(value < 10){
