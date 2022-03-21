@@ -1,3 +1,14 @@
+/**
+ * @file udplogger.h
+ * @author techniccontroller (mail[at]techniccontroller.com)
+ * @brief Class for sending logging Strings as multicast messages 
+ * @version 0.1
+ * @date 2022-03-21
+ * 
+ * @copyright Copyright (c) 2022
+ * 
+ */
+
 #ifndef udplogger_h
 #define udplogger_h
 
