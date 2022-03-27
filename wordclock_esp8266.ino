@@ -7,6 +7,11 @@
  * - ESP8266
  * - Neopixelstrip
  * 
+ * Board settings:
+ * - Board: NodeMCU 1.0 (ESP-12E Module)
+ * - Flash Size: 4MB (FS:2MB OTA:~1019KB)
+ * - Upload Speed: 115200
+ *  
  * 
  * with code parts from:
  * - Adafruit NeoPixel strandtest.ino, https://github.com/adafruit/Adafruit_NeoPixel/blob/master/examples/strandtest/strandtest.ino
