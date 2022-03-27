@@ -6,7 +6,7 @@
  * components:
  * - ESP8266
  * - Neopixelstrip
- *  
+ * 
  * 
  * with code parts from:
  * - Adafruit NeoPixel strandtest.ino, https://github.com/adafruit/Adafruit_NeoPixel/blob/master/examples/strandtest/strandtest.ino
@@ -303,7 +303,7 @@ void setup() {
   setupFS();
 
   // setup OTA
-  setupOTA();
+  setupOTA(hostname);
 
   server.on("/cmd", handleCommand); // process commands
   server.on("/data", handleDataRequest); // process datarequests
@@ -520,6 +520,7 @@ void loop() {
   // NTP time update
   if(millis() - lastNTPUpdate > PERIOD_NTPUPDATE){
     if(ntp.updateNTP()){
+      ntp.calcDate();
       logger.logString("NTP-Update successful");
       Serial.println("NTP-Update successful");
     }
