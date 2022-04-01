@@ -35,6 +35,7 @@ class NTPClientPlus{
         unsigned int getYear();
         bool isLeapYear(unsigned int year);
         int getMonth(int dayOfYear);
+        long getTimeOffset();
 
 
     private:

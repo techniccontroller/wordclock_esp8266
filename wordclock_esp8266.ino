@@ -359,6 +359,7 @@ void setup() {
   ntp.setupNTPClient();
   logger.logString("NTP running");
   logger.logString("Time: " +  ntp.getFormattedTime());
+  logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
 
   // show the current time for short time in words
   int hours = ntp.getHours24();

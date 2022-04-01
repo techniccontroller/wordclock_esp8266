@@ -92,6 +92,11 @@ void NTPClientPlus::setTimeOffset(int timeOffset)
     this->_timeOffset = timeOffset;
 }
 
+long NTPClientPlus::getTimeOffset()
+{
+    return this->_timeOffset;
+}
+
 /**
  * @brief Set time server name
  * 
@@ -536,8 +541,8 @@ void NTPClientPlus::updateSWChange()
     {
         //Start: Set summer-/ winter time
 
-        static bool initSWChange = 0;
-        if (initSWChange)
+        static bool initSWChange = false;
+        if (initSWChange == false)
         {
             // not initialized yet
             // restart in march
@@ -623,6 +628,8 @@ void NTPClientPlus::updateSWChange()
             {
                 this->setSummertime(0);
             }
+
+            initSWChange = true;
         }
 
         //on the last Sunday in March (03) is changed from UTC+1 to UTC+2; 02:00 -> 03:00
