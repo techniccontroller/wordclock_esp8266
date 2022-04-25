@@ -528,6 +528,8 @@ void loop() {
     if(ntp.updateNTP()){
       ntp.calcDate();
       logger.logString("NTP-Update successful");
+      logger.logString("Time: " +  ntp.getFormattedTime());
+      logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       Serial.println("NTP-Update successful");
     }
     else{
