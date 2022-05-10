@@ -103,6 +103,13 @@ String timeToString(uint8_t hours,uint8_t minutes){
   //ES IST
   String message = "ES IST ";
 
+  if((minutes % 5) == 3 || (minutes % 5) == 4){
+    message += "BEINA ";
+  }
+
+  if((minutes % 5) == 0){
+    message += "NUR ";
+  }
   
   //show minutes
   if(minutes >= 5 && minutes < 10)
@@ -212,6 +219,10 @@ String timeToString(uint8_t hours,uint8_t minutes){
   if(minutes < 5)
   {
     message += "UHR ";
+  }
+
+  if((minutes % 5) == 1 || (minutes % 5) == 2){
+    message += "GEWESEN "
   }
 
   Serial.println(message);
