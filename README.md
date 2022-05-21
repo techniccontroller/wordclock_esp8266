@@ -27,7 +27,7 @@ More details on my website: https://techniccontroller.de/word-clock-with-wifi-an
 ## Quickstart
 
 1. Clone the project into the sketch folder of the Arduino IDE, 
-2. Install the additional libraries and flash it to the ESP8266 as usual (See section *Upload program to ESP8266* below). 
+2. Install the additional libraries and flash it to the ESP8266 as usual (See section [*Upload program to ESP8266*](https://github.com/techniccontroller/wordclock_esp8266/blob/main/README.md#upload-program-to-esp8266-with-arduino-ide) below). 
 3. The implemented WiFiManager helps you to set up a WiFi connection with your home WiFi -> on the first startup it will create a WiFi access point named "WordclockAP". Connect your phone to this access point and follow the steps which will be shown to you. 
 4. After a successful WiFi setup, open the browser and enter the IP address of your ESP8266 to access the interface of the webserver. 
 5. Here you can then upload all files located in the folder "data". Please make sure all icons stay in the folder "icons" also on the webserver.
@@ -66,11 +66,10 @@ MySketchbookLocation
     │   (...)
     |
     └───data
-        │   (...)
+        │   index.html
+        |   (...)
         |
-        └─── icons
-        
-        
+        └───icons 
 ```
 
 
