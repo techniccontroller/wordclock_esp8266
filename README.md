@@ -100,3 +100,12 @@ To program the ESP8266 with the Arduino IDE, you need to install the board infor
 - Select right serial Port in Tools -> Port
 - Click on the upload button in the Arduino IDE to upload the program to the ESP8266 Module.     
 ![image](https://user-images.githubusercontent.com/36072504/169649810-1fda75c2-5f4d-4d71-98fe-30985d82f7f5.png)
+
+
+## Remark about the WiFi setup
+
+Regarding the Wifi setting, I have actually implemented two variants: 
+1. By default the WifiManager is activated. That is, the word clock makes the first time its own WiFi (should be called "WordclockAP"). There you simply connect to the cell phone and you can perform configuration of the WiFi settings conveniently as with a SmartHome devices (Very elegant 😊)
+2. Another (traditional) variant is to define the wifi credentials in the code (or in secrets.h). 
+    - For this you have to comment out lines 230 to 251 in the code of the file *wordclock_esp8266.ino* (/\* before and \*/ after) 
+    - and comment out lines 257 to 305 (/\* and \*/ remove)
