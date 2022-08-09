@@ -44,7 +44,6 @@ Please download all these libraries as ZIP from GitHub, and extract them in the 
 - https://github.com/adafruit/Adafruit_NeoPixel
 - https://github.com/Xander-Electronics/Base64
 - https://github.com/tzapu/WiFiManager
-- https://github.com/esp8266/Arduino/tree/master/libraries/EEPROM
 - https://github.com/adafruit/Adafruit_BusIO
 
 folder structure should look like this:
