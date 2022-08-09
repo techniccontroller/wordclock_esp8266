@@ -57,7 +57,6 @@ MySketchbookLocation
 │   └───Adafruit_NeoPixel
 │   └───Base64
 │   └───WiFiManager
-│   └───EEPROM
 │   └───Adafruit_BusIO
 │   
 └───wordclock_esp8266
