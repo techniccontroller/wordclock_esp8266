@@ -33,7 +33,7 @@
 #include <Base64_.h>                    // https://github.com/Xander-Electronics/Base64
 #include <DNSServer.h>
 #include <WiFiManager.h>                //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
-#include <EEPROM.h>                     //https://github.com/esp8266/Arduino/tree/master/libraries/EEPROM
+#include <EEPROM.h>                     //from ESP8266 Arduino Core (automatically installed when ESP8266 was installed via Boardmanager)
 
 // own libraries
 #include "udplogger.h"
