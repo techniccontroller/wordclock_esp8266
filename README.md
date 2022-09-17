@@ -42,7 +42,6 @@ Please download all these libraries as ZIP from GitHub, and extract them in the 
 - https://github.com/adafruit/Adafruit-GFX-Library
 - https://github.com/adafruit/Adafruit_NeoMatrix
 - https://github.com/adafruit/Adafruit_NeoPixel
-- https://github.com/Xander-Electronics/Base64
 - https://github.com/tzapu/WiFiManager
 - https://github.com/adafruit/Adafruit_BusIO
 
@@ -55,7 +54,6 @@ MySketchbookLocation
 │   └───Adafruit-GFX-Library
 │   └───Adafruit_NeoMatrix
 │   └───Adafruit_NeoPixel
-│   └───Base64
 │   └───WiFiManager
 │   └───Adafruit_BusIO
 │   
