@@ -293,12 +293,12 @@
 			MODE
 		</div>
 		<div class="grid-container">
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 0)"><a href="cmd?mode=clock" class="buttonClass" style="width: 100%;"><img src = "./icons/clock.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 1)"><a href="cmd?mode=diclock" class="buttonClass" style="width: 100%;"><img src = "./icons/diclock.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 2)"><a href="cmd?mode=spiral" class="buttonClass" style="width: 100%;"><img src = "./icons/spiral.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 3)"><a href="cmd?mode=tetris" class="buttonClass" style="width: 100%;"><img src = "./icons/tetris.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 4)"><a href="cmd?mode=snake" class="buttonClass" style="width: 100%;"><img src = "./icons/snake.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a href="cmd?mode=pingpong" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 0)"><a onclick="sendCommand('./cmd?mode=clock')" class="buttonClass" style="width: 100%;"><img src = "./icons/clock.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 1)"><a onclick="sendCommand('./cmd?mode=diclock')" class="buttonClass" style="width: 100%;"><img src = "./icons/diclock.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 2)"><a onclick="sendCommand('./cmd?mode=spiral')" class="buttonClass" style="width: 100%;"><img src = "./icons/spiral.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 3)"><a onclick="sendCommand('./cmd?mode=tetris')" class="buttonClass" style="width: 100%;"><img src = "./icons/tetris.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 4)"><a onclick="sendCommand('./cmd?mode=snake')" class="buttonClass" style="width: 100%;"><img src = "./icons/snake.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a onclick="sendCommand('./cmd?mode=pingpong')" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
 		</div>
 		<div class="checkbox-container">
 			<label for="Nightmode" style="align-self: flex-start">Nightmode</label> 
@@ -322,18 +322,18 @@
 			</div>
 			<div class="control-container">
 				<div class="grid-container">
-					<div class="grid-item"><span class="dot"><a href="cmd?led=255-0-0" class="buttonClass" style="background:rgb(255,0,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=255-0-128" class="buttonClass" style="background:rgb(255,0,128);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=255-0-255" class="buttonClass" style="background:rgb(255,0,255);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=128-0-255" class="buttonClass" style="background:rgb(128,0,255);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=0-0-255" class="buttonClass" style="background:rgb(0,0,255);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=0-128-255" class="buttonClass" style="background:rgb(0,128,255);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=255-255-255" class="buttonClass" style="background:rgb(255,255,255);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=0-255-128" class="buttonClass" style="background:rgb(0,255,128);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=0-255-0" class="buttonClass" style="background:rgb(0,255,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=128-255-0" class="buttonClass" style="background:rgb(128,255,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=200-200-0" class="buttonClass" style="background:rgb(200,200,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a href="cmd?led=255-128-0" class="buttonClass" style="background:rgb(255,128,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-0-0')" class="buttonClass" style="background:rgb(255,0,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-0-128')" class="buttonClass" style="background:rgb(255,0,128);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-0-255')" class="buttonClass" style="background:rgb(255,0,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=128-0-255')" class="buttonClass" style="background:rgb(128,0,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-0-255')" class="buttonClass" style="background:rgb(0,0,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-128-255')" class="buttonClass" style="background:rgb(0,128,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-255-255')" class="buttonClass" style="background:rgb(255,255,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-255-128')" class="buttonClass" style="background:rgb(0,255,128);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-255-0')" class="buttonClass" style="background:rgb(0,255,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=128-255-0')" class="buttonClass" style="background:rgb(128,255,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=200-200-0')" class="buttonClass" style="background:rgb(200,200,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-128-0')" class="buttonClass" style="background:rgb(255,128,0);"></a></span></div>
 				</div>
 			</div>
 		</div>
