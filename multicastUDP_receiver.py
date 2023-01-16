@@ -3,7 +3,7 @@ import struct
 import sys
 
 # ip address of network interface
-MCAST_IF_IP = '192.168.0.4'
+MCAST_IF_IP = '192.168.0.8'
 
 multicast_group = '230.120.10.2'
 server_address = ('', 8123)
