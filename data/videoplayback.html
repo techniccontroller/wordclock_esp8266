@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>requestVideoFrameCallback Demo</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--<script>if (location.protocol !== 'https:') { location.protocol = 'https:'; }</script>-->
+
+    <!-- import the webpage's javascript file -->
+    <script>
+	const startDrawing = () => { 
+		const button = document.querySelector("button");
+		const video = document.querySelector("video");
+		const canvas = document.querySelector("canvas");
+		const ctx = canvas.getContext("2d");
+		const fpsInfo = document.querySelector("#fps-info");
+		const metadataInfo =  document.querySelector("#metadata-info");
+	  
+		const dropzone = document.getElementById('dropzone')
+		dropzone.addEventListener('dragover', event => event.preventDefault())
+		dropzone.addEventListener('drop', event => {
+		  event.preventDefault()
+		  const droppedFile = event.dataTransfer.files[0]
+		  video.addEventListener('loadedmetadata', event => {
+			console.log(video.videoWidth, video.videoHeight)
+		  })
+		  video.src = URL.createObjectURL(droppedFile)
+		})
+	  
+	  button.addEventListener('click', () => video.paused ? video.play() : video.pause());
+
+	  video.addEventListener('play', () => {
+		if (!('requestVideoFrameCallback' in HTMLVideoElement.prototype)) {
+		  return alert('Your browser does not support the `Video.requestVideoFrameCallback()` API.');
+		}    
+	  });
+	  
+	  let width = canvas.width;
+	  let height = canvas.height;
+	  
+	  let paintCount = 0;
+	  let startTime = 0.0;
+
+	  const updateCanvas = (now, metadata) => {
+		if (startTime === 0.0) {
+		  startTime = now;
+		}
+
+		ctx.drawImage(video, 0, 0, width, height);
+		
+		//console.log("start");
+		var myImageData = ctx.getImageData(0, 0, 11, 11);
+		//console.log(myImageData.data.buffer)
+		var uint8Array = new Uint8Array(myImageData.data.buffer);
+		//console.log(uint8Array);
+		var b64encoded = btoa(String.fromCharCode.apply(null, uint8Array));
+		//console.log(b64encoded);
+		
+		var oReq = new XMLHttpRequest();
+		var url = "http://192.168.0.10/leddirect"
+		oReq.open("POST", url, true);
+		oReq.setRequestHeader('filename', 'testimage');
+		oReq.onload = function (oEvent) {
+		  //console.log('Uploaded');
+		};
+		
+		//oReq.send(uint8Array);
+		oReq.send(b64encoded);
+
+		const elapsed = (now - startTime) / 1000.0;
+		const fps = (++paintCount / elapsed).toFixed(3);
+		fpsInfo.innerText = !isFinite(fps) ? 0 : fps;
+		metadataInfo.innerText = JSON.stringify(metadata, null, 2);
+
+		video.requestVideoFrameCallback(updateCanvas);
+	  };  
+
+	  /*video.src =
+		"https://cdn.glitch.com/c162fc32-0a96-4954-83c2-90d4cdb149fc%2FBig_Buck_Bunny_360_10s_20MB.mp4?v=1587545460302";*/
+	  video.requestVideoFrameCallback(updateCanvas);  
+	};
+
+	window.addEventListener('load', startDrawing);
+	
+	
+	</script>
+	<style>
+	body {
+	  font-family: helvetica, arial, sans-serif;
+	  margin: 2em;
+	}
+
+	h1 {
+	  font-style: italic;
+	  color: #373fff;
+	}
+
+	video, 
+	canvas {
+	  max-width: 100%;
+	  height: auto;
+	}
+	*, ::before, ::after {
+	  box-sizing: border-box;
+	}
+	#dropzone {
+	  width: 600px;
+	  height: 300px;
+	  border: 2px dashed blue;
+	  border-radius: 3px;
+	  background-color: white;
+	  color: gray;
+	  font-family: sans-serif;
+	  font-size: 22px;
+	  display: flex;
+	  justify-content: center;
+	  align-items: center;
+	  transition: 400ms;
+	}
+	#dropzone:hover {
+	  cursor: pointer;
+	}
+	</style>
+  </head>
+  <body>
+    <h1><code>requestVideoFrameCallback</code> Demo</h1>
+    <p>
+      Start <button type="button">⏯</button> playing the video. Pause the video to read the metadata.
+      Drawing video frames on the canvas is synced with the actual video framerate.
+      For details, check out the blog post
+      <a href="https://blog.tomayac.com/2020/05/15/the-requestvideoframecallback-api/">
+        The requestVideoFrameCallback API
+      </a>.
+    </p>
+    <video width="300" height="300" controls playsinline></video>
+    <canvas width="11" height="11"></canvas>
+    <p><span id="fps-info">0</span>fps</p>
+    <p><pre id="metadata-info"></pre></p>
+	
+	<div id="dropzone">drop files here</div>
+  </body>
+</html>
