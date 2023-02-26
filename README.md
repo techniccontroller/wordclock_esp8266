@@ -27,10 +27,11 @@ More details on my website: https://techniccontroller.de/word-clock-with-wifi-an
 ## Quickstart
 
 1. Clone the project into the sketch folder of the Arduino IDE, 
-2. Install the additional libraries and flash it to the ESP8266 as usual (See section [*Upload program to ESP8266*](https://github.com/techniccontroller/wordclock_esp8266/blob/main/README.md#upload-program-to-esp8266-with-arduino-ide) below). 
-3. The implemented WiFiManager helps you to set up a WiFi connection with your home WiFi -> on the first startup it will create a WiFi access point named "WordclockAP". Connect your phone to this access point and follow the steps which will be shown to you. 
-4. After a successful WiFi setup, open the browser and enter the IP address of your ESP8266 to access the interface of the webserver. 
-5. Here you can then upload all files located in the folder "data". Please make sure all icons stay in the folder "icons" also on the webserver.
+2. Rename the file "example_secrets.h" to "secrets.h". You don't need to change anything in the file if you want uses the normal WiFi setup with WiFiManager (see section "Remark about the WiFi setup").
+3. Install the additional libraries and flash it to the ESP8266 as usual (See section [*Upload program to ESP8266*](https://github.com/techniccontroller/wordclock_esp8266/blob/main/README.md#upload-program-to-esp8266-with-arduino-ide) below). 
+4. The implemented WiFiManager helps you to set up a WiFi connection with your home WiFi -> on the first startup it will create a WiFi access point named "WordclockAP". Connect your phone to this access point and follow the steps which will be shown to you. 
+5. After a successful WiFi setup, open the browser and enter the IP address of your ESP8266 to access the interface of the webserver. 
+6. Here you can then upload all files located in the folder "data". Please make sure all icons stay in the folder "icons" also on the webserver.
 
 
 <img src="https://techniccontroller.de/wp-content/uploads/filemanager1-1.png" height="300px" /> <img src="https://techniccontroller.de/wp-content/uploads/filemanager2-1.png" height="300px" /> <img src="https://techniccontroller.de/wp-content/uploads/filemanager3-1.png" height="300px" />
@@ -102,6 +103,6 @@ To program the ESP8266 with the Arduino IDE, you need to install the board infor
 
 Regarding the Wifi setting, I have actually implemented two variants: 
 1. By default the WifiManager is activated. That is, the word clock makes the first time its own WiFi (should be called "WordclockAP"). There you simply connect to the cell phone and you can perform configuration of the WiFi settings conveniently as with a SmartHome devices (Very elegant 😊)
-2. Another (traditional) variant is to define the wifi credentials in the code (or in secrets.h). 
+2. Another (traditional) variant is to define the wifi credentials in the code (in secrets.h). 
     - For this you have to comment out lines 230 to 251 in the code of the file *wordclock_esp8266.ino* (/\* before and \*/ after) 
     - and comment out lines 257 to 305 (/\* and \*/ remove)
