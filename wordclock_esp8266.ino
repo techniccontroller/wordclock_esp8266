@@ -21,7 +21,7 @@
  * 
  */
 
-#include "secrets.h"
+#include "secrets.h"                    // rename the file example_secrets.h to secrets.h after cloning the project. More information in README.md
 #include <LittleFS.h>
 #include <Adafruit_GFX.h>               // https://github.com/adafruit/Adafruit-GFX-Library
 #include <Adafruit_NeoMatrix.h>         // https://github.com/adafruit/Adafruit_NeoMatrix
