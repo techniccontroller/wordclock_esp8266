@@ -33,7 +33,7 @@ while True:
     print(address, ": ", data_str)
 
     if "NTP-Update not successful" in data_str:
-        saveCounter = 3
+        saveCounter = 7
         
     if saveCounter > 0:
         f = open("log.txt",'a')

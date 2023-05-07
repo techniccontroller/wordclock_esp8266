@@ -32,10 +32,11 @@ void NTPClientPlus::setupNTPClient()
 /**
  * @brief Get new update from NTP
  * 
- * @return true     after successful update
- * @return false    timeout after 1000 ms
+ * @return 0     after successful update
+ * @return -1    timeout after 1000 ms
+ * @return 1     too much difference to previous received time (try again)
  */
-bool NTPClientPlus::updateNTP()
+int NTPClientPlus::updateNTP()
 {
 
     // flush any existing packets
@@ -52,15 +53,11 @@ bool NTPClientPlus::updateNTP()
         delay(10);
         cb = this->_udp->parsePacket();
         if (timeout > 100)
-            return false; // timeout after 1000 ms
+            return -1; // timeout after 1000 ms
         timeout++;
     } while (cb == 0);
 
-    this->_lastUpdate = millis() - (10 * (timeout + 1)); // Account for delay in reading the time
-
     this->_udp->read(this->_packetBuffer, NTP_PACKET_SIZE);
-
-    
 
     unsigned long highWord = word(this->_packetBuffer[40], this->_packetBuffer[41]);
     unsigned long lowWord = word(this->_packetBuffer[42], this->_packetBuffer[43]);
@@ -68,9 +65,11 @@ bool NTPClientPlus::updateNTP()
     // this is NTP time (seconds since Jan 1 1900):
     unsigned long tempSecsSince1900 = highWord << 16 | lowWord;
 
-    // check if time off last ntp update is roughly in the same range: 100sec (validation check)
-    if(tempSecsSince1900 - this->_lastSecsSince1900 < 100000){
-        // Only Update time then
+    // check if time off last ntp update is roughly in the same range: 100sec apart (validation check)
+    if(this->_lastSecsSince1900 == 0 || tempSecsSince1900 - this->_lastSecsSince1900 < 100000){
+        // Only update time then
+        this->_lastUpdate = millis() - (10 * (timeout + 1)); // Account for delay in reading the time
+
         this->_secsSince1900 = tempSecsSince1900;
 
         this->_currentEpoc = this->_secsSince1900 - SEVENZYYEARS;
@@ -78,13 +77,13 @@ bool NTPClientPlus::updateNTP()
         // Remember time of last update
         this->_lastSecsSince1900 = tempSecsSince1900;
 
-        return true; // return true after successful update
+        return 0; // return 0 after successful update
     }
     else{
         // Remember time of last update
         this->_lastSecsSince1900 = tempSecsSince1900;
         
-        return false;
+        return 1;
     }
 }
 
@@ -209,6 +208,24 @@ String NTPClientPlus::getFormattedTime() const {
   String secondStr = seconds < 10 ? "0" + String(seconds) : String(seconds);
 
   return hoursStr + ":" + minuteStr + ":" + secondStr;
+}
+
+/**
+ * @brief 
+ * 
+ * @return String date formatted like `dd.mm.yyyy`
+ */
+String NTPClientPlus::getFormattedDate() {
+    this->calcDate();
+    unsigned int dateDay = this->_dateDay; 
+    unsigned int dateMonth = this->_dateMonth;
+    unsigned int dateYear = this->_dateYear;
+
+    String dayStr = dateDay < 10 ? "0" + String(dateDay) : String(dateDay);
+    String monthStr = dateMonth < 10 ? "0" + String(dateMonth) : String(dateMonth);
+    String yearStr = dateYear < 10 ? "0" + String(dateYear) : String(dateYear);
+
+    return dayStr + "." + monthStr + "." + yearStr;
 }
 
 
@@ -547,135 +564,112 @@ void NTPClientPlus::setSummertime(bool summertime)
 /**
  * @brief (private) Update Summer/Winter time change
  * 
+ * @returns bool summertime active
  */
-void NTPClientPlus::updateSWChange()
+bool NTPClientPlus::updateSWChange()
 {
     unsigned int dayOfWeek = this->_dayOfWeek; 
     unsigned int dateDay = this->_dateDay; 
-    unsigned dateMonth = this->_dateMonth;
+    unsigned int dateMonth = this->_dateMonth;
+
+    bool summertimeActive = false;
     
     if (this->_swChange)
     {
         //Start: Set summer-/ winter time
 
-        static bool initSWChange = false;
-        if (initSWChange == false)
-        {
-            // not initialized yet
-            // restart in march
-            if (dateMonth == 3)
-            {
-
-                //Neustart in der letzten Woche im März
-                if ((this->daysInMonth[3] - dateDay) < 7)
-                {
-
-                    //Example year 2020: March 31 days; Restart March 26, 2020 (Thursday = weekday = 4); 5 days remaining; Last Sunday March 29, 2020
-                    //Calculation: 31 - 26 = 5; 5 + 4 = 9;
-                    //Result: Last day in March is a Tuesday. There follows another Sunday in October => set winter time
-
-                    //Example year 2021: March 31 days; Restart March 30, 2021 (Tuesday = weekday = 2); 1 days remaining; Last Sunday March 28, 2021
-                    //Calculation: 31 - 30 = 1; 1 + 2 = 3;
-                    //Result: Last day in March is a Wednesday. Changeover to summer time already done => set summer time
-
-                    //There follows within the last week in March one more Sunday => set winter time
-                    if (((this->daysInMonth[3] - dateDay) + dayOfWeek) >= 7)
-                    {
-                        this->setSummertime(0);
-                    }
-
-                    // last sunday in march already over -> summer time
-                    else
-                    {
-                        this->setSummertime(1);
-                    }
-                }
-
-                // restart in first three weeks of march -> winter time
-                else
-                {
-                    this->setSummertime(0);
-                }
-            }
-
-            //Neustart im Monat Oktober
-            if (dateMonth == 10)
-            {
-
-                // restart last week of october
-                if ((this->daysInMonth[10] - dateDay) < 7)
-                {
-
-                    //Example year 2020: October 31 days; restart October 26, 2020 (Monday = weekday = 1); 5 days remaining; last Sunday October 25, 2020
-                    //Calculation: 31 - 26 = 5; 5 + 1 = 6;
-                    //Result: Last day in October is a Saturday. Changeover to winter time already done => set winter time
-
-                    //Example year 2021: October 31 days; Restart 26. October 2021 (Tuesday = weekday = 2); 5 days remaining; Last Sunday 31. October 2021
-                    //Calculation: 31 - 26 = 5; 5 + 2 = 7;
-                    //Result: Last day in October is a Sunday. There follows another Sunday in October => set summer time
-
-                    // There follows within the last week in October one more Sunday => summer time
-                    if (((this->daysInMonth[10] - dateDay) + dayOfWeek) >= 7)
-                    {
-                        this->setSummertime(1);
-                    }
-
-                    // last sunday in october already over -> winter time
-                    else
-                    {
-                        this->setSummertime(0);
-                    }
-                }
-
-                // restart in first three weeks of october -> summer time
-                else
-                {
-                    this->setSummertime(1);
-                }
-            }
-
-            // restart in summer time
-            if (dateMonth > 3 && dateMonth < 10)
-            {
-                this->setSummertime(1);
-            }
-
-            // restart in winter time
-            if (dateMonth < 3 || dateMonth > 10)
-            {
-                this->setSummertime(0);
-            }
-
-            initSWChange = true;
-        }
-
-        //on the last Sunday in March (03) is changed from UTC+1 to UTC+2; 02:00 -> 03:00
-        //on the last Sunday in October (10) is changed from UTC+2 to UTC+1; 03:00 -> 02:00
-
-        // call every sunday of march
-        if (dateMonth == 3 && dayOfWeek == 7)
+        // current month is march
+        if (dateMonth == 3)
         {
 
-            // last sunday of march
+            // it is last week in march
             if ((this->daysInMonth[3] - dateDay) < 7)
             {
 
-                // change to summer time
-                this->setSummertime(1);
+                //Example year 2020: March 31 days; Restart March 26, 2020 (Thursday = weekday = 4); 5 days remaining; Last Sunday March 29, 2020
+                //Calculation: 31 - 26 = 5; 5 + 4 = 9;
+                //Result: Last day in March is a Tuesday. There follows another Sunday in October => set winter time
+
+                //Example year 2021: March 31 days; Restart March 30, 2021 (Tuesday = weekday = 2); 1 days remaining; Last Sunday March 28, 2021
+                //Calculation: 31 - 30 = 1; 1 + 2 = 3;
+                //Result: Last day in March is a Wednesday. Changeover to summer time already done => set summer time
+
+                //There follows within the last week in March one more Sunday => set winter time
+                if (((this->daysInMonth[3] - dateDay) + dayOfWeek) >= 7)
+                {
+                    this->setSummertime(0);
+                    summertimeActive = false;
+                }
+
+                // last sunday in march already over -> summer time
+                else
+                {
+                    this->setSummertime(1);
+                    summertimeActive = true;
+                }
+            }
+
+            // restart in first three weeks of march -> winter time
+            else
+            {
+                this->setSummertime(0);
+                summertimeActive = false;
             }
         }
 
-        // call every sunday in october
-        if (dateMonth == 10 && dayOfWeek == 7)
+        // current month is october
+        else if (dateMonth == 10)
         {
 
-            // last sunday in october
+            // restart last week of october
             if ((this->daysInMonth[10] - dateDay) < 7)
             {
 
-                // change to winter time
-                this->setSummertime(0);
+                //Example year 2020: October 31 days; restart October 26, 2020 (Monday = weekday = 1); 5 days remaining; last Sunday October 25, 2020
+                //Calculation: 31 - 26 = 5; 5 + 1 = 6;
+                //Result: Last day in October is a Saturday. Changeover to winter time already done => set winter time
+
+                //Example year 2021: October 31 days; Restart 26. October 2021 (Tuesday = weekday = 2); 5 days remaining; Last Sunday 31. October 2021
+                //Calculation: 31 - 26 = 5; 5 + 2 = 7;
+                //Result: Last day in October is a Sunday. There follows another Sunday in October => set summer time
+
+                // There follows within the last week in October one more Sunday => summer time
+                if (((this->daysInMonth[10] - dateDay) + dayOfWeek) >= 7)
+                {
+                    this->setSummertime(1);
+                    summertimeActive = true;
+                }
+
+                // last sunday in october already over -> winter time
+                else
+                {
+                    this->setSummertime(0);
+                    summertimeActive = false;
+                }
+            }
+
+            // restart in first three weeks of october -> summer time
+            else
+            {
+                this->setSummertime(1);
+                summertimeActive = true;
             }
         }
+
+        // restart in summer time
+        else if (dateMonth > 3 && dateMonth < 10)
+        {
+            this->setSummertime(1);
+            summertimeActive = true;
+        }
+
+        // restart in winter time
+        else if (dateMonth < 3 || dateMonth > 10)
+        {
+            this->setSummertime(0);
+            summertimeActive = false;
+        }
     }
+
+    return summertimeActive;
 }

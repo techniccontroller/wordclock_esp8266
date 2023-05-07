@@ -169,7 +169,7 @@ long lastheartbeat = millis();      // time of last heartbeat sending
 long lastStep = millis();           // time of last animation step
 long lastLEDdirect = 0;             // time of last direct LED command (=> fall back to normal mode after timeout)
 long lastStateChange = millis();    // time of last state change
-long lastNTPUpdate = millis();      // time of last NTP update
+long lastNTPUpdate = 0;             // time of last NTP update
 long lastAnimationStep = millis();  // time of last Matrix update
 long lastNightmodeCheck = millis(); // time of last nightmode check
 long buttonPressStart = 0;          // time of push button press start 
@@ -525,14 +525,24 @@ void loop() {
 
   // NTP time update
   if(millis() - lastNTPUpdate > PERIOD_NTPUPDATE){
-    if(ntp.updateNTP()){
+    int res = ntp.updateNTP();
+    if(res == 0){
       ntp.calcDate();
       logger.logString("NTP-Update successful");
       logger.logString("Time: " +  ntp.getFormattedTime());
+      logger.logString("Date: " +  ntp.getFormattedDate());
       logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
+      logger.logString("Summertime: " + String(ntp.updateSWChange()));
+    }
+    else if(res == -1){
+      logger.logString("NTP-Update not successful. Reason: Timeout");
     }
     else{
-      logger.logString("NTP-Update not successful");
+      logger.logString("NTP-Update not successful. Reason: Too large time difference");
+      logger.logString("Time: " +  ntp.getFormattedTime());
+      logger.logString("Date: " +  ntp.getFormattedDate());
+      logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
+      logger.logString("Summertime: " + String(ntp.updateSWChange()));
     }
     lastNTPUpdate = millis();
   }

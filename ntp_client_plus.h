@@ -19,7 +19,7 @@ class NTPClientPlus{
     public:
         NTPClientPlus(UDP &udp, const char* poolServerName, int utcx, bool _swChange);
         void setupNTPClient();
-        bool updateNTP();
+        int updateNTP();
         void end();
         void setTimeOffset(int timeOffset);
         void setPoolServerName(const char* poolServerName);
@@ -30,12 +30,14 @@ class NTPClientPlus{
         int getMinutes() const;
         int getSeconds() const;
         String getFormattedTime() const;
+        String getFormattedDate();
         void calcDate();
         unsigned int getDayOfWeek();
         unsigned int getYear();
         bool isLeapYear(unsigned int year);
         int getMonth(int dayOfYear);
         long getTimeOffset();
+        bool updateSWChange();
 
 
     private:
@@ -64,7 +66,7 @@ class NTPClientPlus{
         byte          _packetBuffer[NTP_PACKET_SIZE];
         void          sendNTPPacket();
         void          setSummertime(bool summertime);
-        void          updateSWChange();
+        
 
         static const unsigned long secondperday = 86400;
         static const unsigned long secondperhour = 3600;
