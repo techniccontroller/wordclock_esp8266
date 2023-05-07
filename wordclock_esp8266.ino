@@ -530,11 +530,9 @@ void loop() {
       logger.logString("NTP-Update successful");
       logger.logString("Time: " +  ntp.getFormattedTime());
       logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
-      Serial.println("NTP-Update successful");
     }
     else{
       logger.logString("NTP-Update not successful");
-      Serial.println("NTP-Update not successful");
     }
     lastNTPUpdate = millis();
   }
@@ -688,7 +686,6 @@ void handleButton(){
   // check rising edge
   if(buttonPressed == true && lastButtonState == false){
     // button press start
-    Serial.println("Button press started");
     logger.logString("Button press started");
     buttonPressStart = millis();
   }
@@ -697,14 +694,12 @@ void handleButton(){
     // button press ended
     if((millis() - buttonPressStart) > LONGPRESS){
       // longpress -> nightmode
-      Serial.println("Button press ended - longpress");
       logger.logString("Button press ended - longpress");
 
       setNightmode(true);
     }
     else if((millis() - buttonPressStart) > SHORTPRESS){
       // shortpress -> state change 
-      Serial.println("Button press ended - shortpress");
       logger.logString("Button press ended - shortpress");
 
       if(nightMode){
