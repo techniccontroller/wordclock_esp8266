@@ -48,12 +48,15 @@
 //                                        CONSTANTS
 // ----------------------------------------------------------------------------------
 
-#define EEPROM_SIZE 20      // size of EEPROM to save persistent variables
+#define EEPROM_SIZE 30      // size of EEPROM to save persistent variables
 #define ADR_NM_START_H 0
 #define ADR_NM_END_H 4
 #define ADR_NM_START_M 8
 #define ADR_NM_END_M 12
 #define ADR_BRIGHTNESS 16
+#define ADR_MC_RED 20
+#define ADR_MC_GREEN 22
+#define ADR_MC_BLUE 24
 
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
@@ -211,6 +214,9 @@ void setup() {
 
   //Init EEPROM
   EEPROM.begin(EEPROM_SIZE);
+
+  // Load color for clock from EEPROM
+  loadMainColor();
 
   // configure button pin as input
   pinMode(BUTTONPIN, INPUT_PULLUP);
@@ -724,6 +730,35 @@ void handleButton(){
 }
 
 /**
+ * @brief Set main color
+ * 
+ */
+
+void setMainColor(uint8_t red, uint8_t green, uint8_t blue){
+  maincolor_clock = LEDMatrix::Color24bit(red, green, blue);
+  EEPROM.put(ADR_MC_RED, red);
+  EEPROM.put(ADR_MC_GREEN, green);
+  EEPROM.put(ADR_MC_BLUE, blue);
+  EEPROM.commit();
+}
+
+/**
+ * @brief Load maincolor from EEPROM
+ * 
+*/
+
+void loadMainColor(){
+  uint8_t red = EEPROM.read(ADR_MC_RED);
+  uint8_t green = EEPROM.read(ADR_MC_GREEN);
+  uint8_t blue = EEPROM.read(ADR_MC_BLUE);
+  if(int(red) + int(green) + int(blue) < 50){
+    maincolor_clock = colors24bit[2];
+  }else{
+    maincolor_clock = LEDMatrix::Color24bit(red, green, blue);
+  }
+}
+
+/**
  * @brief Handler for handling commands sent to "/cmd" url
  * 
  */
@@ -746,7 +781,7 @@ void handleCommand() {
     logger.logString("g: " + String(greenstr.toInt()));
     logger.logString("b: " + String(bluestr.toInt()));
     // set new main color
-    maincolor_clock = LEDMatrix::Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
+    setMainColor(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
   }
   else if (server.argName(0) == "mode") // the parameter which was sent to this server is mode change
   {
