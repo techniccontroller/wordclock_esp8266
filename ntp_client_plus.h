@@ -54,6 +54,7 @@ class NTPClientPlus{
         unsigned long _currentEpoc    = 0;      // In s
         unsigned long _lastUpdate     = 0;      // In ms
         unsigned long _secsSince1900  = 0;      // seconds since 1. Januar 1900, 00:00:00
+        unsigned long _lastSecsSince1900 = 0;
         unsigned int _dateYear         = 0;
         unsigned int _dateMonth        = 0;
         unsigned int _dateDay          = 0;

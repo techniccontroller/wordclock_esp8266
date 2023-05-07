@@ -60,15 +60,32 @@ bool NTPClientPlus::updateNTP()
 
     this->_udp->read(this->_packetBuffer, NTP_PACKET_SIZE);
 
+    
+
     unsigned long highWord = word(this->_packetBuffer[40], this->_packetBuffer[41]);
     unsigned long lowWord = word(this->_packetBuffer[42], this->_packetBuffer[43]);
     // combine the four bytes (two words) into a long integer
     // this is NTP time (seconds since Jan 1 1900):
-    this->_secsSince1900 = highWord << 16 | lowWord;
+    unsigned long tempSecsSince1900 = highWord << 16 | lowWord;
 
-    this->_currentEpoc = this->_secsSince1900 - SEVENZYYEARS;
+    // check if time off last ntp update is roughly in the same range: 100sec (validation check)
+    if(tempSecsSince1900 - this->_lastSecsSince1900 < 100000){
+        // Only Update time then
+        this->_secsSince1900 = tempSecsSince1900;
 
-    return true; // return true after successful update
+        this->_currentEpoc = this->_secsSince1900 - SEVENZYYEARS;
+
+        // Remember time of last update
+        this->_lastSecsSince1900 = tempSecsSince1900;
+
+        return true; // return true after successful update
+    }
+    else{
+        // Remember time of last update
+        this->_lastSecsSince1900 = tempSecsSince1900;
+        
+        return false;
+    }
 }
 
 /**
