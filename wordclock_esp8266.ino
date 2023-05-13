@@ -172,7 +172,7 @@ long lastheartbeat = millis();      // time of last heartbeat sending
 long lastStep = millis();           // time of last animation step
 long lastLEDdirect = 0;             // time of last direct LED command (=> fall back to normal mode after timeout)
 long lastStateChange = millis();    // time of last state change
-long lastNTPUpdate = 0;             // time of last NTP update
+long lastNTPUpdate = millis() - (PERIOD_NTPUPDATE-5000);  // time of last NTP update
 long lastAnimationStep = millis();  // time of last Matrix update
 long lastNightmodeCheck = millis(); // time of last nightmode check
 long buttonPressStart = 0;          // time of push button press start 
@@ -199,6 +199,9 @@ int nightModeStartHour = 22;
 int nightModeStartMin = 0;
 int nightModeEndHour = 7;
 int nightModeEndMin = 0;
+
+// Watchdog counter to trigger restart if NTP update was not possible 30 times in a row (5min)
+int watchdogCounter = 30;
 
 // ----------------------------------------------------------------------------------
 //                                        SETUP
@@ -331,35 +334,40 @@ void setup() {
   logger.logString("Build: " + String(__TIMESTAMP__));
   delay(10);
   logger.logString("IP: " + WiFi.localIP().toString());
+  delay(10);
+  logger.logString("Reset Reason: " + ESP.getResetReason());
 
-  for(int r = 0; r < HEIGHT; r++){
-    for(int c = 0; c < WIDTH; c++){
-      matrix.fillScreen(0);
-      matrix.drawPixel(c, r, LEDMatrix::color24to16bit(colors24bit[2]));
-      matrix.show();
-      delay(10); 
+  if(!ESP.getResetReason().equals("Software/System restart")){
+    // test quickly each LED
+    for(int r = 0; r < HEIGHT; r++){
+        for(int c = 0; c < WIDTH; c++){
+        matrix.fillScreen(0);
+        matrix.drawPixel(c, r, LEDMatrix::color24to16bit(colors24bit[2]));
+        matrix.show();
+        delay(10); 
+        }
     }
+    
+    // clear Matrix
+    matrix.fillScreen(0);
+    matrix.show();
+    delay(200);
+
+    // display IP
+    uint8_t address = WiFi.localIP()[3];
+    ledmatrix.printChar(1, 0, 'I', maincolor_clock);
+    ledmatrix.printChar(5, 0, 'P', maincolor_clock);
+    ledmatrix.printNumber(0, 6, (address/100), maincolor_clock);
+    ledmatrix.printNumber(4, 6, (address/10)%10, maincolor_clock);
+    ledmatrix.printNumber(8, 6, address%10, maincolor_clock);
+    ledmatrix.drawOnMatrixInstant();
+    delay(2000);
+
+    // clear matrix
+    ledmatrix.gridFlush();
+    ledmatrix.drawOnMatrixInstant();
   }
-  
-  
-  // clear Matrix
-  matrix.fillScreen(0);
-  matrix.show();
-  delay(200);
 
-  // display IP
-  uint8_t address = WiFi.localIP()[3];
-  ledmatrix.printChar(1, 0, 'I', maincolor_clock);
-  ledmatrix.printChar(5, 0, 'P', maincolor_clock);
-  ledmatrix.printNumber(0, 6, (address/100), maincolor_clock);
-  ledmatrix.printNumber(4, 6, (address/10)%10, maincolor_clock);
-  ledmatrix.printNumber(8, 6, address%10, maincolor_clock);
-  ledmatrix.drawOnMatrixInstant();
-  delay(2000);
-
-  // clear matrix
-  ledmatrix.gridFlush();
-  ledmatrix.drawOnMatrixInstant();
 
   // setup NTP
   ntp.setupNTPClient();
@@ -374,7 +382,6 @@ void setup() {
   showStringOnClock(timeMessage, maincolor_clock);
   drawMinuteIndicator(minutes, maincolor_clock);
   ledmatrix.drawOnMatrixSmooth(filterFactor);
-  delay(1000);
 
 
   // init all animation modes
@@ -384,16 +391,6 @@ void setup() {
   spiral(true, sprialDir, WIDTH-6);
   // init random tetris
   randomtetris(true);
-
-  // show countdown
-  /*for(int i = 9; i > 0; i--){
-    logger.logString("DiTest: " + String(i));
-    Serial.println("DiTest: " + String(i));
-    ledmatrix.gridFlush();
-    printNumber(4, 3, i, maincolor_clock);
-    ledmatrix.drawOnMatrixInstant();
-    delay(1000);
-  }*/
 
   // Read nightmode setting from EEPROM
   nightModeStartHour = readIntEEPROM(ADR_NM_START_H);
@@ -539,9 +536,13 @@ void loop() {
       logger.logString("Date: " +  ntp.getFormattedDate());
       logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
+      lastNTPUpdate = millis();
+      watchdogCounter = 30;
     }
     else if(res == -1){
       logger.logString("NTP-Update not successful. Reason: Timeout");
+      lastNTPUpdate += 10000;
+      watchdogCounter--;
     }
     else{
       logger.logString("NTP-Update not successful. Reason: Too large time difference");
@@ -549,8 +550,17 @@ void loop() {
       logger.logString("Date: " +  ntp.getFormattedDate());
       logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
+      lastNTPUpdate += 10000;
+      watchdogCounter--;
     }
-    lastNTPUpdate = millis();
+
+    logger.logString("Watchdog Counter: " + String(watchdogCounter));
+    if(watchdogCounter <= 0){
+        logger.logString("Trigger restart due to watchdog...");
+        delay(100);
+        ESP.restart();
+    }
+    
   }
 
   // check if nightmode need to be activated
