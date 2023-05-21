@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 
 # ip address of network interface
-MCAST_IF_IP = '192.168.0.9'
+MCAST_IF_IP = '192.168.0.3'
 
 multicast_group = '230.120.10.2'
 server_address = ('', 8123)
@@ -32,14 +32,16 @@ while True:
     data_str = data.decode("utf-8").strip()
     print(address, ": ", data_str)
 
-    if "NTP-Update not successful" in data_str:
-        saveCounter = 7
+    if "NTP-Update not successful" in data_str or "Start program" in data_str:
+        saveCounter = 8
         
     if saveCounter > 0:
         f = open("log.txt",'a')
         f.write(datetime.now().strftime('%b-%d-%Y_%H%M') + ": ")
         f.write(data_str)
         f.write("\n")
+        if saveCounter == 1:
+            f.write("\n")
         f.close()
         saveCounter -= 1
 
