@@ -2,6 +2,7 @@ import socket
 import struct
 import sys
 from datetime import datetime
+import queue
 
 # ip address of network interface
 MCAST_IF_IP = '192.168.0.3'
@@ -26,18 +27,29 @@ sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 print("Ready")
 saveCounter = 0
 
+buffer = queue.Queue(20)
+
 # Receive/respond loop
 while True:
     data, address = sock.recvfrom(1024)
     data_str = data.decode("utf-8").strip()
     print(address, ": ", data_str)
+    data_str = datetime.now().strftime('%b-%d-%Y_%H%M%S') + ": " + data_str
+    buffer.put(data_str)
+    if buffer.full():
+        buffer.get()
+
 
     if "NTP-Update not successful" in data_str or "Start program" in data_str:
-        saveCounter = 8
+        f = open("log.txt",'a')
+        while not buffer.empty():    
+            f.write(buffer.get())
+            f.write("\n")
+        f.close()
+        saveCounter = 20
         
     if saveCounter > 0:
         f = open("log.txt",'a')
-        f.write(datetime.now().strftime('%b-%d-%Y_%H%M') + ": ")
         f.write(data_str)
         f.write("\n")
         if saveCounter == 1:
