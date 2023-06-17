@@ -7,10 +7,9 @@ More details on my website: https://techniccontroller.com/word-clock-with-wifi-a
 
 **Languages**
 
-The Wordclock is available in **English** and **German** language. By default the language is German. 
-To use the English language please 
-- rename *wordclockfunctions.ino* to *wordclockfunctions.ino_german*
-- rename *wordclockfunctions.ino_english* to *wordclockfunctions.ino*
+The Wordclock is available in **German**, **English** and **Italian** language. By default the language is German. 
+To use the English or Italian language please replace the file *wordclockfunctions.ino* with *wordclockfunctions.ino_english* or *wordclockfunctions.ino_italian*.
+The code compiles only with one file named wordclockfunctions.ino. So please rename the file you want to use to wordclockfunctions.ino and replace the existing file.
 
 
 ## Features
