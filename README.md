@@ -2,7 +2,7 @@
 
 Wordclock 2.0 with ESP8266 and NTP time
 
-More details on my website: https://techniccontroller.de/word-clock-with-wifi-and-neopixel/
+More details on my website: https://techniccontroller.com/word-clock-with-wifi-and-neopixel/
 
 
 **Features:**
@@ -34,7 +34,7 @@ More details on my website: https://techniccontroller.de/word-clock-with-wifi-an
 6. Here you can then upload all files located in the folder "data". Please make sure all icons stay in the folder "icons" also on the webserver.
 
 
-<img src="https://techniccontroller.de/wp-content/uploads/filemanager1-1.png" height="300px" /> <img src="https://techniccontroller.de/wp-content/uploads/filemanager2-1.png" height="300px" /> <img src="https://techniccontroller.de/wp-content/uploads/filemanager3-1.png" height="300px" />
+<img src="https://techniccontroller.com/wp-content/uploads/filemanager1-1.png" height="300px" /> <img src="https://techniccontroller.com/wp-content/uploads/filemanager2-1.png" height="300px" /> <img src="https://techniccontroller.com/wp-content/uploads/filemanager3-1.png" height="300px" />
 
 ## Install needed Libraries
 
