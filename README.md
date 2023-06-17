@@ -5,7 +5,15 @@ Wordclock 2.0 with ESP8266 and NTP time
 More details on my website: https://techniccontroller.com/word-clock-with-wifi-and-neopixel/
 
 
-**Features:**
+**Languages**
+
+The Wordclock is available in **English** and **German** language. By default the language is German. 
+To use the English language please 
+- rename *wordclockfunctions.ino* to *wordclockfunctions.ino_german*
+- rename *wordclockfunctions.ino_english* to *wordclockfunctions.ino*
+
+
+## Features
 - 6 modes (Clock, Digital Clock, SPIRAL animation, TETRIS, SNAKE, PONG)
 - time update via NTP server
 - automatic summer/wintertime change
