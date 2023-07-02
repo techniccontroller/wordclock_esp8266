@@ -78,7 +78,7 @@ def time_to_string(hours, minutes):
 
 
 # ip address of network interface
-MCAST_IF_IP = '192.168.0.7'
+MCAST_IF_IP = '192.168.0.12'
 
 multicast_group = '230.120.10.2'
 server_address = ('', 8123)
@@ -98,6 +98,12 @@ mreq = struct.pack('4s4s', group, socket.inet_aton(MCAST_IF_IP))
 sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
 print("Ready")
+f = open("log_extended.txt",'a')
+f.write("\n\nLOGGING STARTED\n")
+f.write(datetime.now().strftime('%b-%d-%Y_%H%M%S'))
+f.write("\n\n")
+f.close()
+
 saveCounter = 0
 
 buffer = queue.Queue(20)
