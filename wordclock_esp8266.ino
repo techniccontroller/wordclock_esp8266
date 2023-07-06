@@ -544,12 +544,17 @@ void loop() {
       lastNTPUpdate += 10000;
       watchdogCounter--;
     }
-    else{
+    else if(res == 1){
       logger.logString("NTP-Update not successful. Reason: Too large time difference");
       logger.logString("Time: " +  ntp.getFormattedTime());
       logger.logString("Date: " +  ntp.getFormattedDate());
       logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
+      lastNTPUpdate += 10000;
+      watchdogCounter--;
+    }
+    else {
+      logger.logString("NTP-Update not successful. Reason: NTP time not valid (<1970)");
       lastNTPUpdate += 10000;
       watchdogCounter--;
     }

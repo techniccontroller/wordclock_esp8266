@@ -65,6 +65,11 @@ int NTPClientPlus::updateNTP()
     // this is NTP time (seconds since Jan 1 1900):
     unsigned long tempSecsSince1900 = highWord << 16 | lowWord;
 
+    if(tempSecsSince1900 < SEVENZYYEARS){
+        // NTP time is not valid
+        return 2;
+    }
+
     // check if time off last ntp update is roughly in the same range: 100sec apart (validation check)
     if(this->_lastSecsSince1900 == 0 || tempSecsSince1900 - this->_lastSecsSince1900 < 100000){
         // Only update time then
