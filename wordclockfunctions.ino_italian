@@ -1,5 +1,5 @@
 // HINT: I replaced the special Italian letters (E' and L') in the following strings with = and # 
-const String clockStringEnglish =  "SONORLEBORE=R#UNASDUEZTREOTTONOVEDIECIUNDICIDODICISETTEQUATTROCSEICINQUEAMENOECUNOQUARTOVENTICINQUELVETENAWOCLDIECIPMEZZA";
+const String clockStringItalian =  "SONORLEBORE=R#UNASDUEZTREOTTONOVEDIECIUNDICIDODICISETTEQUATTROCSEICINQUESMENOECUNOQUARTOVENTICINQUEDIECIEMEZZA";
 
 /**
  * @brief control the four minute indicator LEDs
@@ -62,7 +62,7 @@ int showStringOnClock(String message, uint32_t color){
       
       if(word.length() > 0){
         // find word in clock string
-        positionOfWord = clockStringEnglish.indexOf(word, lastLetterClock);
+        positionOfWord = clockStringItalian.indexOf(word, lastLetterClock);
         
         if(positionOfWord >= 0){
           // word found on clock -> enable leds in targetgrid
