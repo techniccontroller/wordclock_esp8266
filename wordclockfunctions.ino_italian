@@ -1,4 +1,4 @@
-
+// HINT: I replaced the special Italian letters (E' and L') in the following strings with = and # 
 const String clockStringEnglish =  "SONORLEBORE=R#UNASDUEZTREOTTONOVEDIECIUNDICIDODICISETTEQUATTROCSEICINQUEAMENOECUNOQUARTOVENTICINQUELVETENAWOCLDIECIPMEZZA";
 
 /**
