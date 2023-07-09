@@ -400,8 +400,9 @@ void setup() {
   logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
   logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
 
-  // Read brightness setting from EEPROM
+  // Read brightness setting from EEPROM, lower limit is 10 so that the LEDs are not completely off
   brightness = readIntEEPROM(ADR_BRIGHTNESS);
+  if(brightness < 10) brightness = 10;
   logger.logString("Brightness: " + String(brightness));
   ledmatrix.setBrightness(brightness);
   
@@ -836,6 +837,7 @@ void handleCommand() {
     nightModeEndHour = split(timestr, '-', 2).toInt();
     nightModeEndMin = split(timestr, '-', 3).toInt();
     brightness = split(timestr, '-', 4).toInt();
+    if(brightness < 10) brightness = 10;
     writeIntEEPROM(ADR_NM_START_H, nightModeStartHour);
     writeIntEEPROM(ADR_NM_START_M, nightModeStartMin);
     writeIntEEPROM(ADR_NM_END_H, nightModeEndHour);
