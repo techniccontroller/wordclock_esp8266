@@ -397,6 +397,10 @@ void setup() {
   nightModeStartMin = readIntEEPROM(ADR_NM_START_M);
   nightModeEndHour = readIntEEPROM(ADR_NM_END_H);
   nightModeEndMin = readIntEEPROM(ADR_NM_END_M);
+  if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
+  if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
+  if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
+  if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
   logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
   logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
 
@@ -510,7 +514,7 @@ void loop() {
   }
 
   // periodically write colors to matrix
-  if(!nightMode && (millis() - lastAnimationStep > PERIOD_MATRIXUPDATE)){
+  if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE){
     ledmatrix.drawOnMatrixSmooth(filterFactor);
     lastAnimationStep = millis();
   }
@@ -838,6 +842,10 @@ void handleCommand() {
     nightModeEndMin = split(timestr, '-', 3).toInt();
     brightness = split(timestr, '-', 4).toInt();
     if(brightness < 10) brightness = 10;
+    if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
+    if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
+    if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
+    if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
     writeIntEEPROM(ADR_NM_START_H, nightModeStartHour);
     writeIntEEPROM(ADR_NM_START_M, nightModeStartMin);
     writeIntEEPROM(ADR_NM_END_H, nightModeEndHour);
@@ -978,7 +986,7 @@ void handleDataRequest() {
  */
 void setNightmode(bool on){
   ledmatrix.gridFlush();
-  ledmatrix.drawOnMatrixInstant();
+  ledmatrix.drawOnMatrixSmooth(0.2);
   nightMode = on;
 }
 
