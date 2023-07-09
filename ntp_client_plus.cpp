@@ -329,38 +329,38 @@ unsigned int NTPClientPlus::getYear()
 
     unsigned long sec1900 = this->getSecsSince1900();
 
-    //NTP beginnt am 1. Januar 1900
+    //NTP starts at 1. Jan 1900
     unsigned int result = 1900;
-    unsigned int tageimjahr = 0;
-    unsigned int tage = 0;
+    unsigned int dayInYear = 0;
+    unsigned int days = 0;
     unsigned int days1900 = 0;
 
     int for_i = 0;
-    bool schaltjahr = LOW;
+    bool leapYear = LOW;
 
     days1900 = sec1900 / this->secondperday;
 
     for (for_i = 0; for_i < days1900; for_i++)
     {
 
-        schaltjahr = this->isLeapYear(result);
+        leapYear = this->isLeapYear(result);
 
-        if (schaltjahr)
+        if (leapYear)
         {
-            tageimjahr = 366;
+            dayInYear = 366;
         }
 
         else
         {
-            tageimjahr = 365;
+            dayInYear = 365;
         }
 
-        tage++;
+        days++;
 
-        if (tage >= tageimjahr)
+        if (days >= dayInYear)
         {
             result++;
-            tage = 0;
+            days = 0;
         }
     }
 
@@ -417,103 +417,103 @@ int NTPClientPlus::getMonth(int dayOfYear)
 
     bool leapYear = this->isLeapYear(this->getYear());
 
-    //Monatsanfänge
-    int monatMin[13] = {0, 1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335};
-    //Monatsenden
-    int monatMax[13] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
+    // Month beginnings
+    int monthMin[13] = {0, 1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335};
+    // Month endings
+    int monthMax[13] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
 
-    int datum = 0;
+    int month = 0;
 
     int y = 0;
 
-    //Berechnung des Anfang und Ende jeden Montas im Schaltjahr
+    // Calculation of the beginning and end of each month in the leap year
     if (leapYear == HIGH)
     {
 
         for (y = 3; y < 13; y++)
         {
-            monatMin[y] = monatMin[y] + 1;
+            monthMin[y] = monthMin[y] + 1;
         }
 
         for (y = 2; y < 13; y++)
         {
-            monatMax[y] = monatMax[y] + 1;
+            monthMax[y] = monthMax[y] + 1;
         }
     }
 
-    //Monat Januar
-    if (dayOfYear >= monatMin[1] && dayOfYear <= monatMax[1])
+    // January
+    if (dayOfYear >= monthMin[1] && dayOfYear <= monthMax[1])
     {
-        datum = 1;
+        month = 1;
     }
 
-    //Monat Februar
-    if (dayOfYear >= monatMin[2] && dayOfYear <= monatMax[2])
+    // February
+    if (dayOfYear >= monthMin[2] && dayOfYear <= monthMax[2])
     {
-        datum = 2;
+        month = 2;
     }
 
-    //Monat März
-    if (dayOfYear >= monatMin[3] && dayOfYear <= monatMax[3])
+    // March
+    if (dayOfYear >= monthMin[3] && dayOfYear <= monthMax[3])
     {
-        datum = 3;
+        month = 3;
     }
 
-    //Monat April
-    if (dayOfYear >= monatMin[4] && dayOfYear <= monatMax[4])
+    // April
+    if (dayOfYear >= monthMin[4] && dayOfYear <= monthMax[4])
     {
-        datum = 4;
+        month = 4;
     }
 
-    //Monat Mai
-    if (dayOfYear >= monatMin[5] && dayOfYear <= monatMax[5])
+    // May
+    if (dayOfYear >= monthMin[5] && dayOfYear <= monthMax[5])
     {
-        datum = 5;
+        month = 5;
     }
 
-    //Monat Juni
-    if (dayOfYear >= monatMin[6] && dayOfYear <= monatMax[6])
+    // June
+    if (dayOfYear >= monthMin[6] && dayOfYear <= monthMax[6])
     {
-        datum = 6;
+        month = 6;
     }
 
-    //Monat Juli
-    if (dayOfYear >= monatMin[7] && dayOfYear <= monatMax[7])
+    // July
+    if (dayOfYear >= monthMin[7] && dayOfYear <= monthMax[7])
     {
-        datum = 7;
+        month = 7;
     }
 
-    //Monat August
-    if (dayOfYear >= monatMin[8] && dayOfYear <= monatMax[8])
+    // August
+    if (dayOfYear >= monthMin[8] && dayOfYear <= monthMax[8])
     {
-        datum = 8;
+        month = 8;
     }
 
-    //Monat September
-    if (dayOfYear >= monatMin[9] && dayOfYear <= monatMax[9])
+    // September
+    if (dayOfYear >= monthMin[9] && dayOfYear <= monthMax[9])
     {
-        datum = 9;
+        month = 9;
     }
 
-    //Monat Oktober
-    if (dayOfYear >= monatMin[10] && dayOfYear <= monatMax[10])
+    // October
+    if (dayOfYear >= monthMin[10] && dayOfYear <= monthMax[10])
     {
-        datum = 10;
+        month = 10;
     }
 
-    //Monat November
-    if (dayOfYear >= monatMin[11] && dayOfYear <= monatMax[11])
+    // November
+    if (dayOfYear >= monthMin[11] && dayOfYear <= monthMax[11])
     {
-        datum = 11;
+        month = 11;
     }
 
-    //Monat Dezember
-    if (dayOfYear >= monatMin[12] && dayOfYear <= monatMax[12])
+    // December
+    if (dayOfYear >= monthMin[12] && dayOfYear <= monthMax[12])
     {
-        datum = 12;
+        month = 12;
     }
 
-    return datum;
+    return month;
 }
 
 /**
