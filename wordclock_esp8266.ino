@@ -511,7 +511,8 @@ void loop() {
 
   // set custom led pattern on matrix
   for(int i = 114; i < 130; i++){
-    ledmatrix.gridAddPixel(i%WIDTH, i/WIDTH, maincolor_clock);
+    matrix.setPassThruColor(maincolor_clock);
+    matrix.drawPixel(i%WIDTH, i/WIDTH, 0);
   }
 
   // periodically write colors to matrix
