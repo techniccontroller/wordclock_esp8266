@@ -109,11 +109,21 @@ To program the ESP8266 with the Arduino IDE, you need to install the board infor
 ## Remark about the WiFi setup
 
 Regarding the Wifi setting, I have actually implemented two variants: 
-1. By default the WifiManager is activated. That is, the word clock makes the first time its own WiFi (should be called "WordclockAP"). There you simply connect to the cell phone and you can perform configuration of the WiFi settings conveniently as with a SmartHome devices (Very elegant 😊)
+1. By default the WifiManager is activated. That is, the word clock makes the first time its own WiFi (should be called "WordclockAP"). There you connect from a cell phone to `192.168.4.1`* and you can perform configuration of the WiFi settings conveniently as with a SmartHome devices (Very elegant 😊)
 2. Another (traditional) variant is to define the wifi credentials in the code (in secrets.h). 
     - For this you have to comment out lines 230 to 251 in the code of the file *wordclock_esp8266.ino* (/\* before and \*/ after) 
     - and comment out lines 257 to 305 (/\* and \*/ remove)
+(* default IP provided by the WifiMAnager library.)
 
+## Resetting the wifi
+
+You can clear the stored wifi credentials and restart the wifi setup described above with these steps:
+1. Open the settings panel in the web UI.
+2. Enable 'Reset Wifi' slider.
+3. Save settings.
+4. LED test should be performed.
+5. Disconnect and reconnect the power. Wifi credentials were removed. Setup should be restarted.
+Resetting the wifi credentials does not delete uploaded files.
 
 ## Remark about Logging
 
