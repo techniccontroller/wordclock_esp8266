@@ -145,6 +145,9 @@ ESP8266WebServer server(HTTPPort);
 //DNS Server
 DNSServer DnsServer;
 
+// Wifi server. keep around to support resetting.
+WiFiManager wifiManager;
+
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
@@ -236,7 +239,7 @@ void setup() {
   /** Use WiFiMaanger for handling initial Wifi setup **/
 
   // Local intialization. Once its business is done, there is no need to keep it around
-  WiFiManager wifiManager;
+
 
   // Uncomment and run it once, if you want to erase all the stored information
   //wifiManager.resetSettings();
@@ -367,7 +370,6 @@ void setup() {
     ledmatrix.gridFlush();
     ledmatrix.drawOnMatrixInstant();
   }
-
 
   // setup NTP
   ntp.setupNTPClient();
@@ -855,6 +857,23 @@ void handleCommand() {
     logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
     logger.logString("Brightness: " + String(brightness));
     ledmatrix.setBrightness(brightness);
+  }
+  else if (server.argName(0) == "resetwifi"){
+    wifiManager.resetSettings();
+    // run LED test.
+    for(int r = 0; r < HEIGHT; r++){
+      for(int c = 0; c < WIDTH; c++){
+        matrix.fillScreen(0);
+        matrix.drawPixel(c, r, LEDMatrix::color24to16bit(colors24bit[2]));
+        matrix.show();
+        delay(10); 
+        }
+    }
+    
+    // clear Matrix
+    matrix.fillScreen(0);
+    matrix.show();
+    delay(200);
   }
   else if(server.argName(0) == "stateautochange"){
     String modestr = server.arg(0);

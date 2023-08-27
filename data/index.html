@@ -243,7 +243,7 @@
 	}
 
 	.show{
-		height: 150px;
+		height: 200px;
 		transition: height 1s;
 	}
 
@@ -283,6 +283,12 @@
 			<div class="number-container">
 				<label for="nm_end" style="align-self: flex-start">Nightmode end time: </label>
 				<input type="time" id="nm_end" name="nm_end" min="00:00" max="23:59">
+			</div>
+			<div class="checkbox-container">
+				<label for="ResetWifi" style="align-self: flex-start">Reset Wifi</label> 
+				<div>
+					<input name= "ResetWifi" id="ResetWifi" type="checkbox" class="toggle">
+				</div>
 			</div>
 			<div class="buttonClass save-button" onclick="saveSettings()">SAVE</div>
 		</div>
@@ -538,6 +544,7 @@
 				var nmStart = document.getElementById("nm_start");
 				var nmEnd = document.getElementById("nm_end");
 				var brightnessElmt = document.getElementById("brightness");
+				var ckb_resetWifi = document.querySelector('input[id="ResetWifi"]');
 				var cmdstr = "./cmd?setting=";
 				cmdstr += nmStart.value.replace(":", "-");
 				cmdstr += "-";
@@ -546,6 +553,9 @@
 				cmdstr += brightnessElmt.value;
 				console.log(cmdstr);
 				sendCommand(cmdstr);
+				if(ckb_resetWifi.checked) {
+					sendCommand("./cmd?resetwifi");
+				}
 				toggleSettings();
 			}
 
