@@ -50,7 +50,7 @@
 #define  LEVELUP           4    // Number of rows before levelup, default 5
 
 #define WIDTH 11
-#define HEIGHT 10
+#define HEIGHT 11
 
 class Tetris{
 

@@ -205,7 +205,7 @@ void LEDMatrix::drawOnMatrix(float factor){
   for(int i = 0; i < 4; i++){
     uint32_t filteredColor = interpolateColor32bit(currentindicators[i], targetindicators[i], factor);
     (*neomatrix).setPassThruColor(filteredColor);
-    (*neomatrix).drawPixel(i,  HEIGHT, 0);
+    (*neomatrix).drawPixel(WIDTH - (1+i),  HEIGHT, 0);
     currentindicators[i] = filteredColor;
     totalCurrent += calcEstimatedLEDCurrent(filteredColor);
   }

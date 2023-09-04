@@ -20,7 +20,7 @@
 #define DEBOUNCE_TIME 300   // in ms
 
 #define X_MAX 11
-#define Y_MAX 10
+#define Y_MAX 11
 
 #define GAME_DELAY 400      // in ms
 
