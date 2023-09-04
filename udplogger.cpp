@@ -30,9 +30,10 @@ void UDPLogger::logString(String logmessage){
     _lastSend=millis();
 }
 
-void UDPLogger::logColor24bit(uint32_t color){
+void UDPLogger::logColor32bit(uint32_t color){
+  uint8_t resultWhite = color >> 24 & 0xff;
   uint8_t resultRed = color >> 16 & 0xff;
   uint8_t resultGreen = color >> 8 & 0xff;
   uint8_t resultBlue = color & 0xff;
-  logString(String(resultRed) + ", " + String(resultGreen) + ", " + String(resultBlue));
+  logString(String(resultRed) + ", " + String(resultGreen) + ", " + String(resultBlue) + ", " + String(resultWhite));
 }

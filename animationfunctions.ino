@@ -354,7 +354,7 @@ int randomtetris(bool init){
       for(int r = 0; r < HEIGHT; r++){
         if(screen[r+3][c] != 0){
           // screen is 3 pixels higher than led grid, so drop the upper three lines
-          ledmatrix.gridAddPixel(c,r,colors24bit[(screen[r+3][c] % NUM_COLORS)]);
+          ledmatrix.gridAddPixel(c,r,colors32bit[(screen[r+3][c] % NUM_COLORS)]);
         }
       }
     }
