@@ -591,22 +591,28 @@ bool NTPClientPlus::updateSWChange()
             if ((this->daysInMonth[3] - dateDay) < 7)
             {
 
-                //Example year 2020: March 31 days; Restart March 26, 2020 (Thursday = weekday = 4); 5 days remaining; Last Sunday March 29, 2020
+                //Example year 2020: March 31 days; Check on March 26, 2020 (Thursday = weekday = 4); 5 days remaining; Last Sunday March 29, 2020
                 //Calculation: 31 - 26 = 5; 5 + 4 = 9;
                 //Result: Last day in March is a Tuesday. There follows another Sunday in October => set winter time
 
-                //Example year 2021: March 31 days; Restart March 30, 2021 (Tuesday = weekday = 2); 1 days remaining; Last Sunday March 28, 2021
+                //Example year 2021: March 31 days; Check on March 30, 2021 (Tuesday = weekday = 2); 1 days remaining; Last Sunday March 28, 2021
                 //Calculation: 31 - 30 = 1; 1 + 2 = 3;
                 //Result: Last day in March is a Wednesday. Changeover to summer time already done => set summer time
 
+                // If today is Sunday (dayOfWeek == 7) then this is already the last sunday in march -> set summer time
+                if(dayOfWeek == 7){
+                    this->setSummertime(1);
+                    summertimeActive = true;
+                }
+
                 //There follows within the last week in March one more Sunday => set winter time
-                if (((this->daysInMonth[3] - dateDay) + dayOfWeek) >= 7)
+                else if (((this->daysInMonth[3] - dateDay) + dayOfWeek) >= 7)
                 {
                     this->setSummertime(0);
                     summertimeActive = false;
                 }
 
-                // last sunday in march already over -> summer time
+                // last sunday in march already over -> set summer time
                 else
                 {
                     this->setSummertime(1);
@@ -614,7 +620,7 @@ bool NTPClientPlus::updateSWChange()
                 }
             }
 
-            // restart in first three weeks of march -> winter time
+            // Check in first three weeks of march -> winter time
             else
             {
                 this->setSummertime(0);
@@ -626,20 +632,26 @@ bool NTPClientPlus::updateSWChange()
         else if (dateMonth == 10)
         {
 
-            // restart last week of october
+            // Check in last week of october
             if ((this->daysInMonth[10] - dateDay) < 7)
             {
 
-                //Example year 2020: October 31 days; restart October 26, 2020 (Monday = weekday = 1); 5 days remaining; last Sunday October 25, 2020
+                //Example year 2020: October 31 days; Check on October 26, 2020 (Monday = weekday = 1); 5 days remaining; last Sunday October 25, 2020
                 //Calculation: 31 - 26 = 5; 5 + 1 = 6;
                 //Result: Last day in October is a Saturday. Changeover to winter time already done => set winter time
 
-                //Example year 2021: October 31 days; Restart 26. October 2021 (Tuesday = weekday = 2); 5 days remaining; Last Sunday 31. October 2021
+                //Example year 2021: October 31 days; Check on 26. October 2021 (Tuesday = weekday = 2); 5 days remaining; Last Sunday 31. October 2021
                 //Calculation: 31 - 26 = 5; 5 + 2 = 7;
                 //Result: Last day in October is a Sunday. There follows another Sunday in October => set summer time
+                
+                // If today is Sunday (dayOfWeek == 7) then this is already the last sunday in october -> winter time
+                if(dayOfWeek == 7){
+                    this->setSummertime(0);
+                    summertimeActive = false;
+                }
 
                 // There follows within the last week in October one more Sunday => summer time
-                if (((this->daysInMonth[10] - dateDay) + dayOfWeek) >= 7)
+                else if (((this->daysInMonth[10] - dateDay) + dayOfWeek) >= 7)
                 {
                     this->setSummertime(1);
                     summertimeActive = true;
@@ -653,7 +665,7 @@ bool NTPClientPlus::updateSWChange()
                 }
             }
 
-            // restart in first three weeks of october -> summer time
+            // Check in first three weeks of october -> summer time
             else
             {
                 this->setSummertime(1);
@@ -661,14 +673,14 @@ bool NTPClientPlus::updateSWChange()
             }
         }
 
-        // restart in summer time
+        // Check in summer time
         else if (dateMonth > 3 && dateMonth < 10)
         {
             this->setSummertime(1);
             summertimeActive = true;
         }
 
-        // restart in winter time
+        // Check in winter time
         else if (dateMonth < 3 || dateMonth > 10)
         {
             this->setSummertime(0);

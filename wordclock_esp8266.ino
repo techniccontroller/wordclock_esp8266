@@ -541,6 +541,7 @@ void loop() {
       logger.logString("NTP-Update successful");
       logger.logString("Time: " +  ntp.getFormattedTime());
       logger.logString("Date: " +  ntp.getFormattedDate());
+      logger.logString("Day of Week (Mon=1, Sun=7): " +  String(ntp.getDayOfWeek()));
       logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate = millis();
@@ -555,6 +556,7 @@ void loop() {
       logger.logString("NTP-Update not successful. Reason: Too large time difference");
       logger.logString("Time: " +  ntp.getFormattedTime());
       logger.logString("Date: " +  ntp.getFormattedDate());
+      logger.logString("Day of Week (Mon=1, Sun=7): " +  ntp.getDayOfWeek());
       logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate += 10000;
