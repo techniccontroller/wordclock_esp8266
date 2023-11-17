@@ -152,7 +152,7 @@ WiFiManager wifiManager;
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, HEIGHT+1, NEOPIXELPIN,
-  NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
+  NEO_MATRIX_BOTTOM + NEO_MATRIX_LEFT +
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
 

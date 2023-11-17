@@ -191,7 +191,7 @@ void LEDMatrix::drawOnMatrix(float factor){
     for(int z = 0; z < HEIGHT; z++){
       // inplement momentum as smooth transistion function
       uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], factor);
-      (*neomatrix).drawPixel(s, z, color24to16bit(filteredColor)); 
+      (*neomatrix).drawPixel(s, z+1, color24to16bit(filteredColor)); 
       currentgrid[z][s] = filteredColor;
       totalCurrent += calcEstimatedLEDCurrent(filteredColor);
     } 
@@ -200,7 +200,7 @@ void LEDMatrix::drawOnMatrix(float factor){
   // loop over all minute indicator leds
   for(int i = 0; i < 4; i++){
     uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], factor);
-    (*neomatrix).drawPixel(WIDTH - (1+i), HEIGHT, color24to16bit(filteredColor));
+    (*neomatrix).drawPixel(WIDTH - (1+i), 0, color24to16bit(filteredColor));
     currentindicators[i] = filteredColor;
     totalCurrent += calcEstimatedLEDCurrent(filteredColor);
   }

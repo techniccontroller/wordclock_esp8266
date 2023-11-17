@@ -1,5 +1,7 @@
 # Wordclock 2.0
 
+> **_NOTE:_** This developmentbranch (*dev_lars*) implements requested changes by Lars: first led is on bottom left corner, minutes indicators are at the end of led strip (top of clock).
+
 Wordclock 2.0 with ESP8266 and NTP time
 
 More details on my website: https://techniccontroller.com/word-clock-with-wifi-and-neopixel/
