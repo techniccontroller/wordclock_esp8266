@@ -200,7 +200,7 @@ void LEDMatrix::drawOnMatrix(float factor){
   // loop over all minute indicator leds
   for(int i = 0; i < 4; i++){
     uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], factor);
-    (*neomatrix).drawPixel(WIDTH - (1+i), 0, color24to16bit(filteredColor));
+    (*neomatrix).drawPixel(i, 0, color24to16bit(filteredColor));
     currentindicators[i] = filteredColor;
     totalCurrent += calcEstimatedLEDCurrent(filteredColor);
   }

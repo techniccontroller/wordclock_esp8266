@@ -9,7 +9,7 @@
 // width of the led matrix
 #define WIDTH 11
 // height of the led matrix
-#define HEIGHT 11
+#define HEIGHT 10
 
 #define DEFAULT_CURRENT_LIMIT 9999
 

@@ -95,7 +95,7 @@ enum direction {right, left, up, down};
 // width of the led matrix
 #define WIDTH 11
 // height of the led matrix
-#define HEIGHT 11
+#define HEIGHT 10
 
 // own datatype for state machine states
 #define NUM_STATES 6
