@@ -80,7 +80,7 @@ MySketchbookLocation
 ## Upload program to ESP8266 with Arduino IDE
 
 #### STEP1: Installation of Arduino IDE
-First, the latest version of the Arduino IDE needs to be downloaded and installed from here.
+First, the latest version of the Arduino IDE needs to be downloaded and installed from [here](https://www.arduino.cc/en/software).
 
 #### STEP2: Installation of ESP8266 Arduino Core
 To program the ESP8266 with the Arduino IDE, you need to install the board information first in Arduino IDE. To do that follow the following instructions:
