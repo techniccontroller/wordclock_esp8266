@@ -39,6 +39,12 @@ The code compiles only with one file named *wordclockfunctions.ino*. So please r
 4. The implemented WiFiManager helps you to set up a WiFi connection with your home WiFi -> on the first startup it will create a WiFi access point named "WordclockAP". Connect your phone to this access point and follow the steps which will be shown to you. 
 5. After a successful WiFi setup, open the browser and enter the IP address of your ESP8266 to access the interface of the webserver. 
 6. Here you can upload all files located in the folder "data". Please make sure all icons stay in the folder "icons" also on the webserver.
+    - Open **http://\<ip-address\>/fs.html** in a browser
+    - Upload **fs.html**
+    - Upload **style.css**
+    - Upload **index.html**
+    - Create a new folder **icons**
+    - Upload all icons into this new folder **icons**
 
 
 <img src="https://techniccontroller.com/wp-content/uploads/filemanager1-1.png" height="300px" /> <img src="https://techniccontroller.com/wp-content/uploads/filemanager2-1.png" height="300px" /> <img src="https://techniccontroller.com/wp-content/uploads/filemanager3-1.png" height="300px" />
