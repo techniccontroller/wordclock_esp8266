@@ -206,6 +206,11 @@ int nightModeEndMin = 0;
 // Watchdog counter to trigger restart if NTP update was not possible 30 times in a row (5min)
 int watchdogCounter = 30;
 
+// global variables for bypassing time from webserver directly to clock
+
+int hours = 0;
+int minutes = 0;
+
 // ----------------------------------------------------------------------------------
 //                                        SETUP
 // ----------------------------------------------------------------------------------
@@ -445,8 +450,8 @@ void loop() {
       // state clock
       case st_clock:
         {
-          int hours = ntp.getHours24();
-          int minutes = ntp.getMinutes();
+          //int hours = ntp.getHours24();  // deactivated to bypass time from webserver directly to clock
+          //int minutes = ntp.getMinutes();
           showStringOnClock(timeToString(hours, minutes), maincolor_clock);
           drawMinuteIndicator(minutes, maincolor_clock);
         }
@@ -792,6 +797,18 @@ void handleCommand() {
     Serial.print(server.argName(i));
     Serial.print(F(": "));
     Serial.println(server.arg(i));
+  }
+
+  if (server.argName(0) == "time") // the parameter which was sent to this server is time
+  {
+    String timestr = server.arg(0) + "-";
+    String hoursstr = split(timestr, '-', 0);
+    String minstr= split(timestr, '-', 1);
+    logger.logString(timestr);
+    logger.logString("hours: " + String(hoursstr.toInt()));
+    logger.logString("min: " + String(minstr.toInt()));
+    hours = hoursstr.toInt();
+    minutes = minstr.toInt();
   }
   
   if (server.argName(0) == "led") // the parameter which was sent to this server is led color
