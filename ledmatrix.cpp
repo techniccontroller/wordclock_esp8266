@@ -191,7 +191,7 @@ void LEDMatrix::drawOnMatrix(float factor){
     for(int z = 0; z < HEIGHT; z++){
       // inplement momentum as smooth transistion function
       uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], factor);
-      (*neomatrix).drawPixel(s, z, color24to16bit(filteredColor)); 
+      (*neomatrix).drawPixel(s*2, z, color24to16bit(filteredColor)); 
       currentgrid[z][s] = filteredColor;
       totalCurrent += calcEstimatedLEDCurrent(filteredColor);
     } 

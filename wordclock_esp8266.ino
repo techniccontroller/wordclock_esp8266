@@ -151,7 +151,7 @@ WiFiManager wifiManager;
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, HEIGHT+1, NEOPIXELPIN,
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH+10, HEIGHT+1, NEOPIXELPIN,
   NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
@@ -343,7 +343,7 @@ void setup() {
   if(!ESP.getResetReason().equals("Software/System restart")){
     // test quickly each LED
     for(int r = 0; r < HEIGHT; r++){
-        for(int c = 0; c < WIDTH; c++){
+        for(int c = 0; c < WIDTH+10; c++){
         matrix.fillScreen(0);
         matrix.drawPixel(c, r, LEDMatrix::color24to16bit(colors24bit[2]));
         matrix.show();
