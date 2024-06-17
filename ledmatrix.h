@@ -16,10 +16,10 @@
 class LEDMatrix{
     public:
         LEDMatrix(Adafruit_NeoMatrix *mymatrix, uint8_t mybrightness, UDPLogger *mylogger);
-        static uint32_t Color24bit(uint8_t r, uint8_t g, uint8_t b);
+        static uint32_t Color32bit(uint8_t r, uint8_t g, uint8_t b, uint8_t w = 0);
         static uint16_t color24to16bit(uint32_t color24bit);
         static uint32_t Wheel(uint8_t WheelPos);
-        static uint32_t interpolateColor24bit(uint32_t color1, uint32_t color2, float factor);
+        static uint32_t interpolateColor32bit(uint32_t color1, uint32_t color2, float factor);
         void setupMatrix();
         void setMinIndicator(uint8_t pattern, uint32_t color);
         void gridAddPixel(uint8_t x, uint8_t y, uint32_t color);

@@ -573,7 +573,7 @@ void Tetris::everythingRed() {
  * 
  */
 void Tetris::showscore() {
-    uint32_t color = LEDMatrix::Color24bit(255, 170, 0);
+    uint32_t color = LEDMatrix::Color32bit(255, 170, 0);
     (*_ledmatrix).gridFlush();
     if(_score > 9){
         (*_ledmatrix).printNumber(2, 3, _score/10, color);

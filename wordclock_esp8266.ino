@@ -57,6 +57,7 @@
 #define ADR_MC_RED 20
 #define ADR_MC_GREEN 22
 #define ADR_MC_BLUE 24
+#define ADR_MC_WHITE 26
 
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
@@ -154,18 +155,18 @@ WiFiManager wifiManager;
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH+10, HEIGHT+1, NEOPIXELPIN,
   NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
-  NEO_GRB            + NEO_KHZ800);
+  NEO_RGBW            + NEO_KHZ800);
 
 
-// seven predefined colors24bit (green, red, yellow, purple, orange, lightgreen, blue) 
-const uint32_t colors24bit[NUM_COLORS] = {
-  LEDMatrix::Color24bit(0, 255, 0),
-  LEDMatrix::Color24bit(255, 0, 0),
-  LEDMatrix::Color24bit(200, 200, 0),
-  LEDMatrix::Color24bit(255, 0, 200),
-  LEDMatrix::Color24bit(255, 128, 0), 
-  LEDMatrix::Color24bit(0, 128, 0), 
-  LEDMatrix::Color24bit(0, 0, 255) };
+// seven predefined colors32bit (green, red, yellow, purple, orange, lightgreen, blue) 
+const uint32_t colors32bit[NUM_COLORS] = {
+  LEDMatrix::Color32bit(0, 255, 0, 0),
+  LEDMatrix::Color32bit(255, 0, 0, 0),
+  LEDMatrix::Color32bit(200, 200, 0, 0),
+  LEDMatrix::Color32bit(255, 0, 200, 0),
+  LEDMatrix::Color32bit(255, 128, 0, 0), 
+  LEDMatrix::Color32bit(0, 128, 0, 0), 
+  LEDMatrix::Color32bit(0, 0, 255, 0) };
 
 uint8_t brightness = 40;            // current brightness of leds
 bool sprialDir = false;
@@ -193,8 +194,8 @@ float filterFactor = DEFAULT_SMOOTHING_FACTOR;// stores smoothing factor for led
 uint8_t currentState = st_clock;              // stores current state
 bool stateAutoChange = false;                 // stores state of automatic state change
 bool nightMode = false;                       // stores state of nightmode
-uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital clock
-uint32_t maincolor_snake = colors24bit[1];    // color of the random snake animation
+uint32_t maincolor_clock = colors32bit[2];    // color of the clock and digital clock
+uint32_t maincolor_snake = colors32bit[1];    // color of the random snake animation
 bool apmode = false;                          // stores if WiFi AP mode is active
 
 // nightmode settings
@@ -232,7 +233,7 @@ void setup() {
   ledmatrix.setCurrentLimit(CURRENT_LIMIT_LED);
 
   // Turn on minutes leds (blue)
-  ledmatrix.setMinIndicator(15, colors24bit[6]);
+  ledmatrix.setMinIndicator(15, colors32bit[6]);
   ledmatrix.drawOnMatrixInstant();
 
 
@@ -280,7 +281,7 @@ void setup() {
 
   int timeoutcounter = 0;
   while (WiFi.status() != WL_CONNECTED && timeoutcounter < 30) {
-    ledmatrix.setMinIndicator(15, colors24bit[6]);
+    ledmatrix.setMinIndicator(15, colors32bit[6]);
     ledmatrix.drawOnMatrixInstant();
     delay(250);
     ledmatrix.setMinIndicator(15, 0);
@@ -345,7 +346,9 @@ void setup() {
     for(int r = 0; r < HEIGHT; r++){
         for(int c = 0; c < WIDTH+10; c++){
         matrix.fillScreen(0);
-        matrix.drawPixel(c, r, LEDMatrix::color24to16bit(colors24bit[2]));
+        matrix.setPassThruColor(colors32bit[2]);
+        matrix.drawPixel(c, r, 0);
+        matrix.setPassThruColor(0);
         matrix.show();
         delay(10); 
         }
@@ -388,7 +391,7 @@ void setup() {
 
   // init all animation modes
   // init snake
-  randomsnake(true, 8, colors24bit[1], -1);
+  randomsnake(true, 8, colors32bit[1], -1);
   // init spiral
   spiral(true, sprialDir, WIDTH-6);
   // init random tetris
@@ -434,7 +437,7 @@ void loop() {
     // Check wifi status (only if no apmode)
     if(!apmode && WiFi.status() != WL_CONNECTED){
       Serial.println("connection lost");
-      ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
+      ledmatrix.gridAddPixel(0, 5, colors32bit[1]);
       ledmatrix.drawOnMatrixInstant();
     }
   }
@@ -623,7 +626,7 @@ void entryAction(uint8_t state){
       break;
     case st_snake:
       if(stateAutoChange){
-        randomsnake(true, 8, colors24bit[1], -1);
+        randomsnake(true, 8, colors32bit[1], -1);
       }
       else{
         filterFactor = 1.0; // no smoothing
@@ -706,7 +709,8 @@ void handleLEDDirect() {
         uint8_t red = byteArray[i]; // red
         uint8_t green = byteArray[i + 1]; // green
         uint8_t blue = byteArray[i + 2]; // blue
-        ledmatrix.gridAddPixel((i/4) % WIDTH, (i/4) / HEIGHT, LEDMatrix::Color24bit(red, green, blue));
+        uint8_t white = byteArray[i + 3]; // white
+        ledmatrix.gridAddPixel((i/4) % WIDTH, (i/4) / HEIGHT, LEDMatrix::Color32bit(red, green, blue, white));
       }
       ledmatrix.drawOnMatrixInstant();
 
@@ -758,11 +762,12 @@ void handleButton(){
  * 
  */
 
-void setMainColor(uint8_t red, uint8_t green, uint8_t blue){
-  maincolor_clock = LEDMatrix::Color24bit(red, green, blue);
+void setMainColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t white){
+  maincolor_clock = LEDMatrix::Color32bit(red, green, blue, white);
   EEPROM.put(ADR_MC_RED, red);
   EEPROM.put(ADR_MC_GREEN, green);
   EEPROM.put(ADR_MC_BLUE, blue);
+  EEPROM.put(ADR_MC_WHITE, white);
   EEPROM.commit();
 }
 
@@ -775,10 +780,11 @@ void loadMainColor(){
   uint8_t red = EEPROM.read(ADR_MC_RED);
   uint8_t green = EEPROM.read(ADR_MC_GREEN);
   uint8_t blue = EEPROM.read(ADR_MC_BLUE);
+  uint8_t white = EEPROM.read(ADR_MC_WHITE);
   if(int(red) + int(green) + int(blue) < 50){
-    maincolor_clock = colors24bit[2];
+    maincolor_clock = colors32bit[2];
   }else{
-    maincolor_clock = LEDMatrix::Color24bit(red, green, blue);
+    maincolor_clock = LEDMatrix::Color32bit(red, green, blue, white);
   }
 }
 
@@ -800,12 +806,14 @@ void handleCommand() {
     String redstr = split(colorstr, '-', 0);
     String greenstr= split(colorstr, '-', 1);
     String bluestr = split(colorstr, '-', 2);
+    String whitestr = split(colorstr, '-', 3);
     logger.logString(colorstr);
     logger.logString("r: " + String(redstr.toInt()));
     logger.logString("g: " + String(greenstr.toInt()));
     logger.logString("b: " + String(bluestr.toInt()));
+    logger.logString("w: " + String(whitestr.toInt()));
     // set new main color
-    setMainColor(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
+    setMainColor(redstr.toInt(), greenstr.toInt(), bluestr.toInt(), whitestr.toInt());
   }
   else if (server.argName(0) == "mode") // the parameter which was sent to this server is mode change
   {
@@ -866,7 +874,9 @@ void handleCommand() {
     for(int r = 0; r < HEIGHT; r++){
       for(int c = 0; c < WIDTH; c++){
         matrix.fillScreen(0);
-        matrix.drawPixel(c, r, LEDMatrix::color24to16bit(colors24bit[2]));
+        matrix.setPassThruColor(colors32bit[2]);
+        matrix.drawPixel(c, r, 0);
+        matrix.setPassThruColor();
         matrix.show();
         delay(10); 
         }

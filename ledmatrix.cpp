@@ -16,16 +16,17 @@ LEDMatrix::LEDMatrix(Adafruit_NeoMatrix *mymatrix, uint8_t mybrightness, UDPLogg
 }
 
 /**
- * @brief Convert RGB value to 24bit color value
+ * @brief Convert RGBW value to 32bit color value
  * 
  * @param r red value (0-255)
  * @param g green value (0-255)
  * @param b blue value (0-255)
- * @return uint32_t 24bit color value
- */
-uint32_t LEDMatrix::Color24bit(uint8_t r, uint8_t g, uint8_t b) 
+ * @param w white value (0-255) (optional)
+ * @return uint32_t 32bit color value
+*/
+uint32_t LEDMatrix::Color32bit(uint8_t r, uint8_t g, uint8_t b, uint8_t w) 
 {
-  return ((uint32_t)r << 16) | ((uint32_t)g <<  8) | b;
+  return ((uint32_t)w << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
 }
 
 /**
@@ -47,41 +48,43 @@ uint16_t LEDMatrix::color24to16bit(uint32_t color24bit){
  * @brief Input a value 0 to 255 to get a color value. The colors are a transition r - g - b - back to r.
  * 
  * @param WheelPos Value between 0 and 255
- * @return uint32_t return 24bit color of colorwheel
+ * @return uint32_t return color of colorwheel
  */
 uint32_t LEDMatrix::Wheel(uint8_t WheelPos)
 {
     WheelPos = 255 - WheelPos;
     if (WheelPos < 85)
     {
-        return Color24bit(255 - WheelPos * 3, 0, WheelPos * 3);
+        return Color32bit(255 - WheelPos * 3, 0, WheelPos * 3, 0);
     }
     if (WheelPos < 170)
     {
         WheelPos -= 85;
-        return Color24bit(0, WheelPos * 3, 255 - WheelPos * 3);
+        return Color32bit(0, WheelPos * 3, 255 - WheelPos * 3, 0);
     }
     WheelPos -= 170;
-    return Color24bit(WheelPos * 3, 255 - WheelPos * 3, 0);
+    return Color32bit(WheelPos * 3, 255 - WheelPos * 3, 0, 0);
 }
 
 /**
- * @brief Interpolates two colors24bit and returns an color of the result
+ * @brief Interpolates two colors and returns an color of the result
  * 
  * @param color1 startcolor for interpolation
  * @param color2 endcolor for interpolatio
  * @param factor which color is wanted on the path from start to end color
  * @return uint32_t interpolated color
  */
-uint32_t LEDMatrix::interpolateColor24bit(uint32_t color1, uint32_t color2, float factor)
+uint32_t LEDMatrix::interpolateColor32bit(uint32_t color1, uint32_t color2, float factor)
 {
+    uint8_t resultWhite = color1 >> 24 & 0xff;
     uint8_t resultRed = color1 >> 16 & 0xff;
     uint8_t resultGreen = color1 >> 8 & 0xff;
     uint8_t resultBlue = color1 & 0xff;
+    resultWhite = (uint8_t)(resultWhite + (int16_t)(factor * ((int16_t)(color2 >> 24 & 0xff) - (int16_t)resultWhite)));
     resultRed = (uint8_t)(resultRed + (int16_t)(factor * ((int16_t)(color2 >> 16 & 0xff) - (int16_t)resultRed)));
     resultGreen = (uint8_t)(resultGreen + (int16_t)(factor * ((int16_t)(color2 >> 8 & 0xff) - (int16_t)resultGreen)));
     resultBlue = (uint8_t)(resultBlue + (int16_t)(factor * ((int16_t)(color2 & 0xff) - (int16_t)resultBlue)));
-    return Color24bit(resultRed, resultGreen, resultBlue);
+    return Color32bit(resultRed, resultGreen, resultBlue, resultWhite);
 }
 
 /**
@@ -190,8 +193,10 @@ void LEDMatrix::drawOnMatrix(float factor){
   for(int s = 0; s < WIDTH; s++){
     for(int z = 0; z < HEIGHT; z++){
       // inplement momentum as smooth transistion function
-      uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], factor);
-      (*neomatrix).drawPixel(s*2, z, color24to16bit(filteredColor)); 
+      uint32_t filteredColor = interpolateColor32bit(currentgrid[z][s], targetgrid[z][s], factor);
+      (*neomatrix).setPassThruColor(filteredColor);
+      (*neomatrix).drawPixel(s*2, z, 0); 
+      (*neomatrix).setPassThruColor();
       currentgrid[z][s] = filteredColor;
       totalCurrent += calcEstimatedLEDCurrent(filteredColor);
     } 
@@ -199,8 +204,10 @@ void LEDMatrix::drawOnMatrix(float factor){
 
   // loop over all minute indicator leds
   for(int i = 0; i < 4; i++){
-    uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], factor);
-    (*neomatrix).drawPixel(WIDTH - (1+i), HEIGHT, color24to16bit(filteredColor));
+    uint32_t filteredColor = interpolateColor32bit(currentindicators[i], targetindicators[i], factor);
+    (*neomatrix).setPassThruColor(filteredColor);
+    (*neomatrix).drawPixel((WIDTH - (1+i))*2, HEIGHT, 0);
+    (*neomatrix).setPassThruColor();
     currentindicators[i] = filteredColor;
     totalCurrent += calcEstimatedLEDCurrent(filteredColor);
   }
@@ -220,7 +227,7 @@ void LEDMatrix::drawOnMatrix(float factor){
  * @param xpos x of left top corner of digit
  * @param ypos y of left top corner of digit
  * @param number number to display
- * @param color color to display (24bit)
+ * @param color color to display
  */
 void LEDMatrix::printNumber(uint8_t xpos, uint8_t ypos, uint8_t number, uint32_t color)
 {
@@ -239,7 +246,7 @@ void LEDMatrix::printNumber(uint8_t xpos, uint8_t ypos, uint8_t number, uint32_t
  * @param xpos x of left top corner of character
  * @param ypos y of left top corner of character
  * @param character character to display
- * @param color color to display (24bit)
+ * @param color color to display
  */
 void LEDMatrix::printChar(uint8_t xpos, uint8_t ypos, char character, uint32_t color)
 {
@@ -273,18 +280,19 @@ void LEDMatrix::setBrightness(uint8_t mybrightness){
 /**
  * @brief Calc estimated current (mA) for one pixel with the given color and brightness
  * 
- * @param color 24bit color value of the pixel for which the current should be calculated
+ * @param color 32bit color value of the pixel for which the current should be calculated
  * @return the current in mA
  */
 uint16_t LEDMatrix::calcEstimatedLEDCurrent(uint32_t color){
   // extract rgb values
+  uint8_t white = color >> 24 & 0xff;
   uint8_t red = color >> 16 & 0xff;
   uint8_t green = color >> 8 & 0xff;
   uint8_t blue = color & 0xff;
   
   // Linear estimation: 20mA for full brightness per LED 
   // (calculation avoids float numbers)
-  uint32_t estimatedCurrent = (20 * red) + (20 * green) + (20 * blue);
+  uint32_t estimatedCurrent = (20 * red) + (20 * green) + (20 * blue) + (20 * white);
   estimatedCurrent /= 255;
   estimatedCurrent = (estimatedCurrent * brightness)/255;
 

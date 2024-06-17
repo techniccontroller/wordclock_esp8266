@@ -196,7 +196,7 @@ direction nextDir(direction dir, int d){
  * 
  * @param hours hours of time to display
  * @param minutes minutes of time to display
- * @param color  color to display (24bit)
+ * @param color  color to display
  */
 void showDigitalClock(uint8_t hours, uint8_t minutes, uint32_t color){
   ledmatrix.gridFlush();
@@ -354,7 +354,7 @@ int randomtetris(bool init){
       for(int r = 0; r < HEIGHT; r++){
         if(screen[r+3][c] != 0){
           // screen is 3 pixels higher than led grid, so drop the upper three lines
-          ledmatrix.gridAddPixel(c,r,colors24bit[(screen[r+3][c] % NUM_COLORS)]);
+          ledmatrix.gridAddPixel(c,r,colors32bit[(screen[r+3][c] % NUM_COLORS)]);
         }
       }
     }
