@@ -147,9 +147,6 @@ String timeToString(uint8_t hours, uint8_t minutes) {
 
   // show hours
   switch (hours) {
-    case 0:
-      message += "TWELVE ";
-      break;
     case 1:
       message += "ONE ";
       break;
@@ -182,6 +179,9 @@ String timeToString(uint8_t hours, uint8_t minutes) {
       break;
     case 11:
       message += "ELEVEN ";
+      break;
+    case 12:
+      message += "TWELVE ";
       break;
   }
 
