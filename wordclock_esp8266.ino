@@ -206,10 +206,11 @@ int nightModeEndMin = 0;
 // Watchdog counter to trigger restart if NTP update was not possible 30 times in a row (5min)
 int watchdogCounter = 30;
 
-// global variables for bypassing time from webserver directly to clock
-
-int hours = 0;
-int minutes = 0;
+// global variables for bypassing time from webserver directly to clock:
+// open following URL in browser to set time for 5 cycles: http://<IP>/cmd?time=HH-MM
+uint8_t timeBypassHours = 0;
+uint8_t timeBypassMinutes = 0;
+int timeBypassActive = 0;
 
 // ----------------------------------------------------------------------------------
 //                                        SETUP
@@ -450,8 +451,13 @@ void loop() {
       // state clock
       case st_clock:
         {
-          //int hours = ntp.getHours24();  // deactivated to bypass time from webserver directly to clock
-          //int minutes = ntp.getMinutes();
+          int hours = ntp.getHours24();
+          int minutes = ntp.getMinutes();
+          if(timeBypassActive){
+            hours = timeBypassHours;
+            minutes = timeBypassMinutes;
+            timeBypassActive--;
+          }
           showStringOnClock(timeToString(hours, minutes), maincolor_clock);
           drawMinuteIndicator(minutes, maincolor_clock);
         }
@@ -461,6 +467,11 @@ void loop() {
         {
           int hours = ntp.getHours24();
           int minutes = ntp.getMinutes();
+          if(timeBypassActive){
+            hours = timeBypassHours;
+            minutes = timeBypassMinutes;
+            timeBypassActive--;
+          }
           showDigitalClock(hours, minutes, maincolor_clock);
         }
         break;
@@ -804,11 +815,15 @@ void handleCommand() {
     String timestr = server.arg(0) + "-";
     String hoursstr = split(timestr, '-', 0);
     String minstr= split(timestr, '-', 1);
-    logger.logString(timestr);
-    logger.logString("hours: " + String(hoursstr.toInt()));
-    logger.logString("min: " + String(minstr.toInt()));
-    hours = hoursstr.toInt();
-    minutes = minstr.toInt();
+    logger.logString("Time change via Webserver to: " + timestr);
+    timeBypassHours = hoursstr.toInt();
+    timeBypassMinutes = minstr.toInt();
+    if(timeBypassHours < 0 || timeBypassHours > 23) timeBypassHours = 0;
+    if(timeBypassMinutes < 0 || timeBypassMinutes > 59) timeBypassMinutes = 0;
+    timeBypassActive = 5;
+    logger.logString("hours: " + String(timeBypassHours));
+    logger.logString("min: " + String(timeBypassMinutes));
+    logger.logString("Time bypass active for " + String(timeBypassActive) + " cycles");
   }
   
   if (server.argName(0) == "led") // the parameter which was sent to this server is led color
