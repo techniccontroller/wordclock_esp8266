@@ -104,80 +104,32 @@ String timeToString(uint8_t hours,uint8_t minutes){
   String message = "";
 
   
-  //SONO LE
-  if(hours == 1)
-  {
-    message += "= # "; //E' L' -> = is for E' and # is for L'
-  }
-  else if (hours == 2)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 3)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 4)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 5)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 6)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 7)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 8)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 9)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 10)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 11)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 12 && minutes <= 34)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 12 && minutes >= 35)
-  {
-    message += "= # "; //E' L' -> = is for E' and # is for L'
-  }
-  else if (hours == 0 && minutes <= 34)
-  {
-    message += "SONO LE ";
-  }
-  else if (hours == 0 && minutes >= 35)
-  {
-    message += "= # "; //E' L' -> = is for E' and # is for L'
-  }
-
   //convert hours to 12h format
   if(hours >= 12)
   {
       hours -= 12;
   }
-  if(minutes >= 20)
+  if(minutes >= 35)
   {
       hours++;
   }
   if(hours == 12)
   {
       hours = 0;
+  }
+  
+  //SONO LE
+  if(hours == 1 && minutes < 35)
+  {
+    message += "= # "; //E' L' -> = is for E' and # is for L'
+  }
+  else if (hours == 0 && minutes >= 35)
+  {
+    message += "= # "; //E' L' -> = is for E' and # is for L'
+  }
+  else
+  {
+    message += "SONO LE ";
   }
 
   // show hours
