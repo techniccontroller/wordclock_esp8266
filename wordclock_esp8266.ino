@@ -99,9 +99,9 @@ enum direction {right, left, up, down};
 #define HEIGHT 11
 
 // own datatype for state machine states
-#define NUM_STATES 6
-enum ClockState {st_clock, st_diclock, st_spiral, st_tetris, st_snake, st_pingpong};
-const String stateNames[] = {"Clock", "DiClock", "Sprial", "Tetris", "Snake", "PingPong"};
+#define NUM_STATES 7
+enum ClockState {st_clock, st_diclock, st_spiral, st_tetris, st_snake, st_pingpong, st_clock_french};
+const String stateNames[] = {"Clock", "DiClock", "Sprial", "Tetris", "Snake", "PingPong", "FrenchClock"};
 // PERIODS for each state (different for stateAutoChange or Manual mode)
 const uint16_t PERIODS[2][NUM_STATES] = { { PERIOD_TIMEVISUUPDATE, // stateAutoChange = 0
                                             PERIOD_TIMEVISUUPDATE, 
@@ -622,6 +622,15 @@ void updateStateBehavior(uint8_t state){
     case st_pingpong:
       {
         mypong.loopCycle();
+      }
+      break;
+    // state french clock
+    case st_clock_french:
+      {
+        int hours = ntp.getHours24();
+        int minutes = ntp.getMinutes();
+        showStringOnClock_french(timeToString_french(hours, minutes), maincolor_clock);
+        drawMinuteIndicator(minutes, maincolor_clock);
       }
       break;
   }

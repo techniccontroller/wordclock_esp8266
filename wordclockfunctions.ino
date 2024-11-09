@@ -1,5 +1,5 @@
 
-const String clockStringFrench =  "IL EST DEUXQUATRETROISNEUFUNESEPTHUITSIXCINQMIDI MINUITONZE HEURESMOINS ETDIXETQUART    VINGT-CINQ ET DEMIE   TRENTE-CINQ";
+const String clockStringGerman =  "ESPISTAFUNFVIERTELZEHNZWANZIGUVORTECHNICNACHHALBMELFUNFXCONTROLLEREINSEAWZWEIDREITUMVIERSECHSQYACHTSIEBENZWOLFZEHNEUNJUHR";
 
 /**
  * @brief control the four minute indicator LEDs
@@ -62,7 +62,7 @@ int showStringOnClock(String message, uint32_t color){
       
       if(word.length() > 0){
         // find word in clock string
-        positionOfWord = clockStringFrench.indexOf(word, lastLetterClock);
+        positionOfWord = clockStringGerman.indexOf(word, lastLetterClock);
         
         if(positionOfWord >= 0){
           // word found on clock -> enable leds in targetgrid
@@ -90,93 +90,132 @@ int showStringOnClock(String message, uint32_t color){
 }
 
 /**
- * @brief convert the given number to french
- * 
- * @param number number to be converted
- * @return String number as french
- */
-String numberToFrench(uint8_t number) {
-  switch (number) {
-    case 1: return "UNE";
-    case 2: return "DEUX";
-    case 3: return "TROIS";
-    case 4: return "QUATRE";
-    case 5: return "CINQ";
-    case 6: return "SIX";
-    case 7: return "SEPT";
-    case 8: return "HUIT";
-    case 9: return "NEUF";
-    case 10: return "DIX";
-    case 11: return "ONZE";
-    case 12: return "DOUZE";
-    default: return "";
-  }
-}
-
-/**
  * @brief Converts the given time as sentence (String)
  * 
  * @param hours hours of the time value
  * @param minutes minutes of the time value
  * @return String time as sentence
  */
-String timeToString(uint8_t hours, uint8_t minutes) {
-  // Runden der Minuten auf den nächsten 5-Minuten-Takt
-  minutes = minutes / 5 * 5;
-
-  // ES IST
-  String message = "IL EST ";
-
-  // Stunden anpassen, falls Minuten >= 60 (da wir dann zur nächsten Stunde gehen)
-  if (minutes >= 60) {
-    minutes = 0;
-    hours = (hours + 1) % 24;
-  }
+String timeToString(uint8_t hours,uint8_t minutes){
+  Serial.println(hours);
+  Serial.println(minutes);
   
-  if(minutes >= 35)
+  //ES IST
+  String message = "ES IST ";
+
+  
+  //show minutes
+  if(minutes >= 5 && minutes < 10)
+  {
+    message += "FUNF NACH ";
+  }
+  else if(minutes >= 10 && minutes < 15)
+  {
+    message += "ZEHN NACH ";
+  }
+  else if(minutes >= 15 && minutes < 20)
+  {
+    message += "VIERTEL NACH ";
+  }
+  else if(minutes >= 20 && minutes < 25)
+  {
+    message += "ZEHN VOR HALB "; 
+  }
+  else if(minutes >= 25 && minutes < 30)
+  {
+    message += "FUNF VOR HALB ";
+  }
+  else if(minutes >= 30 && minutes < 35)
+  {
+    message += "HALB ";
+  }
+  else if(minutes >= 35 && minutes < 40)
+  {
+    message += "FUNF NACH HALB ";
+  }
+  else if(minutes >= 40 && minutes < 45)
+  {
+    message += "ZEHN NACH HALB ";
+  }
+  else if(minutes >= 45 && minutes < 50)
+  {
+    message += "VIERTEL VOR ";
+  }
+  else if(minutes >= 50 && minutes < 55)
+  {
+    message += "ZEHN VOR ";
+  }
+  else if(minutes >= 55 && minutes < 60)
+  {
+    message += "FUNF VOR ";
+  }
+
+  //convert hours to 12h format
+  if(hours >= 12)
+  {
+      hours -= 12;
+  }
+  if(minutes >= 20)
   {
       hours++;
   }
+  if(hours == 12)
+  {
+      hours = 0;
+  }
 
-  // Umwandlung in 12-Stunden-Format
-  if (hours == 0) {
-    message += "MINUIT";
-  } else if (hours == 12) {
-    message += "MIDI";
-  } else {
-    if (hours > 12) {
-      hours -= 12;
+  // show hours
+  switch(hours)
+  {
+  case 0:
+    message += "ZWOLF ";
+    break;
+  case 1:
+    message += "EIN";
+    //EIN(S)
+    if(minutes > 4){
+      message += "S";
     }
-    message += numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "");
+    message += " ";
+    break;
+  case 2:
+    message += "ZWEI ";
+    break;
+  case 3:
+    message += "DREI ";
+    break;
+  case 4:
+    message += "VIER ";
+    break;
+  case 5:
+    message += "FUNF ";
+    break;
+  case 6:
+    message += "SECHS ";
+    break;
+  case 7:
+    message += "SIEBEN ";
+    break;
+  case 8:
+    message += "ACHT ";
+    break;
+  case 9:
+    message += "NEUN ";
+    break;
+  case 10:
+    message += "ZEHN ";
+    break;
+  case 11:
+    message += "ELF ";
+    break;
+  }
+  if(minutes < 5)
+  {
+    message += "UHR ";
   }
 
-  // Minuten formatieren
-  if (minutes == 0) {
-    // Keine Minuten, nur volle Stunde
-    return message;
-  } else if (minutes == 5) {
-    message += " CINQ";
-  } else if (minutes == 10) {
-    message += " DIX";
-  } else if (minutes == 15) {
-    message += " ET QUART";
-  } else if (minutes == 20) {
-    message += " VINGT";
-  } else if (minutes == 25) {
-    message += " VINGT-CINQ";
-  } else if (minutes == 30) {
-    message += " ET DEMIE";
-  } else if (minutes == 35) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS VINGT-CINQ";
-  } else if (minutes == 40) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS VINGT";
-  } else if (minutes == 45) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS LE QUART";
-  } else if (minutes == 50) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS DIX";
-  } else if (minutes == 55) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS CINQ";
-  }
+  Serial.println(message);
+  logger.logString("time as String: " + String(message));
 
   return message;
 }
