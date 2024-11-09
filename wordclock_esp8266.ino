@@ -175,9 +175,9 @@ long lastheartbeat = millis();      // time of last heartbeat sending
 long lastStep = millis();           // time of last animation step
 long lastLEDdirect = 0;             // time of last direct LED command (=> fall back to normal mode after timeout)
 long lastStateChange = millis();    // time of last state change
-long lastNTPUpdate = millis() - (PERIOD_NTPUPDATE-5000);  // time of last NTP update
+long lastNTPUpdate = millis() - (PERIOD_NTPUPDATE-3000);  // time of last NTP update
 long lastAnimationStep = millis();  // time of last Matrix update
-long lastNightmodeCheck = millis(); // time of last nightmode check
+long lastNightmodeCheck = millis()  - (PERIOD_NIGHTMODECHECK-3000); // time of last nightmode check
 long buttonPressStart = 0;          // time of push button press start 
 
 // Create necessary global objects
@@ -206,6 +206,8 @@ int nightModeEndMin = 0;
 // Watchdog counter to trigger restart if NTP update was not possible 30 times in a row (5min)
 int watchdogCounter = 30;
 
+bool waitForTimeAfterReboot = false; // wait for time update after reboot
+
 // ----------------------------------------------------------------------------------
 //                                        SETUP
 // ----------------------------------------------------------------------------------
@@ -231,9 +233,11 @@ void setup() {
   ledmatrix.setupMatrix();
   ledmatrix.setCurrentLimit(CURRENT_LIMIT_LED);
 
-  // Turn on minutes leds (blue)
-  ledmatrix.setMinIndicator(15, colors24bit[6]);
-  ledmatrix.drawOnMatrixInstant();
+  if(!ESP.getResetReason().equals("Software/System restart")){
+    // Turn on minutes leds (blue)
+    ledmatrix.setMinIndicator(15, colors24bit[6]);
+    ledmatrix.drawOnMatrixInstant();
+  }
 
 
   /** Use WiFiMaanger for handling initial Wifi setup **/
@@ -258,9 +262,11 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP()); 
 
-  // Turn off minutes leds
-  ledmatrix.setMinIndicator(15, 0);
-  ledmatrix.drawOnMatrixInstant();
+  if(!ESP.getResetReason().equals("Software/System restart")){
+    // Turn off minutes leds
+    ledmatrix.setMinIndicator(15, 0);
+    ledmatrix.drawOnMatrixInstant();
+  }
 
    
   
@@ -369,6 +375,9 @@ void setup() {
     // clear matrix
     ledmatrix.gridFlush();
     ledmatrix.drawOnMatrixInstant();
+  }
+  else {
+    waitForTimeAfterReboot = true;
   }
 
   // setup NTP
@@ -516,7 +525,7 @@ void loop() {
   }
 
   // periodically write colors to matrix
-  if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE){
+  if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot){
     ledmatrix.drawOnMatrixSmooth(filterFactor);
     lastAnimationStep = millis();
   }
@@ -546,6 +555,7 @@ void loop() {
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate = millis();
       watchdogCounter = 30;
+      waitForTimeAfterReboot = false;
     }
     else if(res == -1){
       logger.logString("NTP-Update not successful. Reason: Timeout");
@@ -578,16 +588,31 @@ void loop() {
   }
 
   // check if nightmode need to be activated
-  if(millis() - lastNightmodeCheck > PERIOD_NIGHTMODECHECK){
+  if(millis() - lastNightmodeCheck > PERIOD_NIGHTMODECHECK && !waitForTimeAfterReboot){
+    logger.logString("Check nightmode");
     int hours = ntp.getHours24();
     int minutes = ntp.getMinutes();
     
-    if(hours == nightModeStartHour && minutes == nightModeStartMin){
-      setNightmode(true);
+    nightMode = false; // Initial assumption
+
+    // Convert all times to minutes for easier comparison
+    int currentTimeInMinutes = hours * 60 + minutes;
+    int startInMinutes = nightModeStartHour * 60 + nightModeStartMin;
+    int endInMinutes = nightModeEndHour * 60 + nightModeEndMin;
+
+    if (startInMinutes < endInMinutes) { // Same day scenario
+        if (startInMinutes < currentTimeInMinutes && currentTimeInMinutes < endInMinutes) {
+            nightMode = true;
+            logger.logString("Nightmode activated");
+        }
+    } else if (startInMinutes > endInMinutes) { // Overnight scenario
+        if (currentTimeInMinutes > startInMinutes || currentTimeInMinutes < endInMinutes) {
+            nightMode = true;
+            logger.logString("Nightmode activated");
+        }
     }
-    else if(hours == nightModeEndHour && minutes == nightModeEndMin){
-      setNightmode(false);
-    }
+
+    setNightmode(nightMode);
     
     lastNightmodeCheck = millis();
   }
@@ -1007,7 +1032,7 @@ void handleDataRequest() {
  */
 void setNightmode(bool on){
   ledmatrix.gridFlush();
-  ledmatrix.drawOnMatrixSmooth(0.2);
+  ledmatrix.drawOnMatrixInstant();
   nightMode = on;
 }
 
