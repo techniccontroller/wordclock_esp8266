@@ -57,6 +57,7 @@
 #define ADR_MC_RED 20
 #define ADR_MC_GREEN 22
 #define ADR_MC_BLUE 24
+#define ADR_STATE 26
 
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
@@ -352,6 +353,27 @@ void setup() {
   logger.logString("Time: " +  ntp.getFormattedTime());
   logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
 
+  // Read nightmode setting from EEPROM
+  nightModeStartHour = readIntEEPROM(ADR_NM_START_H);
+  nightModeStartMin = readIntEEPROM(ADR_NM_START_M);
+  nightModeEndHour = readIntEEPROM(ADR_NM_END_H);
+  nightModeEndMin = readIntEEPROM(ADR_NM_END_M);
+  if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
+  if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
+  if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
+  if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
+  logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
+  logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
+
+  // Read brightness setting from EEPROM, lower limit is 10 so that the LEDs are not completely off
+  brightness = readIntEEPROM(ADR_BRIGHTNESS);
+  if(brightness < 10) brightness = 10;
+  logger.logString("Brightness: " + String(brightness));
+  ledmatrix.setBrightness(brightness);
+
+  // Read state from EEPROM
+  currentState = readIntEEPROM(ADR_STATE);
+
   if(!ESP.getResetReason().equals("Software/System restart")){
     // test quickly each LED
     for(int r = 0; r < HEIGHT; r++){
@@ -381,28 +403,14 @@ void setup() {
     // clear matrix
     ledmatrix.gridFlush();
     ledmatrix.drawOnMatrixInstant();
+
+    entryAction(currentState);
   }
   else {
     waitForTimeAfterReboot = true;
   }
 
-  // Read nightmode setting from EEPROM
-  nightModeStartHour = readIntEEPROM(ADR_NM_START_H);
-  nightModeStartMin = readIntEEPROM(ADR_NM_START_M);
-  nightModeEndHour = readIntEEPROM(ADR_NM_END_H);
-  nightModeEndMin = readIntEEPROM(ADR_NM_END_M);
-  if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
-  if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
-  if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
-  if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
-  logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
-  logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
-
-  // Read brightness setting from EEPROM, lower limit is 10 so that the LEDs are not completely off
-  brightness = readIntEEPROM(ADR_BRIGHTNESS);
-  if(brightness < 10) brightness = 10;
-  logger.logString("Brightness: " + String(brightness));
-  ledmatrix.setBrightness(brightness);
+  
   
 }
 
@@ -431,79 +439,9 @@ void loop() {
     }
   }
 
-  // handle mode behaviours (trigger loopCycles of different modes depending on current mode)
+  // handle state behaviours (trigger loopCycles of different states depending on current state)
   if(!nightMode && (millis() - lastStep > PERIODS[stateAutoChange][currentState]) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
-    switch(currentState){
-      // state clock
-      case st_clock:
-        {
-          int hours = ntp.getHours24();
-          int minutes = ntp.getMinutes();
-          showStringOnClock(timeToString(hours, minutes), maincolor_clock);
-          drawMinuteIndicator(minutes, maincolor_clock);
-        }
-        break;
-      // state diclock
-      case st_diclock:
-        {
-          int hours = ntp.getHours24();
-          int minutes = ntp.getMinutes();
-          showDigitalClock(hours, minutes, maincolor_clock);
-        }
-        break;
-      // state spiral
-      case st_spiral:
-        {
-          int res = spiral(false, sprialDir, WIDTH-6);
-          if(res && sprialDir == 0){
-            // change spiral direction to closing (draw empty leds)
-            sprialDir = 1;
-            // init spiral with new spiral direction
-            spiral(true, sprialDir, WIDTH-6);
-            
-          }else if(res && sprialDir == 1){
-            // reset spiral direction to normal drawing leds
-            sprialDir = 0;
-            // init spiral with new spiral direction
-            spiral(true, sprialDir, WIDTH-6);
-          }
-        }
-        break;
-      // state tetris
-      case st_tetris:
-        {
-          if(stateAutoChange){
-            randomtetris(false);
-          }
-          else{
-            mytetris.loopCycle();
-          }
-        }
-        break;
-      // state snake
-      case st_snake:
-        {
-          if(stateAutoChange){
-            ledmatrix.gridFlush();
-            int res = randomsnake(false, 8, maincolor_snake, -1);
-            if(res){
-              // init snake for next run
-              randomsnake(true, 8, maincolor_snake, -1);
-            }
-          }
-          else{
-            mysnake.loopCycle();
-          }
-        }
-        break;
-      // state pingpong
-      case st_pingpong:
-        {
-          mypong.loopCycle();
-        }
-        break;
-    }    
-    
+    updateStateBehavior(currentState);    
     lastStep = millis();
   }
 
@@ -519,7 +457,7 @@ void loop() {
   // handle state changes
   if(stateAutoChange && (millis() - lastStateChange > PERIOD_STATECHANGE) && !nightMode){
     // increment state variable and trigger state change
-    stateChange((currentState + 1) % NUM_STATES);
+    stateChange((currentState + 1) % NUM_STATES, false);
     
     // save last automatic state change
     lastStateChange = millis();
@@ -539,12 +477,9 @@ void loop() {
       lastNTPUpdate = millis();
       watchdogCounter = 30;
       if(waitForTimeAfterReboot){
-        // write the current time onto the matrix first time after reboot
-        int hours = ntp.getHours24();
-        int minutes = ntp.getMinutes();
-        String timeMessage = timeToString(hours, minutes);
-        showStringOnClock(timeMessage, maincolor_clock);
-        drawMinuteIndicator(minutes, maincolor_clock);
+        // update mode (e.g. write the current time onto the matrix) first time after reboot
+        entryAction(currentState);
+        updateStateBehavior(currentState);
         ledmatrix.drawOnMatrixInstant();
         waitForTimeAfterReboot = false;
       }
@@ -617,6 +552,82 @@ void loop() {
 // ----------------------------------------------------------------------------------
 
 /**
+ * @brief Update mode behaviour depending on current state
+ */
+void updateStateBehavior(uint8_t state){
+  switch(state){
+    // state clock
+    case st_clock:
+      {
+        int hours = ntp.getHours24();
+        int minutes = ntp.getMinutes();
+        showStringOnClock(timeToString(hours, minutes), maincolor_clock);
+        drawMinuteIndicator(minutes, maincolor_clock);
+      }
+      break;
+    // state diclock
+    case st_diclock:
+      {
+        int hours = ntp.getHours24();
+        int minutes = ntp.getMinutes();
+        showDigitalClock(hours, minutes, maincolor_clock);
+      }
+      break;
+    // state spiral
+    case st_spiral:
+      {
+        int res = spiral(false, sprialDir, WIDTH-6);
+        if(res && sprialDir == 0){
+          // change spiral direction to closing (draw empty leds)
+          sprialDir = 1;
+          // init spiral with new spiral direction
+          spiral(true, sprialDir, WIDTH-6);
+          
+        }else if(res && sprialDir == 1){
+          // reset spiral direction to normal drawing leds
+          sprialDir = 0;
+          // init spiral with new spiral direction
+          spiral(true, sprialDir, WIDTH-6);
+        }
+      }
+      break;
+    // state tetris
+    case st_tetris:
+      {
+        if(stateAutoChange){
+          randomtetris(false);
+        }
+        else{
+          mytetris.loopCycle();
+        }
+      }
+      break;
+    // state snake
+    case st_snake:
+      {
+        if(stateAutoChange){
+          ledmatrix.gridFlush();
+          int res = randomsnake(false, 8, maincolor_snake, -1);
+          if(res){
+            // init snake for next run
+            randomsnake(true, 8, maincolor_snake, -1);
+          }
+        }
+        else{
+          mysnake.loopCycle();
+        }
+      }
+      break;
+    // state pingpong
+    case st_pingpong:
+      {
+        mypong.loopCycle();
+      }
+      break;
+  }
+}
+
+/**
  * @brief call entry action of given state
  * 
  * @param state 
@@ -663,8 +674,9 @@ void entryAction(uint8_t state){
  * @brief execute a state change to given newState
  * 
  * @param newState the new state to be changed to
+ * @param persistant if true, the state will be saved to EEPROM
  */
-void stateChange(uint8_t newState){
+void stateChange(uint8_t newState, bool persistant){
   if(nightMode){
     // deactivate Nightmode
     setNightmode(false);
@@ -675,8 +687,10 @@ void stateChange(uint8_t newState){
   currentState = newState;
   entryAction(currentState);
   logger.logString("State change to: " + stateNames[currentState]);
-  delay(5);
-  logger.logString("FreeMemory=" + String(ESP.getFreeHeap()));
+  if(persistant){
+    // save state to EEPROM
+    writeIntEEPROM(ADR_STATE, currentState);
+  }
 }
 
 /**
@@ -762,7 +776,7 @@ void handleButton(){
       if(nightMode){
         setNightmode(false);
       }else{
-        stateChange((currentState + 1) % NUM_STATES);
+        stateChange((currentState + 1) % NUM_STATES, true);
       }
       
     }
@@ -829,22 +843,22 @@ void handleCommand() {
     logger.logString("Mode change via Webserver to: " + modestr);
     // set current mode/state accordant sent mode
     if(modestr == "clock"){
-      stateChange(st_clock);
+      stateChange(st_clock, true);
     }
     else if(modestr == "diclock"){
-      stateChange(st_diclock);
+      stateChange(st_diclock, true);
     }
     else if(modestr == "spiral"){
-      stateChange(st_spiral);
+      stateChange(st_spiral, true);
     }
     else if(modestr == "tetris"){
-      stateChange(st_tetris);
+      stateChange(st_tetris, true);
     }
     else if(modestr == "snake"){
-      stateChange(st_snake);
+      stateChange(st_snake, true);
     }
     else if(modestr == "pingpong"){
-      stateChange(st_pingpong);
+      stateChange(st_pingpong, true);
     } 
   }
   else if(server.argName(0) == "nightmode"){
