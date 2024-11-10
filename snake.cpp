@@ -26,10 +26,11 @@ Snake::Snake(){
  * @param myledmatrix pointer to LEDMatrix object, need to provide gridAddPixel(x, y, col), gridFlush()
  * @param mylogger pointer to UDPLogger object, need to provide a function logString(message)
  */
-Snake::Snake(LEDMatrix *myledmatrix, UDPLogger *mylogger){
+Snake::Snake(LEDMatrix *myledmatrix, UDPLogger *mylogger, uint8_t soundPin){
     _logger = mylogger;
     _ledmatrix = myledmatrix;
     _gameState = GAME_STATE_END;
+    _soundPin = soundPin;
 }
 
 /**
@@ -176,6 +177,7 @@ void Snake::updateGame()
         _wormLength++;
       }
       updateFood();
+      playEatMelody();
     }
 
     _lastDrawUpdate = millis();
@@ -190,6 +192,8 @@ void Snake::endGame()
 {
   _gameState = GAME_STATE_END;
   toggleLed(_head.x, _head.y, LED_TYPE_BLOOD);
+  playGameOverMelody();
+  (*_logger).logString("Snake: Game ended");
 }
 
 /**
@@ -281,4 +285,42 @@ void Snake::toggleLed(uint8_t x, uint8_t y, uint8_t type)
   }
 
   (*_ledmatrix).gridAddPixel(x, y, color);
+}
+
+/**
+ * @brief Play a sound
+ * 
+ * @param frequency frequency of sound
+ * @param duration duration of sound
+ */
+void Snake::playTone(uint16_t frequency, uint32_t duration)
+{
+  tone(_soundPin, frequency, duration);
+  delay(duration);
+  noTone(_soundPin);
+}
+
+/**
+ * @brief Play sound when snake eats food
+ * 
+ */
+void Snake::playEatMelody()
+{
+  playTone(NOTE_C4, 100);
+  playTone(NOTE_D4, 100);
+  playTone(NOTE_E4, 100);
+}
+
+
+/**
+ * @brief Play sound when game is over
+ * 
+ */
+void Snake::playGameOverMelody()
+{
+  playTone(NOTE_C5, 200);
+  playTone(NOTE_A4, 200);
+  playTone(NOTE_G4, 200);
+  playTone(NOTE_F4, 300);
+  playTone(NOTE_E4, 300);
 }

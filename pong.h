@@ -47,6 +47,16 @@
 #define GAME_STATE_END     2
 #define GAME_STATE_INIT    3
 
+// Define frequencies for some musical notes
+#define NOTE_C4  261
+#define NOTE_D4  294
+#define NOTE_E4  329
+#define NOTE_F4  349
+#define NOTE_G4  392
+#define NOTE_A4  440
+#define NOTE_B4  494
+#define NOTE_C5  523
+
 class Pong{
 
     struct Coords {
@@ -56,7 +66,7 @@ class Pong{
 
     public:
         Pong();
-        Pong(LEDMatrix *myledmatrix, UDPLogger *mylogger);
+        Pong(LEDMatrix *myledmatrix, UDPLogger *mylogger, uint8_t soundPin);
         void loopCycle();
         void initGame(uint8_t numBots);
         void ctrlUp(uint8_t playerid);
@@ -77,6 +87,7 @@ class Pong{
         unsigned long _lastDrawUpdate = 0;
         unsigned long _lastBallUpdate = 0;
         unsigned long _lastButtonClick = 0;
+        uint8_t _soundPin;
         
 
         void updateBall();
@@ -85,6 +96,10 @@ class Pong{
         uint8_t getPlayerMovement(uint8_t playerId);
         void resetLEDs();
         void toggleLed(uint8_t x, uint8_t y, uint8_t type);
+        void playTone(uint16_t frequency, uint32_t duration);
+        void playBatHitMelody();
+        void playWallHitMelody();
+        void playGameOverMelody();
 };
 
 #endif

@@ -63,6 +63,7 @@
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
 #define NUMPIXELS 125       // number of pixels attached to Attiny85
 #define BUTTONPIN 14        // pin to which the button is attached
+#define SPEAKERPIN D3        // pin to which the speaker is attached
 #define LEFT 1
 #define RIGHT 2
 #define LINE 10
@@ -187,8 +188,8 @@ WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
 Tetris mytetris = Tetris(&ledmatrix, &logger);
-Snake mysnake = Snake(&ledmatrix, &logger);
-Pong mypong = Pong(&ledmatrix, &logger);
+Snake mysnake = Snake(&ledmatrix, &logger, SPEAKERPIN);
+Pong mypong = Pong(&ledmatrix, &logger, SPEAKERPIN);
 
 float filterFactor = DEFAULT_SMOOTHING_FACTOR;// stores smoothing factor for led transition
 uint8_t currentState = st_clock;              // stores current state

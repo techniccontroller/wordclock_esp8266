@@ -26,10 +26,11 @@ Pong::Pong(){
  * @param myledmatrix pointer to LEDMatrix object, need to provide gridAddPixel(x, y, col), gridFlush()
  * @param mylogger pointer to UDPLogger object, need to provide a function logString(message)
  */
-Pong::Pong(LEDMatrix *myledmatrix, UDPLogger *mylogger){
+Pong::Pong(LEDMatrix *myledmatrix, UDPLogger *mylogger, uint8_t soundPin){
     _ledmatrix = myledmatrix;
     _logger = mylogger;
     _gameState = GAME_STATE_END;
+    _soundPin = soundPin;
 }
 
 /**
@@ -152,6 +153,7 @@ void Pong::updateBall()
 
     if (hitBall == true) {
         _ballMovement[0] *= -1;
+        playBatHitMelody();
         if (_ballDelay > BALL_DELAY_MIN) {
         _ballDelay -= BALL_DELAY_STEP;
         }
@@ -167,6 +169,7 @@ void Pong::updateBall()
 
     if (_ball.y <= 0 || _ball.y >= Y_MAX-1) {
         _ballMovement[1] *= -1;
+        playWallHitMelody();
     }
 
     toggleLed(_ball.x, _ball.y, LED_TYPE_BALL);
@@ -181,6 +184,7 @@ void Pong::endGame()
     (*_logger).logString("Pong: Game ended");
     _gameState = GAME_STATE_END;
     toggleLed(_ball.x, _ball.y, LED_TYPE_BALL_RED);
+    playGameOverMelody();
 }
 
 /**
@@ -291,4 +295,42 @@ void Pong::toggleLed(uint8_t x, uint8_t y, uint8_t type)
     }
 
     (*_ledmatrix).gridAddPixel(x, y, color);
+}
+
+/**
+ * @brief Play a sound
+ * 
+ * @param frequency frequency of sound
+ * @param duration duration of sound
+ */
+void Pong::playTone(uint16_t frequency, uint32_t duration){
+    tone(_soundPin, frequency, duration);
+    delay(duration);
+    noTone(_soundPin);
+}
+
+/**
+ * @brief Play sound when ball hits the bat
+ */ 
+void Pong::playBatHitMelody() {
+  playTone(NOTE_G4, 100);
+  playTone(NOTE_C5, 100);
+}
+
+/**
+ * @brief Play sound when ball hits the wall
+ */
+void Pong::playWallHitMelody() {
+  playTone(NOTE_E4, 150);
+  playTone(NOTE_C4, 150);
+}
+
+/**
+ * @brief Play game over melody
+ */
+void Pong::playGameOverMelody() {
+  playTone(NOTE_C5, 200);
+  playTone(NOTE_B4, 200);
+  playTone(NOTE_A4, 200);
+  playTone(NOTE_G4, 400);
 }

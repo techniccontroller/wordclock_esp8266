@@ -42,6 +42,16 @@
 #define MAX_TAIL_LENGTH X_MAX * Y_MAX
 #define MIN_TAIL_LENGTH 3
 
+// Define frequencies for some musical notes
+#define NOTE_C4  261
+#define NOTE_D4  294
+#define NOTE_E4  329
+#define NOTE_F4  349
+#define NOTE_G4  392
+#define NOTE_A4  440
+#define NOTE_B4  494
+#define NOTE_C5  523
+
 class Snake{
 
     struct Coords {
@@ -51,7 +61,7 @@ class Snake{
 
     public:
         Snake();
-        Snake(LEDMatrix *myledmatrix, UDPLogger *mylogger);
+        Snake(LEDMatrix *myledmatrix, UDPLogger *mylogger, uint8_t soundPin);
         void loopCycle();
         void initGame();
         void ctrlUp();
@@ -70,6 +80,7 @@ class Snake{
         unsigned long _lastDrawUpdate = 0;
         unsigned long _lastButtonClick;
         unsigned int _wormLength = 0;
+        uint8_t _soundPin;
 
         void resetLEDs();
         void updateGame();
@@ -78,6 +89,9 @@ class Snake{
         void updateFood();
         bool isCollision();
         void toggleLed(uint8_t x, uint8_t y, uint8_t type);
+        void playTone(uint16_t frequency, uint32_t duration);
+        void playEatMelody();
+        void playGameOverMelody();
 
 };
 
