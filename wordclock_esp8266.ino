@@ -476,13 +476,14 @@ void loop() {
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate = millis();
       watchdogCounter = 30;
-      if(waitForTimeAfterReboot){
+      checkNightmode();
+      if(waitForTimeAfterReboot && !nightMode){
         // update mode (e.g. write the current time onto the matrix) first time after reboot
         entryAction(currentState);
         updateStateBehavior(currentState);
         ledmatrix.drawOnMatrixInstant();
-        waitForTimeAfterReboot = false;
       }
+      waitForTimeAfterReboot = false;
     }
     else if(res == -1){
       logger.logString("NTP-Update not successful. Reason: Timeout");
@@ -516,31 +517,7 @@ void loop() {
 
   // check if nightmode need to be activated
   if(millis() - lastNightmodeCheck > PERIOD_NIGHTMODECHECK && !waitForTimeAfterReboot){
-    logger.logString("Check nightmode");
-    int hours = ntp.getHours24();
-    int minutes = ntp.getMinutes();
-    
-    nightMode = false; // Initial assumption
-
-    // Convert all times to minutes for easier comparison
-    int currentTimeInMinutes = hours * 60 + minutes;
-    int startInMinutes = nightModeStartHour * 60 + nightModeStartMin;
-    int endInMinutes = nightModeEndHour * 60 + nightModeEndMin;
-
-    if (startInMinutes < endInMinutes) { // Same day scenario
-        if (startInMinutes < currentTimeInMinutes && currentTimeInMinutes < endInMinutes) {
-            nightMode = true;
-            logger.logString("Nightmode activated");
-        }
-    } else if (startInMinutes > endInMinutes) { // Overnight scenario
-        if (currentTimeInMinutes >= startInMinutes || currentTimeInMinutes < endInMinutes) {
-            nightMode = true;
-            logger.logString("Nightmode activated");
-        }
-    }
-
-    setNightmode(nightMode);
-    
+    checkNightmode();
     lastNightmodeCheck = millis();
   }
  
@@ -625,6 +602,36 @@ void updateStateBehavior(uint8_t state){
       }
       break;
   }
+}
+
+/**
+ * @brief Check if nightmode should be activated
+ * 
+ */
+void checkNightmode(){
+  logger.logString("Check nightmode");
+  int hours = ntp.getHours24();
+  int minutes = ntp.getMinutes();
+  
+  nightMode = false; // Initial assumption
+
+  // Convert all times to minutes for easier comparison
+  int currentTimeInMinutes = hours * 60 + minutes;
+  int startInMinutes = nightModeStartHour * 60 + nightModeStartMin;
+  int endInMinutes = nightModeEndHour * 60 + nightModeEndMin;
+
+  if (startInMinutes < endInMinutes) { // Same day scenario
+      if (startInMinutes < currentTimeInMinutes && currentTimeInMinutes < endInMinutes) {
+          nightMode = true;
+          logger.logString("Nightmode activated");
+      }
+  } else if (startInMinutes > endInMinutes) { // Overnight scenario
+      if (currentTimeInMinutes >= startInMinutes || currentTimeInMinutes < endInMinutes) {
+          nightMode = true;
+          logger.logString("Nightmode activated");
+      }
+  }
+  setNightmode(nightMode);
 }
 
 /**
