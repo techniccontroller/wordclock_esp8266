@@ -97,8 +97,6 @@ int showStringOnClock(String message, uint32_t color){
  * @return String time as sentence
  */
 String timeToString(uint8_t hours,uint8_t minutes){
-  Serial.println(hours);
-  Serial.println(minutes);
   
   //ES IST
   String message = "ES IST ";
@@ -214,7 +212,6 @@ String timeToString(uint8_t hours,uint8_t minutes){
     message += "UHR ";
   }
 
-  Serial.println(message);
   logger.logString("time as String: " + String(message));
 
   return message;
