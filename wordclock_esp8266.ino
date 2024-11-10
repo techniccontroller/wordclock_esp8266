@@ -67,7 +67,7 @@
 #define LINE 10
 #define RECT 5
 
-#define PERIOD_HEARTBEAT 1000
+#define PERIOD_HEARTBEAT 5000
 #define PERIOD_ANIMATION 200
 #define PERIOD_TETRIS 50
 #define PERIOD_SNAKE 50
@@ -606,7 +606,7 @@ void loop() {
             logger.logString("Nightmode activated");
         }
     } else if (startInMinutes > endInMinutes) { // Overnight scenario
-        if (currentTimeInMinutes > startInMinutes || currentTimeInMinutes < endInMinutes) {
+        if (currentTimeInMinutes >= startInMinutes || currentTimeInMinutes < endInMinutes) {
             nightMode = true;
             logger.logString("Nightmode activated");
         }
@@ -884,6 +884,7 @@ void handleCommand() {
     logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
     logger.logString("Brightness: " + String(brightness));
     ledmatrix.setBrightness(brightness);
+    lastNightmodeCheck = millis()  - PERIOD_NIGHTMODECHECK;
   }
   else if (server.argName(0) == "resetwifi"){
     wifiManager.resetSettings();
@@ -1031,8 +1032,9 @@ void handleDataRequest() {
  * @param on true -> nightmode on
  */
 void setNightmode(bool on){
-  ledmatrix.gridFlush();
-  ledmatrix.drawOnMatrixInstant();
+  if(on){
+    ledmatrix.gridFlush();
+  }
   nightMode = on;
 }
 
