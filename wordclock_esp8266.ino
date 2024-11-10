@@ -346,6 +346,12 @@ void setup() {
   delay(10);
   logger.logString("Reset Reason: " + ESP.getResetReason());
 
+  // setup NTP
+  ntp.setupNTPClient();
+  logger.logString("NTP running");
+  logger.logString("Time: " +  ntp.getFormattedTime());
+  logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
+
   if(!ESP.getResetReason().equals("Software/System restart")){
     // test quickly each LED
     for(int r = 0; r < HEIGHT; r++){
@@ -379,29 +385,6 @@ void setup() {
   else {
     waitForTimeAfterReboot = true;
   }
-
-  // setup NTP
-  ntp.setupNTPClient();
-  logger.logString("NTP running");
-  logger.logString("Time: " +  ntp.getFormattedTime());
-  logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
-
-  // show the current time for short time in words
-  int hours = ntp.getHours24();
-  int minutes = ntp.getMinutes();
-  String timeMessage = timeToString(hours, minutes);
-  showStringOnClock(timeMessage, maincolor_clock);
-  drawMinuteIndicator(minutes, maincolor_clock);
-  ledmatrix.drawOnMatrixSmooth(filterFactor);
-
-
-  // init all animation modes
-  // init snake
-  randomsnake(true, 8, colors24bit[1], -1);
-  // init spiral
-  spiral(true, sprialDir, WIDTH-6);
-  // init random tetris
-  randomtetris(true);
 
   // Read nightmode setting from EEPROM
   nightModeStartHour = readIntEEPROM(ADR_NM_START_H);
@@ -555,7 +538,16 @@ void loop() {
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate = millis();
       watchdogCounter = 30;
-      waitForTimeAfterReboot = false;
+      if(waitForTimeAfterReboot){
+        // write the current time onto the matrix first time after reboot
+        int hours = ntp.getHours24();
+        int minutes = ntp.getMinutes();
+        String timeMessage = timeToString(hours, minutes);
+        showStringOnClock(timeMessage, maincolor_clock);
+        drawMinuteIndicator(minutes, maincolor_clock);
+        ledmatrix.drawOnMatrixInstant();
+        waitForTimeAfterReboot = false;
+      }
     }
     else if(res == -1){
       logger.logString("NTP-Update not successful. Reason: Timeout");
@@ -814,9 +806,8 @@ void loadMainColor(){
 void handleCommand() {
   // receive command and handle accordingly
   for (uint8_t i = 0; i < server.args(); i++) {
-    Serial.print(server.argName(i));
-    Serial.print(F(": "));
-    Serial.println(server.arg(i));
+    String log_str = "Command received: " + server.argName(i) + " " + server.arg(i);
+    logger.logString(log_str);
   }
   
   if (server.argName(0) == "led") // the parameter which was sent to this server is led color
@@ -962,6 +953,12 @@ void handleCommand() {
     else if(cmdstr == "new"){
       mypong.initGame(1);
     }
+  }
+  else if(server.argName(0) == "reboot"){
+    logger.logString("Reboot via Webserver");
+    server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
+    delay(1000);
+    ESP.restart();
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
