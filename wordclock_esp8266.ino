@@ -373,6 +373,10 @@ void setup() {
 
   // Read state from EEPROM
   currentState = readIntEEPROM(ADR_STATE);
+  if(currentState >= NUM_STATES){
+    currentState = st_clock;
+    writeIntEEPROM(ADR_STATE, currentState);
+  }
 
   if(!ESP.getResetReason().equals("Software/System restart")){
     // test quickly each LED
