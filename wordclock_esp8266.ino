@@ -108,13 +108,15 @@ const uint16_t PERIODS[2][NUM_STATES] = { { PERIOD_TIMEVISUUPDATE, // stateAutoC
                                             PERIOD_ANIMATION,
                                             PERIOD_TETRIS, 
                                             PERIOD_SNAKE,  
-                                            PERIOD_PONG},
+                                            PERIOD_PONG,
+                                            PERIOD_TIMEVISUUPDATE},
                                           { PERIOD_TIMEVISUUPDATE, // stateAutoChange = 1
                                             PERIOD_TIMEVISUUPDATE, 
                                             PERIOD_ANIMATION,
                                             PERIOD_ANIMATION, 
                                             PERIOD_ANIMATION,  
-                                            PERIOD_PONG}};
+                                            PERIOD_PONG,
+                                            PERIOD_TIMEVISUUPDATE}};
 
 // ports
 const unsigned int localPort = 2390;

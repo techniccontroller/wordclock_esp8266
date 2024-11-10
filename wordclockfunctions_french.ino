@@ -145,6 +145,7 @@ String timeToString_french(uint8_t hours, uint8_t minutes) {
     message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS CINQ";
   }
 
+  logger.logString("time as String: " + String(message));
   return message;
 }
 
