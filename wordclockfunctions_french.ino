@@ -93,28 +93,22 @@ String timeToString_french(uint8_t hours, uint8_t minutes) {
 
   // ES IST
   String message = "IL EST ";
-
-  // Stunden anpassen, falls Minuten >= 60 (da wir dann zur nächsten Stunde gehen)
-  if (minutes >= 60) {
-    minutes = 0;
-    hours = (hours + 1) % 24;
-  }
   
   if(minutes >= 35)
   {
       hours++;
   }
 
-  // Umwandlung in 12-Stunden-Format
-  if (hours == 0) {
+  if ((hours == 0 && minutes <= 30) || (hours == 24 && minutes >= 35)) {
     message += "MINUIT";
-  } else if (hours == 12) {
+  } else if (hours == 12 && minutes <= 30) {
     message += "MIDI";
   } else {
-    if (hours > 12) {
-      hours -= 12;
+    uint8_t hours12h = hours;
+    if (hours12h > 12) {
+      hours12h -= 12;
     }
-    message += numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "");
+    message += numberToFrench(hours12h) + " HEURE" + (hours12h > 1 ? "S" : "");
   }
 
   // Minuten formatieren
@@ -132,20 +126,19 @@ String timeToString_french(uint8_t hours, uint8_t minutes) {
   } else if (minutes == 25) {
     message += " VINGT-CINQ";
   } else if (minutes == 30) {
-    message += " ET DEMIE";
+    message += " ET DEMI" + String((hours == 0 || hours == 12 || hours == 13) ? "" : "E");
   } else if (minutes == 35) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS VINGT-CINQ";
+    message += " MOINS VINGT-CINQ";
   } else if (minutes == 40) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS VINGT";
+    message += " MOINS VINGT";
   } else if (minutes == 45) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS LE QUART";
+    message += " MOINS QUART";
   } else if (minutes == 50) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS DIX";
+    message += " MOINS DIX";
   } else if (minutes == 55) {
-    message = "IL EST " + numberToFrench(hours) + " HEURE" + (hours > 1 ? "S" : "") + " MOINS CINQ";
+    message += " MOINS CINQ";
   }
 
-  logger.logString("time as String: " + String(message));
   return message;
 }
 
