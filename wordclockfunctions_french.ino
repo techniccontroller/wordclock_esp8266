@@ -9,11 +9,9 @@ const String clockStringFrench =  "IL EST DEUXQUATRETROISNEUFUNESEPTHUITSIXCINQM
  * @return int: 0 if successful, -1 if sentence not possible to display
  */
 int showStringOnClock_french(String message, uint32_t color){
-    int messageStart = 0;
     String word = "";
     int lastLetterClock = 0;
     int positionOfWord  = 0;
-    int nextSpace = 0;
     int index = 0;
 
     // add space on the end of message for splitting
@@ -33,7 +31,7 @@ int showStringOnClock_french(String message, uint32_t color){
         
         if(positionOfWord >= 0){
           // word found on clock -> enable leds in targetgrid
-          for(int i = 0; i < word.length(); i++){
+          for(unsigned int i = 0; i < word.length(); i++){
             int x = (positionOfWord + i)%WIDTH;
             int y = (positionOfWord + i)/WIDTH;
             ledmatrix.gridAddPixel(x, y, color);
@@ -46,7 +44,6 @@ int showStringOnClock_french(String message, uint32_t color){
           logger.logString("word is not possible to show on clock: " + String(word));
           return -1;
         }
-        //logger.logString(String(nextSpace) + " - " + String());
       }else{
         // end - no more word in message
         break;
