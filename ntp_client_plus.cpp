@@ -250,7 +250,7 @@ void NTPClientPlus::calcDate()
 
     // calc how many leap days since 1.Jan 1900
     int leapDays = 0;
-    for (int i = 1900; i < this->_dateYear; i++)
+    for (unsigned int i = 1900; i < this->_dateYear; i++)
     {
         // check if leap year
         if (this->isLeapYear(i))
@@ -278,7 +278,7 @@ void NTPClientPlus::calcDate()
     this->_dateDay = 0;
 
     // calc day of month
-    for (int i = 0; i < this->_dateMonth; i++)
+    for (unsigned int i = 0; i < this->_dateMonth; i++)
     {
         this->_dateDay = this->_dateDay + daysInMonth[i];
     }
@@ -289,7 +289,7 @@ void NTPClientPlus::calcDate()
     // 1. Januar 1900 was a monday
     this->_dayOfWeek = 1;
 
-    for (int i = 0; i < days1900; i++)
+    for (unsigned long i = 0; i < days1900; i++)
     {
 
         if (this->_dayOfWeek < 7)
@@ -335,7 +335,7 @@ unsigned int NTPClientPlus::getYear()
     unsigned int days = 0;
     unsigned int days1900 = 0;
 
-    int for_i = 0;
+    unsigned long for_i = 0;
     bool leapYear = LOW;
 
     days1900 = sec1900 / this->secondperday;

@@ -330,7 +330,6 @@ int randomtetris(bool init){
       }
     }
     else{
-      uint8_t tempscreen[HEIGHT+3][WIDTH] = {0};
       uint8_t moveX = WIDTH-1;
       uint8_t moveY = HEIGHT+2;
       // moving blocks exists -> move them one pixel down
@@ -338,7 +337,6 @@ int randomtetris(bool init){
       for(int c = WIDTH-1; c >= 0; c--){
         for(int r = HEIGHT+1; r >= 0; r--){
           if((screen[r][c] != 0) && tomove[screen[r][c]]){
-            tempscreen[r+1][c] = screen[r][c];
             screen[r+1][c] = screen[r][c];
             screen[r][c] = 0;
             // save top left corner of block

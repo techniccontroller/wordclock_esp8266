@@ -56,7 +56,7 @@ void Snake::loopCycle()
  * 
  */
 void Snake::ctrlUp(){
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameState == GAME_STATE_RUNNING) {
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_SNAKE && _gameState == GAME_STATE_RUNNING) {
         (*_logger).logString("Snake: UP");
         _userDirection = DIRECTION_DOWN; // need to swap direction as field is rotated 180deg
         _lastButtonClick = millis();
@@ -68,7 +68,7 @@ void Snake::ctrlUp(){
  * 
  */
 void Snake::ctrlDown(){
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameState == GAME_STATE_RUNNING) {
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_SNAKE && _gameState == GAME_STATE_RUNNING) {
         (*_logger).logString("Snake: DOWN");
         _userDirection = DIRECTION_UP; // need to swap direction as field is rotated 180deg
         _lastButtonClick = millis();
@@ -80,7 +80,7 @@ void Snake::ctrlDown(){
  * 
  */
 void Snake::ctrlRight(){
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameState == GAME_STATE_RUNNING) {
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_SNAKE && _gameState == GAME_STATE_RUNNING) {
         (*_logger).logString("Snake: RIGHT");
         _userDirection = DIRECTION_LEFT; // need to swap direction as field is rotated 180deg
         _lastButtonClick = millis();
@@ -92,7 +92,7 @@ void Snake::ctrlRight(){
  * 
  */
 void Snake::ctrlLeft(){
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameState == GAME_STATE_RUNNING) {
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_SNAKE && _gameState == GAME_STATE_RUNNING) {
         (*_logger).logString("Snake: LEFT");
         _userDirection = DIRECTION_RIGHT; // need to swap direction as field is rotated 180deg
         _lastButtonClick = millis();
@@ -138,9 +138,9 @@ void Snake::initGame()
  */
 void Snake::updateGame()
 {
-  if ((millis() - _lastDrawUpdate) > GAME_DELAY) {
+  if ((millis() - _lastDrawUpdate) > GAME_DELAY_SNAKE) {
     (*_logger).logString("Snake: update game");
-    toggleLed(_tail[_wormLength-1].x, _tail[_wormLength-1].y, LED_TYPE_OFF);
+    toggleLed(_tail[_wormLength-1].x, _tail[_wormLength-1].y, LED_TYPE_EMPTY);
     switch(_userDirection) {
       case DIRECTION_RIGHT:
         if (_head.x > 0) {
@@ -198,14 +198,14 @@ void Snake::endGame()
  */
 void Snake::updateTail()
 {
-  for(int i=_wormLength-1; i>0; i--) {
+  for(unsigned int i=_wormLength-1; i>0; i--) {
     _tail[i].x = _tail[i-1].x;
     _tail[i].y = _tail[i-1].y;
   }
   _tail[0].x = _head.x;
   _tail[0].y = _head.y;
 
-  for(int i=0; i<_wormLength; i++) {
+  for(unsigned int i=0; i<_wormLength; i++) {
     if (_tail[i].x > -1) {
       toggleLed(_tail[i].x, _tail[i].y, LED_TYPE_SNAKE);
     }
@@ -223,7 +223,7 @@ void Snake::updateFood()
     found = true;
     _food.x = random(0, X_MAX);
     _food.y = random(0, Y_MAX);
-    for(int i=0; i<_wormLength; i++) {
+    for(unsigned int i=0; i<_wormLength; i++) {
       if (_tail[i].x == _food.x && _tail[i].y == _food.y) {
          found = false;
       }
@@ -246,7 +246,7 @@ bool Snake::isCollision()
   if (_head.y < 0 || _head.y >= Y_MAX) {
     return true;
   }
-  for(int i=1; i<_wormLength; i++) {
+  for(unsigned int i=1; i<_wormLength; i++) {
     if (_tail[i].x == _head.x && _tail[i].y == _head.y) {
        return true;
     }
@@ -263,13 +263,13 @@ bool Snake::isCollision()
  */
 void Snake::toggleLed(uint8_t x, uint8_t y, uint8_t type)
 {
-  uint32_t color;
+  uint32_t color = LEDMatrix::Color24bit(0, 0, 0);
 
   switch(type) {
     case LED_TYPE_SNAKE:
       color = LEDMatrix::Color24bit(0, 100, 100);
       break;
-    case LED_TYPE_OFF:
+    case LED_TYPE_EMPTY:
       color = LEDMatrix::Color24bit(0, 0, 0);
       break;
     case LED_TYPE_FOOD:

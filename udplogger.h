@@ -31,7 +31,7 @@ class UDPLogger{
         int _port;
         WiFiUDP _Udp;
         char _packetBuffer[100];
-        long _lastSend;
+        unsigned long _lastSend;
 };
 
 #endif

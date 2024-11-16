@@ -18,12 +18,12 @@
 #include "ledmatrix.h"
 #include "udplogger.h"
 
-#define DEBOUNCE_TIME 10  // in ms
+#define DEBOUNCE_TIME_PONG 10  // in ms
 
 #define X_MAX 11
 #define Y_MAX 11
 
-#define GAME_DELAY 80         // in ms
+#define GAME_DELAY_PONG 80         // in ms
 #define BALL_DELAY_MAX   350  // in ms
 #define BALL_DELAY_MIN    50  // in ms
 #define BALL_DELAY_STEP    5  // in ms
