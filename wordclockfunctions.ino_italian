@@ -42,11 +42,9 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
  * @return int: 0 if successful, -1 if sentence not possible to display
  */
 int showStringOnClock(String message, uint32_t color){
-    int messageStart = 0;
     String word = "";
     int lastLetterClock = 0;
     int positionOfWord  = 0;
-    int nextSpace = 0;
     int index = 0;
 
     // add space on the end of message for splitting
@@ -79,7 +77,6 @@ int showStringOnClock(String message, uint32_t color){
           logger.logString("word is not possible to show on clock: " + String(word));
           return -1;
         }
-        //logger.logString(String(nextSpace) + " - " + String());
       }else{
         // end - no more word in message
         break;
