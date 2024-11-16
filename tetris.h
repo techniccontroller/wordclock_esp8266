@@ -17,7 +17,7 @@
 #include "ledmatrix.h"
 #include "udplogger.h"
 
-#define DEBOUNCE_TIME 100
+#define DEBOUNCE_TIME_TETRIS 100
 #define RED_END_TIME 1500
 #define GAME_STATE_RUNNINGt 1
 #define GAME_STATE_ENDt     2

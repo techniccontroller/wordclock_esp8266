@@ -95,7 +95,7 @@ void Tetris::loopCycle(){
  * 
  */
 void Tetris::ctrlStart() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS)
     {
         _lastButtonClick = millis();
         _gameStatet = GAME_STATE_INITt;
@@ -107,7 +107,7 @@ void Tetris::ctrlStart() {
  * 
  */
 void Tetris::ctrlPlayPause() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS)
     {
         _lastButtonClick = millis();
         if (_gameStatet == GAME_STATE_PAUSEDt) {
@@ -128,7 +128,7 @@ void Tetris::ctrlPlayPause() {
  * 
  */
 void Tetris::ctrlRight() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS && _gameStatet == GAME_STATE_RUNNINGt)
     {
         _lastButtonClick = millis();
         shiftActiveBrick(DIR_RIGHT);
@@ -141,7 +141,7 @@ void Tetris::ctrlRight() {
  * 
  */
 void Tetris::ctrlLeft() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS && _gameStatet == GAME_STATE_RUNNINGt)
     {
         _lastButtonClick = millis();
         shiftActiveBrick(DIR_LEFT);
@@ -154,7 +154,7 @@ void Tetris::ctrlLeft() {
  * 
  */
 void Tetris::ctrlUp() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS && _gameStatet == GAME_STATE_RUNNINGt)
     {
         _lastButtonClick = millis();
         rotateActiveBrick();
@@ -168,7 +168,7 @@ void Tetris::ctrlUp() {
  */
 void Tetris::ctrlDown() {
     // longer debounce time, to prevent immediate drop
-    if (millis() > _lastButtonClickr + DEBOUNCE_TIME*5 && _gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClickr + DEBOUNCE_TIME_TETRIS*5 && _gameStatet == GAME_STATE_RUNNINGt)
     {
         _allowdrop = true;
         _lastButtonClickr = millis();
