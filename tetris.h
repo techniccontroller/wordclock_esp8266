@@ -90,7 +90,7 @@ class Tetris{
         void ctrlLeft();
         void ctrlUp();
         void ctrlDown();
-        void setSpeed(int32_t i);
+        void setSpeed(uint8_t i);
 
         void loopCycle();
 
@@ -119,21 +119,20 @@ class Tetris{
         Brick _activeBrick;
         Field _field;
 
-        long _lastButtonClick = 0;
-        long _lastButtonClickr = 0;
+        unsigned long _lastButtonClick = 0;
+        unsigned long _lastButtonClickr = 0;
         int _score = 0;
         int _gameStatet = GAME_STATE_INITt;
-        uint16_t _brickSpeed;
+        unsigned int _brickSpeed;
         unsigned long _nbRowsThisLevel;
         unsigned long _nbRowsTotal;
 
         bool _tetrisGameOver;
 
         unsigned long _prevUpdateTime = 0;
-
-        long _tetrisshowscore;
-        long _droptime = 0;
-        int _speedtetris = 80;
+        unsigned long _tetrisshowscoreTime = 0;
+        unsigned long _dropTime = 0;
+        unsigned int _speedtetris = 80;
         bool _allowdrop;
         
         // color library

@@ -198,14 +198,14 @@ void Snake::endGame()
  */
 void Snake::updateTail()
 {
-  for(int i=_wormLength-1; i>0; i--) {
+  for(unsigned int i=_wormLength-1; i>0; i--) {
     _tail[i].x = _tail[i-1].x;
     _tail[i].y = _tail[i-1].y;
   }
   _tail[0].x = _head.x;
   _tail[0].y = _head.y;
 
-  for(int i=0; i<_wormLength; i++) {
+  for(unsigned int i=0; i<_wormLength; i++) {
     if (_tail[i].x > -1) {
       toggleLed(_tail[i].x, _tail[i].y, LED_TYPE_SNAKE);
     }
@@ -223,7 +223,7 @@ void Snake::updateFood()
     found = true;
     _food.x = random(0, X_MAX);
     _food.y = random(0, Y_MAX);
-    for(int i=0; i<_wormLength; i++) {
+    for(unsigned int i=0; i<_wormLength; i++) {
       if (_tail[i].x == _food.x && _tail[i].y == _food.y) {
          found = false;
       }
@@ -246,7 +246,7 @@ bool Snake::isCollision()
   if (_head.y < 0 || _head.y >= Y_MAX) {
     return true;
   }
-  for(int i=1; i<_wormLength; i++) {
+  for(unsigned int i=1; i<_wormLength; i++) {
     if (_tail[i].x == _head.x && _tail[i].y == _head.y) {
        return true;
     }
@@ -263,7 +263,7 @@ bool Snake::isCollision()
  */
 void Snake::toggleLed(uint8_t x, uint8_t y, uint8_t type)
 {
-  uint32_t color;
+  uint32_t color = LEDMatrix::Color24bit(0, 0, 0);
 
   switch(type) {
     case LED_TYPE_SNAKE:

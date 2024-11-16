@@ -273,7 +273,7 @@ void Pong::resetLEDs()
  */
 void Pong::toggleLed(uint8_t x, uint8_t y, uint8_t type)
 {
-    uint32_t color;
+    uint32_t color = LEDMatrix::Color24bit(0, 0, 0);
 
     switch(type) {
         case LED_TYPE_PADDLE:
