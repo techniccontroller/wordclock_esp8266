@@ -135,7 +135,7 @@ void LEDMatrix::setMinIndicator(uint8_t pattern, uint32_t color)
 void LEDMatrix::gridAddPixel(uint8_t x, uint8_t y, uint32_t color)
 {
   // limit ranges of x and y
-  if(x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT){
+  if(x < WIDTH && y < HEIGHT){
     targetgrid[y][x] = color;
   }
   else{
