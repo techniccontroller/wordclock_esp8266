@@ -17,15 +17,15 @@
 #include "ledmatrix.h"
 #include "udplogger.h"
 
-#define DEBOUNCE_TIME 300   // in ms
+#define DEBOUNCE_TIME_SNAKE 300   // in ms
 
 #define X_MAX 11
 #define Y_MAX 11
 
-#define GAME_DELAY 400      // in ms
+#define GAME_DELAY_SNAKE 400      // in ms
 
 #define LED_TYPE_SNAKE 1
-#define LED_TYPE_OFF   2
+#define LED_TYPE_EMPTY 2
 #define LED_TYPE_FOOD  3
 #define LED_TYPE_BLOOD 4
 

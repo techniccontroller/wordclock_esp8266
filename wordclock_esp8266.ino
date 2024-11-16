@@ -998,7 +998,6 @@ void handleCommand() {
  */
 String split(String s, char parser, int index) {
   String rs="";
-  int parserIndex = index;
   int parserCnt=0;
   int rFromIndex=0, rToIndex=-1;
   while (index >= parserCnt) {

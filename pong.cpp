@@ -56,7 +56,7 @@ void Pong::loopCycle(){
  * @param playerid id of player {0, 1}
  */
 void Pong::ctrlUp(uint8_t playerid){
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME) {
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_PONG) {
         _playerMovement[playerid] = PADDLE_MOVE_DOWN; // need to swap direction as field is rotated 180deg
         _lastButtonClick = millis();
     }
@@ -68,7 +68,7 @@ void Pong::ctrlUp(uint8_t playerid){
  * @param playerid id of player {0, 1}
  */
 void Pong::ctrlDown(uint8_t playerid){
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME) {
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_PONG) {
         _playerMovement[playerid] = PADDLE_MOVE_UP; // need to swap direction as field is rotated 180deg
         _lastButtonClick = millis();
     }
@@ -80,7 +80,7 @@ void Pong::ctrlDown(uint8_t playerid){
  * @param playerid id of player {0, 1}
  */
 void Pong::ctrlNone(uint8_t playerid){
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME) {
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_PONG) {
         _playerMovement[playerid] = PADDLE_MOVE_NONE;
         _lastButtonClick = millis();
     }
@@ -189,7 +189,7 @@ void Pong::endGame()
  */
 void Pong::updateGame()
 {
-    if ((millis() - _lastDrawUpdate) < GAME_DELAY) {
+    if ((millis() - _lastDrawUpdate) < GAME_DELAY_PONG) {
         return;
     }
     _lastDrawUpdate = millis();
@@ -273,7 +273,7 @@ void Pong::resetLEDs()
  */
 void Pong::toggleLed(uint8_t x, uint8_t y, uint8_t type)
 {
-    uint32_t color;
+    uint32_t color = LEDMatrix::Color24bit(0, 0, 0);
 
     switch(type) {
         case LED_TYPE_PADDLE:

@@ -45,8 +45,8 @@ void Tetris::loopCycle(){
             if (_activeBrick.enabled) {
                 // move faster down when allow drop
                 if (_allowdrop) {
-                    if (millis() > _droptime + 50) {
-                        _droptime = millis();
+                    if (millis() > _dropTime + 50) {
+                        _dropTime = millis();
                         shiftActiveBrick(DIR_DOWN);
                         printField();
                     }
@@ -77,10 +77,10 @@ void Tetris::loopCycle(){
                 _tetrisGameOver = false;
                 (*_logger).logString("Tetris: end");
                 everythingRed();
-                _tetrisshowscore = millis();
+                _tetrisshowscoreTime = millis();
             }
 
-            if (millis() > (_tetrisshowscore + RED_END_TIME)) {
+            if (millis() > (_tetrisshowscoreTime + RED_END_TIME)) {
                 resetLEDs();
                 _score = _nbRowsTotal;
                 showscore();
@@ -95,7 +95,7 @@ void Tetris::loopCycle(){
  * 
  */
 void Tetris::ctrlStart() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS)
     {
         _lastButtonClick = millis();
         _gameStatet = GAME_STATE_INITt;
@@ -107,7 +107,7 @@ void Tetris::ctrlStart() {
  * 
  */
 void Tetris::ctrlPlayPause() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS)
     {
         _lastButtonClick = millis();
         if (_gameStatet == GAME_STATE_PAUSEDt) {
@@ -128,7 +128,7 @@ void Tetris::ctrlPlayPause() {
  * 
  */
 void Tetris::ctrlRight() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS && _gameStatet == GAME_STATE_RUNNINGt)
     {
         _lastButtonClick = millis();
         shiftActiveBrick(DIR_RIGHT);
@@ -141,7 +141,7 @@ void Tetris::ctrlRight() {
  * 
  */
 void Tetris::ctrlLeft() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS && _gameStatet == GAME_STATE_RUNNINGt)
     {
         _lastButtonClick = millis();
         shiftActiveBrick(DIR_LEFT);
@@ -154,7 +154,7 @@ void Tetris::ctrlLeft() {
  * 
  */
 void Tetris::ctrlUp() {
-    if (millis() > _lastButtonClick + DEBOUNCE_TIME && _gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClick + DEBOUNCE_TIME_TETRIS && _gameStatet == GAME_STATE_RUNNINGt)
     {
         _lastButtonClick = millis();
         rotateActiveBrick();
@@ -168,7 +168,7 @@ void Tetris::ctrlUp() {
  */
 void Tetris::ctrlDown() {
     // longer debounce time, to prevent immediate drop
-    if (millis() > _lastButtonClickr + DEBOUNCE_TIME*5 && _gameStatet == GAME_STATE_RUNNINGt)
+    if (millis() > _lastButtonClickr + DEBOUNCE_TIME_TETRIS*5 && _gameStatet == GAME_STATE_RUNNINGt)
     {
         _allowdrop = true;
         _lastButtonClickr = millis();
@@ -178,9 +178,10 @@ void Tetris::ctrlDown() {
 /**
  * @brief Set game speed
  * 
- * @param i new speed value
+ * @param i new speed value (0 - 15)
  */
-void Tetris::setSpeed(int32_t i) {
+void Tetris::setSpeed(uint8_t i) {
+    if(i > 15) i = 15;
     (*_logger).logString("setSpeed: " + String(i));
     _speedtetris = -10 * i + 150;
 }
@@ -321,12 +322,11 @@ boolean Tetris::checkFieldCollision(struct Brick * brick) {
 boolean Tetris::checkSidesCollision(struct Brick * brick) {
     //Check vertical collision with sides of field
     uint8_t bx, by;
-    uint8_t fx, fy;
+    int8_t fx;
     for (by = 0; by < MAX_BRICK_SIZE; by++) {
         for (bx = 0; bx < MAX_BRICK_SIZE; bx++) {
             if ( (*brick).pix[bx][by] == 1) {
                 fx = (*brick).xpos + bx;//Determine actual position in the field of the current pix of the brick
-                fy = (*brick).ypos + by;
                 if (fx < 0 || fx >= WIDTH) {
                     return true;
                 }
@@ -450,7 +450,7 @@ void Tetris::shiftActiveBrick(int dir) {
  */
 void Tetris::addActiveBrickToField() {
     uint8_t bx, by;
-    uint8_t fx, fy;
+    int8_t fx, fy;
     for (by = 0; by < MAX_BRICK_SIZE; by++) {
         for (bx = 0; bx < MAX_BRICK_SIZE; bx++) {
             fx = _activeBrick.xpos + bx;
