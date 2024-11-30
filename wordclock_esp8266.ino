@@ -544,6 +544,7 @@ void updateStateBehavior(uint8_t state){
         int minutes = ntp.getMinutes();
         showStringOnClock(timeToString(hours, minutes), maincolor_clock);
         drawMinuteIndicator(minutes, maincolor_clock);
+        showStaticBackgroundPattern();
       }
       break;
     // state diclock
@@ -1095,4 +1096,24 @@ String leadingZero2Digit(int value){
   }
   msg += String(value);
   return msg;
+}
+
+/**
+ * @brief Show a static background pattern on the matrix
+ * 
+ * You can define which leds should be lit up by changing the coordinatesX and coordinatesY arrays.
+ * You can define the color by changing the color variable.
+ * 
+ */
+void showStaticBackgroundPattern(){
+  // define the coordinates of the background pattern to light up
+  // top left corner is (0,0)
+  uint8_t coordinatesX[] = {0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5,  5};
+  uint32_t color = LEDMatrix::Color24bit(255, 0, 0);
+
+  for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
+    ledmatrix.gridAddPixel(coordinatesX[i], coordinatesY[i], color);
+  }
+
 }
