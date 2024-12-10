@@ -5,6 +5,24 @@ Wordclock 2.0 with ESP8266 and NTP time
 More details on my website: https://techniccontroller.com/word-clock-with-wifi-and-neopixel/
 
 
+<div class="warning" style='padding:0.1em; background-color:#E9D8FD; color:#69337A'>
+<span>
+<p style='margin-top:1em; text-align:center'>
+<b>Minimal version</b></p>
+<p style='margin-left:1em;'>
+This branch contains an minimal version of the original code. Missing features are:
+
+- UDPLogger
+- tetris
+- pong
+- snake
+- LEDdirect
+
+</p>
+</span>
+</div>
+
+
 **Languages**
 
 The Wordclock is available in **German**, **English**, **Italian**, **French** and **Javanese** language. By default the language is German. 

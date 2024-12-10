@@ -218,13 +218,6 @@
 		background-color: rgba(147, 147, 158, 0.4);
 	}
 
-	.tetris-button-bottom{
-		width: 105px; 
-		height: 40px; 
-		margin: 5px;
-		background-color: rgba(147, 147, 158, 0.4);
-	}
-
 	img{
 		-moz-user-select: none;
 		-webkit-user-select: none;	
@@ -302,9 +295,6 @@
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 0)"><a onclick="sendCommand('./cmd?mode=clock')" class="buttonClass" style="width: 100%;"><img src = "./icons/clock.svg" style="height:50px"/></a></span></div>
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 1)"><a onclick="sendCommand('./cmd?mode=diclock')" class="buttonClass" style="width: 100%;"><img src = "./icons/diclock.svg" style="height:50px"/></a></span></div>
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 2)"><a onclick="sendCommand('./cmd?mode=spiral')" class="buttonClass" style="width: 100%;"><img src = "./icons/spiral.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 3)"><a onclick="sendCommand('./cmd?mode=tetris')" class="buttonClass" style="width: 100%;"><img src = "./icons/tetris.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 4)"><a onclick="sendCommand('./cmd?mode=snake')" class="buttonClass" style="width: 100%;"><img src = "./icons/snake.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a onclick="sendCommand('./cmd?mode=pingpong')" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
 		</div>
 		<div class="checkbox-container">
 			<label for="Nightmode" style="align-self: flex-start">Nightmode</label> 
@@ -345,87 +335,7 @@
 		</div>
 
 
-		<div class="main-container hidden" id="snakecontainer">
-			<div class="verticalline">
-			</div>
-			<div class="headline">
-				SNAKE
-			</div>
-			<div class="control-container">
-				<div class="grid-container">
-					<div class="grid-item" style="grid-column: 2; grid-row: 1;">
-						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?snake=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
-					</div>
-					
-					<div class="grid-item" style="grid-column: 1; grid-row: 2;">
-						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?snake=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
-					</div>
-					<div class="grid-item" style="grid-column: 2; grid-row: 2;">
-						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?snake=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
-					</div>
-					<div class="grid-item" style="grid-column: 3; grid-row: 2;">
-						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?snake=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
-					</div>
-				</div>
-			</div>
-			<div class="control-container">
-				<div class="buttonClass wide-button-bottom" onclick="sendCommand('./cmd?snake=new')" unselectable="on"><img src = "./icons/refresh.svg" style="height:30px"/></div>
-			</div>
-		</div>
-
-
-		<div class="main-container hidden" id="tetriscontainer">
-			<div class="verticalline">
-			</div>
-			<div class="headline">
-				TETRIS
-			</div>
-			<div class="control-container">
-				<div class="grid-container">
-					<div class="grid-item" style="grid-column: 2; grid-row: 1;">
-						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?tetris=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
-					</div>
-					
-					<div class="grid-item" style="grid-column: 1; grid-row: 2;">
-						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?tetris=left')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px;"/></div>
-					</div>
-					<div class="grid-item" style="grid-column: 2; grid-row: 2;">
-						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?tetris=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
-					</div>
-					<div class="grid-item" style="grid-column: 3; grid-row: 2;">
-						<div class="buttonClass arrow-button" onclick="sendCommand('./cmd?tetris=right')" unselectable="on"><img src = "./icons/arrow_right.svg" style="height:30px;"/></div>
-					</div>
-				</div>
-			</div>
-			<div class="control-container">
-				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=play')" unselectable="on"><img src = "./icons/refresh.svg" style="height:20px"/></div>
-				<div class="buttonClass tetris-button-bottom" onclick="sendCommand('./cmd?tetris=pause')" unselectable="on"><img src = "./icons/playpause.svg" style="height:20px"/></div>
-			</div>
-		</div>
-
-		<div class="main-container hidden" id="pongcontainer">
-			<div class="verticalline">
-			</div>
-			<div class="headline">
-				PONG
-			</div>
-			<div class="control-container">
-				<div class="grid-container">
-
-					<div class="grid-item" style="grid-column: 1; grid-row: 1;">
-						<div class="buttonClass arrow-button" style="width: 140px" onclick="sendCommand('./cmd?pong=up')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(90deg);"/></div>
-					</div>
-
-					<div class="grid-item" style="grid-column: 1; grid-row: 2;">
-						<div class="buttonClass arrow-button" style="width: 140px" onclick="sendCommand('./cmd?pong=down')" unselectable="on"><img src = "./icons/arrow_left.svg" style="height:30px; transform:rotate(-90deg);"/></div>
-					</div>
-
-				</div>
-			</div>
-			<div class="control-container">
-				<div class="buttonClass wide-button-bottom" onclick="sendCommand('./cmd?pong=new')" unselectable="on"><img src = "./icons/refresh.svg" style="height:30px"/></div>
-			</div>
-		</div>
+		
 		
 
 		<script>
@@ -519,16 +429,6 @@
 							break;
 						case 2: // spiral
 							break;
-						case 3: // tetris
-							document.getElementById("tetriscontainer").classList.remove("hidden");
-							break;
-						case 4: // snake
-							document.getElementById("snakecontainer").classList.remove("hidden");
-							break;
-						case 5: // pingping
-							document.getElementById("pongcontainer").classList.remove("hidden");
-							break;
-
 					}
 				}
 				

@@ -6,12 +6,10 @@
  * 
  * @param mymatrix pointer to Adafruit_NeoMatrix object
  * @param mybrightness the initial brightness of the leds
- * @param mylogger pointer to the UDPLogger object
  */
-LEDMatrix::LEDMatrix(Adafruit_NeoMatrix *mymatrix, uint8_t mybrightness, UDPLogger *mylogger){
+LEDMatrix::LEDMatrix(Adafruit_NeoMatrix *mymatrix, uint8_t mybrightness){
     neomatrix = mymatrix;
     brightness = mybrightness;
-    logger = mylogger;
     currentLimit = DEFAULT_CURRENT_LIMIT;
 }
 
@@ -138,9 +136,6 @@ void LEDMatrix::gridAddPixel(uint8_t x, uint8_t y, uint32_t color)
   if(x < WIDTH && y < HEIGHT){
     targetgrid[y][x] = color;
   }
-  else{
-    //logger->logString("Index out of Range: " + String(x) + ", " + String(y));
-  }
 }
 
 /**
@@ -208,7 +203,7 @@ void LEDMatrix::drawOnMatrix(float factor){
   // Check if totalCurrent reaches CURRENTLIMIT -> if yes reduce brightness
   if(totalCurrent > currentLimit){
     uint8_t newBrightness = brightness * float(currentLimit)/float(totalCurrent);
-    //logger->logString("CurrentLimit reached!!!: " + String(totalCurrent) + ", new: " + String(newBrightness));
+    //Serial.println("CurrentLimit reached!!!: " + String(totalCurrent) + ", new: " + String(newBrightness));
     (*neomatrix).setBrightness(newBrightness);
   }
   (*neomatrix).show();

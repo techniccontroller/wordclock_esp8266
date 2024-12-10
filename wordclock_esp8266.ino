@@ -30,18 +30,14 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
-#include "Base64.h"                    // copied from https://github.com/Xander-Electronics/Base64 
 #include <DNSServer.h>
 #include <WiFiManager.h>                //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 #include <EEPROM.h>                     //from ESP8266 Arduino Core (automatically installed when ESP8266 was installed via Boardmanager)
 
 // own libraries
-#include "udplogger.h"
 #include "ntp_client_plus.h"
 #include "ledmatrix.h"
-#include "tetris.h"
-#include "snake.h"
-#include "pong.h"
+
 
 
 // ----------------------------------------------------------------------------------
@@ -70,9 +66,6 @@
 
 #define PERIOD_HEARTBEAT 5000
 #define PERIOD_ANIMATION 200
-#define PERIOD_TETRIS 50
-#define PERIOD_SNAKE 50
-#define PERIOD_PONG 10
 #define TIMEOUT_LEDDIRECT 5000
 #define PERIOD_STATECHANGE 10000
 #define PERIOD_NTPUPDATE 30000
@@ -99,22 +92,16 @@ enum direction {right, left, up, down};
 #define HEIGHT 11
 
 // own datatype for state machine states
-#define NUM_STATES 6
-enum ClockState {st_clock, st_diclock, st_spiral, st_tetris, st_snake, st_pingpong};
+#define NUM_STATES 3
+enum ClockState {st_clock, st_diclock, st_spiral};
 const String stateNames[] = {"Clock", "DiClock", "Sprial", "Tetris", "Snake", "PingPong"};
 // PERIODS for each state (different for stateAutoChange or Manual mode)
 const uint16_t PERIODS[2][NUM_STATES] = { { PERIOD_TIMEVISUUPDATE, // stateAutoChange = 0
                                             PERIOD_TIMEVISUUPDATE, 
-                                            PERIOD_ANIMATION,
-                                            PERIOD_TETRIS, 
-                                            PERIOD_SNAKE,  
-                                            PERIOD_PONG},
+                                            PERIOD_ANIMATION},
                                           { PERIOD_TIMEVISUUPDATE, // stateAutoChange = 1
                                             PERIOD_TIMEVISUUPDATE, 
-                                            PERIOD_ANIMATION,
-                                            PERIOD_ANIMATION, 
-                                            PERIOD_ANIMATION,  
-                                            PERIOD_PONG}};
+                                            PERIOD_ANIMATION}};
 
 // ports
 const unsigned int localPort = 2390;
@@ -182,13 +169,9 @@ long lastNightmodeCheck = millis()  - (PERIOD_NIGHTMODECHECK-3000); // time of l
 long buttonPressStart = 0;          // time of push button press start 
 
 // Create necessary global objects
-UDPLogger logger;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
-LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
-Tetris mytetris = Tetris(&ledmatrix, &logger);
-Snake mysnake = Snake(&ledmatrix, &logger);
-Pong mypong = Pong(&ledmatrix, &logger);
+LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness);
 
 float filterFactor = DEFAULT_SMOOTHING_FACTOR;// stores smoothing factor for led transition
 uint8_t currentState = st_clock;              // stores current state
@@ -331,27 +314,23 @@ void setup() {
 
   server.on("/cmd", handleCommand); // process commands
   server.on("/data", handleDataRequest); // process datarequests
-  server.on("/leddirect", HTTP_POST, handleLEDDirect); // Call the 'handleLEDDirect' function when a POST request is made to URI "/leddirect"
   server.begin();
   
-  // create UDP Logger to send logging messages via UDP multicast
-  logger = UDPLogger(WiFi.localIP(), logMulticastIP, logMulticastPort);
-  logger.setName("Wordclock 2.0");
-  logger.logString("Start program\n");
+  Serial.println("Start program\n");
   delay(10);
-  logger.logString("Sketchname: "+ String(__FILE__));
+  Serial.println("Sketchname: "+ String(__FILE__));
   delay(10);
-  logger.logString("Build: " + String(__TIMESTAMP__));
+  Serial.println("Build: " + String(__TIMESTAMP__));
   delay(10);
-  logger.logString("IP: " + WiFi.localIP().toString());
+  Serial.println("IP: " + WiFi.localIP().toString());
   delay(10);
-  logger.logString("Reset Reason: " + ESP.getResetReason());
+  Serial.println("Reset Reason: " + ESP.getResetReason());
 
   // setup NTP
   ntp.setupNTPClient();
-  logger.logString("NTP running");
-  logger.logString("Time: " +  ntp.getFormattedTime());
-  logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
+  Serial.println("NTP running");
+  Serial.println("Time: " +  ntp.getFormattedTime());
+  Serial.println("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
 
   // Read nightmode setting from EEPROM
   nightModeStartHour = readIntEEPROM(ADR_NM_START_H);
@@ -362,13 +341,13 @@ void setup() {
   if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
   if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
   if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
-  logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
-  logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
+  Serial.println("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
+  Serial.println("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
 
   // Read brightness setting from EEPROM, lower limit is 10 so that the LEDs are not completely off
   brightness = readIntEEPROM(ADR_BRIGHTNESS);
   if(brightness < 10) brightness = 10;
-  logger.logString("Brightness: " + String(brightness));
+  Serial.println("Brightness: " + String(brightness));
   ledmatrix.setBrightness(brightness);
 
   // Read state from EEPROM
@@ -432,7 +411,7 @@ void loop() {
 
   // send regularly heartbeat messages via UDP multicast
   if(millis() - lastheartbeat > PERIOD_HEARTBEAT){
-    logger.logString("Heartbeat, state: " + stateNames[currentState] + ", FreeHeap: " + ESP.getFreeHeap() + ", HeapFrag: " + ESP.getHeapFragmentation() + ", MaxFreeBlock: " + ESP.getMaxFreeBlockSize() + "\n");
+    Serial.println("Heartbeat, state: " + stateNames[currentState] + ", FreeHeap: " + ESP.getFreeHeap() + ", HeapFrag: " + ESP.getHeapFragmentation() + ", MaxFreeBlock: " + ESP.getMaxFreeBlockSize() + "\n");
     lastheartbeat = millis();
 
     // Check wifi status (only if no apmode)
@@ -472,12 +451,12 @@ void loop() {
     int res = ntp.updateNTP();
     if(res == 0){
       ntp.calcDate();
-      logger.logString("NTP-Update successful");
-      logger.logString("Time: " +  ntp.getFormattedTime());
-      logger.logString("Date: " +  ntp.getFormattedDate());
-      logger.logString("Day of Week (Mon=1, Sun=7): " +  String(ntp.getDayOfWeek()));
-      logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
-      logger.logString("Summertime: " + String(ntp.updateSWChange()));
+      Serial.println("NTP-Update successful");
+      Serial.println("Time: " +  ntp.getFormattedTime());
+      Serial.println("Date: " +  ntp.getFormattedDate());
+      Serial.println("Day of Week (Mon=1, Sun=7): " +  String(ntp.getDayOfWeek()));
+      Serial.println("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
+      Serial.println("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate = millis();
       watchdogCounter = 30;
       checkNightmode();
@@ -490,29 +469,29 @@ void loop() {
       waitForTimeAfterReboot = false;
     }
     else if(res == -1){
-      logger.logString("NTP-Update not successful. Reason: Timeout");
+      Serial.println("NTP-Update not successful. Reason: Timeout");
       lastNTPUpdate += 10000;
       watchdogCounter--;
     }
     else if(res == 1){
-      logger.logString("NTP-Update not successful. Reason: Too large time difference");
-      logger.logString("Time: " +  ntp.getFormattedTime());
-      logger.logString("Date: " +  ntp.getFormattedDate());
-      logger.logString("Day of Week (Mon=1, Sun=7): " +  ntp.getDayOfWeek());
-      logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
-      logger.logString("Summertime: " + String(ntp.updateSWChange()));
+      Serial.println("NTP-Update not successful. Reason: Too large time difference");
+      Serial.println("Time: " +  ntp.getFormattedTime());
+      Serial.println("Date: " +  ntp.getFormattedDate());
+      Serial.println("Day of Week (Mon=1, Sun=7): " +  ntp.getDayOfWeek());
+      Serial.println("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
+      Serial.println("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate += 10000;
       watchdogCounter--;
     }
     else {
-      logger.logString("NTP-Update not successful. Reason: NTP time not valid (<1970)");
+      Serial.println("NTP-Update not successful. Reason: NTP time not valid (<1970)");
       lastNTPUpdate += 10000;
       watchdogCounter--;
     }
 
-    logger.logString("Watchdog Counter: " + String(watchdogCounter));
+    Serial.println("Watchdog Counter: " + String(watchdogCounter));
     if(watchdogCounter <= 0){
-        logger.logString("Trigger restart due to watchdog...");
+        Serial.println("Trigger restart due to watchdog...");
         delay(100);
         ESP.restart();
     }
@@ -572,39 +551,6 @@ void updateStateBehavior(uint8_t state){
         }
       }
       break;
-    // state tetris
-    case st_tetris:
-      {
-        if(stateAutoChange){
-          randomtetris(false);
-        }
-        else{
-          mytetris.loopCycle();
-        }
-      }
-      break;
-    // state snake
-    case st_snake:
-      {
-        if(stateAutoChange){
-          ledmatrix.gridFlush();
-          int res = randomsnake(false, 8, maincolor_snake, -1);
-          if(res){
-            // init snake for next run
-            randomsnake(true, 8, maincolor_snake, -1);
-          }
-        }
-        else{
-          mysnake.loopCycle();
-        }
-      }
-      break;
-    // state pingpong
-    case st_pingpong:
-      {
-        mypong.loopCycle();
-      }
-      break;
   }
 }
 
@@ -613,7 +559,7 @@ void updateStateBehavior(uint8_t state){
  * 
  */
 void checkNightmode(){
-  logger.logString("Check nightmode");
+  Serial.println("Check nightmode");
   int hours = ntp.getHours24();
   int minutes = ntp.getMinutes();
   
@@ -627,12 +573,12 @@ void checkNightmode(){
   if (startInMinutes < endInMinutes) { // Same day scenario
       if (startInMinutes < currentTimeInMinutes && currentTimeInMinutes < endInMinutes) {
           nightMode = true;
-          logger.logString("Nightmode activated");
+          Serial.println("Nightmode activated");
       }
   } else if (startInMinutes > endInMinutes) { // Overnight scenario
       if (currentTimeInMinutes >= startInMinutes || currentTimeInMinutes < endInMinutes) {
           nightMode = true;
-          logger.logString("Nightmode activated");
+          Serial.println("Nightmode activated");
       }
   }
   setNightmode(nightMode);
@@ -650,33 +596,6 @@ void entryAction(uint8_t state){
       // Init spiral with normal drawing mode
       sprialDir = 0;
       spiral(true, sprialDir, WIDTH-6);
-      break;
-    case st_tetris:
-      filterFactor = 1.0; // no smoothing
-      if(stateAutoChange){
-        randomtetris(true);
-      }
-      else{
-        mytetris.ctrlStart();
-      }
-      break;
-    case st_snake:
-      if(stateAutoChange){
-        randomsnake(true, 8, colors24bit[1], -1);
-      }
-      else{
-        filterFactor = 1.0; // no smoothing
-        mysnake.initGame();
-      }
-      break;
-    case st_pingpong:
-      if(stateAutoChange){
-        mypong.initGame(2);
-      }
-      else{
-        filterFactor = 1.0; // no smoothing
-        mypong.initGame(1);
-      }
       break;
   }
 }
@@ -697,64 +616,10 @@ void stateChange(uint8_t newState, bool persistant){
   // set new state
   currentState = newState;
   entryAction(currentState);
-  logger.logString("State change to: " + stateNames[currentState]);
+  Serial.println("State change to: " + stateNames[currentState]);
   if(persistant){
     // save state to EEPROM
     writeIntEEPROM(ADR_STATE, currentState);
-  }
-}
-
-/**
- * @brief Handler for POST requests to /leddirect.
- * 
- * Allows the control of all LEDs from external source. 
- * It will overwrite the normal program for 5 seconds.
- * A 11x11 picture can be sent as base64 encoded string to be displayed on matrix.
- * 
- */
-void handleLEDDirect() {
-  if (server.method() != HTTP_POST) {
-    server.send(405, "text/plain", "Method Not Allowed");
-  } else {
-    String message = "POST data was:\n";
-    /*logger.logString(message);
-    delay(10);
-    for (uint8_t i = 0; i < server.args(); i++) {
-      message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-      logger.logString(server.arg(i));
-      delay(10);
-    }*/
-    if(server.args() == 1){
-      String data = String(server.arg(0));
-      int dataLength = data.length();
-      //char byteArray[dataLength];
-      //data.toCharArray(byteArray, dataLength);
-
-      // base64 decoding
-      char base64data[dataLength];
-      data.toCharArray(base64data, dataLength);
-      int base64dataLen = dataLength;
-      int decodedLength = Base64.decodedLength(base64data, base64dataLen);
-      char byteArray[decodedLength];
-      Base64.decode(byteArray, base64data, base64dataLen);
-
-      /*for(int i = 0; i < 10; i++){
-        logger.logString(String((int)(byteArray[i])));
-        delay(10);
-      }*/
-
-
-      for(int i = 0; i < dataLength; i += 4) {
-        uint8_t red = byteArray[i]; // red
-        uint8_t green = byteArray[i + 1]; // green
-        uint8_t blue = byteArray[i + 2]; // blue
-        ledmatrix.gridAddPixel((i/4) % WIDTH, (i/4) / HEIGHT, LEDMatrix::Color24bit(red, green, blue));
-      }
-      ledmatrix.drawOnMatrixInstant();
-
-      lastLEDdirect = millis();
-    }
-    server.send(200, "text/plain", message);
   }
 }
 
@@ -768,7 +633,7 @@ void handleButton(){
   // check rising edge
   if(buttonPressed == true && lastButtonState == false){
     // button press start
-    logger.logString("Button press started");
+    Serial.println("Button press started");
     buttonPressStart = millis();
   }
   // check falling edge
@@ -776,13 +641,13 @@ void handleButton(){
     // button press ended
     if((millis() - buttonPressStart) > LONGPRESS){
       // longpress -> nightmode
-      logger.logString("Button press ended - longpress");
+      Serial.println("Button press ended - longpress");
 
       setNightmode(true);
     }
     else if((millis() - buttonPressStart) > SHORTPRESS){
       // shortpress -> state change 
-      logger.logString("Button press ended - shortpress");
+      Serial.println("Button press ended - shortpress");
 
       if(nightMode){
         setNightmode(false);
@@ -832,7 +697,7 @@ void handleCommand() {
   // receive command and handle accordingly
   for (uint8_t i = 0; i < server.args(); i++) {
     String log_str = "Command received: " + server.argName(i) + " " + server.arg(i);
-    logger.logString(log_str);
+    Serial.println(log_str);
   }
   
   if (server.argName(0) == "led") // the parameter which was sent to this server is led color
@@ -841,17 +706,17 @@ void handleCommand() {
     String redstr = split(colorstr, '-', 0);
     String greenstr= split(colorstr, '-', 1);
     String bluestr = split(colorstr, '-', 2);
-    logger.logString(colorstr);
-    logger.logString("r: " + String(redstr.toInt()));
-    logger.logString("g: " + String(greenstr.toInt()));
-    logger.logString("b: " + String(bluestr.toInt()));
+    Serial.println(colorstr);
+    Serial.println("r: " + String(redstr.toInt()));
+    Serial.println("g: " + String(greenstr.toInt()));
+    Serial.println("b: " + String(bluestr.toInt()));
     // set new main color
     setMainColor(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
   }
   else if (server.argName(0) == "mode") // the parameter which was sent to this server is mode change
   {
     String modestr = server.arg(0);
-    logger.logString("Mode change via Webserver to: " + modestr);
+    Serial.println("Mode change via Webserver to: " + modestr);
     // set current mode/state accordant sent mode
     if(modestr == "clock"){
       stateChange(st_clock, true);
@@ -861,26 +726,17 @@ void handleCommand() {
     }
     else if(modestr == "spiral"){
       stateChange(st_spiral, true);
-    }
-    else if(modestr == "tetris"){
-      stateChange(st_tetris, true);
-    }
-    else if(modestr == "snake"){
-      stateChange(st_snake, true);
-    }
-    else if(modestr == "pingpong"){
-      stateChange(st_pingpong, true);
     } 
   }
   else if(server.argName(0) == "nightmode"){
     String modestr = server.arg(0);
-    logger.logString("Nightmode change via Webserver to: " + modestr);
+    Serial.println("Nightmode change via Webserver to: " + modestr);
     if(modestr == "1") setNightmode(true);
     else setNightmode(false);
   }
   else if(server.argName(0) == "setting"){
     String timestr = server.arg(0) + "-";
-    logger.logString("Nightmode setting change via Webserver to: " + timestr);
+    Serial.println("Nightmode setting change via Webserver to: " + timestr);
     nightModeStartHour = split(timestr, '-', 0).toInt();
     nightModeStartMin = split(timestr, '-', 1).toInt();
     nightModeEndHour = split(timestr, '-', 2).toInt();
@@ -896,9 +752,9 @@ void handleCommand() {
     writeIntEEPROM(ADR_NM_END_H, nightModeEndHour);
     writeIntEEPROM(ADR_NM_END_M, nightModeEndMin);
     writeIntEEPROM(ADR_BRIGHTNESS, brightness);
-    logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
-    logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
-    logger.logString("Brightness: " + String(brightness));
+    Serial.println("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
+    Serial.println("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
+    Serial.println("Brightness: " + String(brightness));
     ledmatrix.setBrightness(brightness);
     lastNightmodeCheck = millis()  - PERIOD_NIGHTMODECHECK;
   }
@@ -921,66 +777,12 @@ void handleCommand() {
   }
   else if(server.argName(0) == "stateautochange"){
     String modestr = server.arg(0);
-    logger.logString("stateAutoChange change via Webserver to: " + modestr);
+    Serial.println("stateAutoChange change via Webserver to: " + modestr);
     if(modestr == "1") stateAutoChange = true;
     else stateAutoChange = false;
   }
-  else if(server.argName(0) == "tetris"){
-    String cmdstr = server.arg(0);
-    logger.logString("Tetris cmd via Webserver to: " + cmdstr);
-    if(cmdstr == "up"){
-      mytetris.ctrlUp();
-    }
-    else if(cmdstr == "left"){
-      mytetris.ctrlLeft();
-    }
-    else if(cmdstr == "right"){
-      mytetris.ctrlRight();
-    }
-    else if(cmdstr == "down"){
-      mytetris.ctrlDown();
-    }
-    else if(cmdstr == "play"){
-      mytetris.ctrlStart();
-    }
-    else if(cmdstr == "pause"){
-      mytetris.ctrlPlayPause();
-    }
-  }
-  else if(server.argName(0) == "snake"){
-    String cmdstr = server.arg(0);
-    logger.logString("Snake cmd via Webserver to: " + cmdstr);
-    if(cmdstr == "up"){
-      mysnake.ctrlUp();
-    }
-    else if(cmdstr == "left"){
-      mysnake.ctrlLeft();
-    }
-    else if(cmdstr == "right"){
-      mysnake.ctrlRight();
-    }
-    else if(cmdstr == "down"){
-      mysnake.ctrlDown();
-    }
-    else if(cmdstr == "new"){
-      mysnake.initGame();
-    }
-  }
-  else if(server.argName(0) == "pong"){
-    String cmdstr = server.arg(0);
-    logger.logString("Pong cmd via Webserver to: " + cmdstr);
-    if(cmdstr == "up"){
-      mypong.ctrlUp(1);
-    }
-    else if(cmdstr == "down"){
-      mypong.ctrlDown(1);
-    }
-    else if(cmdstr == "new"){
-      mypong.initGame(1);
-    }
-  }
   else if(server.argName(0) == "reboot"){
-    logger.logString("Reboot via Webserver");
+    Serial.println("Reboot via Webserver");
     server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
     delay(1000);
     ESP.restart();

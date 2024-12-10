@@ -74,7 +74,7 @@ int showStringOnClock(String message, uint32_t color){
         }
         else{
           // word is not possible to show on clock
-          logger.logString("word is not possible to show on clock: " + String(word));
+          Serial.println("word is not possible to show on clock: " + String(word));
           return -1;
         }
       }else{
@@ -209,7 +209,7 @@ String timeToString(uint8_t hours,uint8_t minutes){
     message += "UHR ";
   }
 
-  logger.logString("time as String: " + String(message));
+  Serial.println("time as String: " + String(message));
 
   return message;
 }
