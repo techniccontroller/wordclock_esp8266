@@ -309,6 +309,13 @@
 			</div>
 			
 		</div>
+		<div class="checkbox-container">
+			<label for="ColorShift" style="align-self: flex-start">DynamicColorShift</label>
+			<div>
+				<input name= "ColorShift" id="ColorShift" type="checkbox" class="toggle">
+			</div>
+			
+		</div>
 		
 		<div class="main-container hidden" id="colorcontainer">
 			<div class="verticalline">
@@ -388,6 +395,23 @@
 							sendCommand("./cmd?stateautochange=1");
 						} else {
 							sendCommand("./cmd?stateautochange=0");
+						}
+					});
+
+					var ckb_colorshift = document.querySelector('input[id="ColorShift"]');
+					if(myVar.colorshift == "1") {
+						console.log("colorshift == 1");
+						ckb_colorshift.checked = true;
+					}
+					else {
+						console.log("colorshift == 0");
+						ckb_colorshift.checked = false;
+					}
+					ckb_colorshift.addEventListener('change', () => {
+						if(ckb_colorshift.checked) {
+							sendCommand("./cmd?colorshift=1");
+						} else {
+							sendCommand("./cmd?colorshift=0");
 						}
 					});
 					

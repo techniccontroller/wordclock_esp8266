@@ -69,7 +69,7 @@
 #define TIMEOUT_LEDDIRECT 5000
 #define PERIOD_STATECHANGE 10000
 #define PERIOD_NTPUPDATE 30000
-#define PERIOD_TIMEVISUUPDATE 1000
+#define PERIOD_TIMEVISUUPDATE 100
 #define PERIOD_MATRIXUPDATE 100
 #define PERIOD_NIGHTMODECHECK 20000
 
@@ -180,6 +180,10 @@ bool nightMode = false;                       // stores state of nightmode
 uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital clock
 uint32_t maincolor_snake = colors24bit[1];    // color of the random snake animation
 bool apmode = false;                          // stores if WiFi AP mode is active
+bool dynColorShiftActive = true;             // stores if dynamic color shift is active
+uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
+uint8_t dynColorShiftSpeed = 2;               // stores the speed of the dynamic color shift, how many steps per update (per 100ms)
+
 
 // nightmode settings
 int nightModeStartHour = 22;
@@ -430,7 +434,11 @@ void loop() {
 
   // periodically write colors to matrix
   if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot){
-    ledmatrix.drawOnMatrixSmooth(filterFactor);
+    if(dynColorShiftActive){
+      ledmatrix.drawOnMatrixInstant();
+    }else{
+      ledmatrix.drawOnMatrixSmooth(filterFactor);
+    }
     lastAnimationStep = millis();
   }
 
@@ -519,6 +527,13 @@ void updateStateBehavior(uint8_t state){
     // state clock
     case st_clock:
       {
+        if(dynColorShiftActive){
+          // dynamic color shift
+          dynColorShiftPhase = (dynColorShiftPhase + dynColorShiftSpeed) % 256;
+          ledmatrix.setDynamicColorShiftPhase(dynColorShiftPhase);
+        } else {
+          ledmatrix.setDynamicColorShiftPhase(-1);
+        }
         int hours = ntp.getHours24();
         int minutes = ntp.getMinutes();
         showStringOnClock(timeToString(hours, minutes), maincolor_clock);
@@ -528,6 +543,7 @@ void updateStateBehavior(uint8_t state){
     // state diclock
     case st_diclock:
       {
+        dynColorShiftActive = false;
         int hours = ntp.getHours24();
         int minutes = ntp.getMinutes();
         showDigitalClock(hours, minutes, maincolor_clock);
@@ -536,6 +552,7 @@ void updateStateBehavior(uint8_t state){
     // state spiral
     case st_spiral:
       {
+        dynColorShiftActive = false;
         int res = spiral(false, sprialDir, WIDTH-6);
         if(res && sprialDir == 0){
           // change spiral direction to closing (draw empty leds)
@@ -590,7 +607,6 @@ void checkNightmode(){
  * @param state 
  */
 void entryAction(uint8_t state){
-  filterFactor = 0.5;
   switch(state){
     case st_spiral:
       // Init spiral with normal drawing mode
@@ -787,6 +803,12 @@ void handleCommand() {
     delay(1000);
     ESP.restart();
   }
+  else if(server.argName(0) == "colorshift"){
+    Serial.println("ColorShift change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") dynColorShiftActive = true;
+    else dynColorShiftActive = false;
+  }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
@@ -843,6 +865,8 @@ void handleDataRequest() {
       message += "\"nightModeEnd\":\"" + leadingZero2Digit(nightModeEndHour) + "-" + leadingZero2Digit(nightModeEndMin) + "\"";
       message += ",";
       message += "\"brightness\":\"" + String(brightness) + "\"";
+      message += ",";
+      message += "\"colorshift\":\"" + String(dynColorShiftActive) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
