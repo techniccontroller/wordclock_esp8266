@@ -182,7 +182,7 @@ uint32_t maincolor_snake = colors24bit[1];    // color of the random snake anima
 bool apmode = false;                          // stores if WiFi AP mode is active
 bool dynColorShiftActive = true;             // stores if dynamic color shift is active
 uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
-uint8_t dynColorShiftSpeed = 2;               // stores the speed of the dynamic color shift, how many steps per update (per 100ms)
+int8_t dynColorShiftSpeed = -2;               // stores the speed of the dynamic color shift, how many steps per update (per 100ms)
 
 
 // nightmode settings
