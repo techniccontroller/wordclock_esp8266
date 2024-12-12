@@ -70,7 +70,7 @@ int spiral(bool init, bool empty, uint8_t size){
 }
 
 /**
- * @brief Calc the next direction for led movement (snake and spiral)
+ * @brief Calc the next direction for led movement (spiral)
  * 
  * @param dir direction of the current led movement
  * @param d action to be executed

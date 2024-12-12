@@ -83,7 +83,7 @@
 // number of colors in colors array
 #define NUM_COLORS 7
 
-// own datatype for matrix movement (snake and spiral)
+// own datatype for matrix movement (spiral)
 enum direction {right, left, up, down};
 
 // width of the led matrix
@@ -94,7 +94,7 @@ enum direction {right, left, up, down};
 // own datatype for state machine states
 #define NUM_STATES 3
 enum ClockState {st_clock, st_diclock, st_spiral};
-const String stateNames[] = {"Clock", "DiClock", "Sprial", "Tetris", "Snake", "PingPong"};
+const String stateNames[] = {"Clock", "DiClock", "Sprial"};
 // PERIODS for each state (different for stateAutoChange or Manual mode)
 const uint16_t PERIODS[2][NUM_STATES] = { { PERIOD_TIMEVISUUPDATE, // stateAutoChange = 0
                                             PERIOD_TIMEVISUUPDATE, 
@@ -178,7 +178,6 @@ uint8_t currentState = st_clock;              // stores current state
 bool stateAutoChange = false;                 // stores state of automatic state change
 bool nightMode = false;                       // stores state of nightmode
 uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital clock
-uint32_t maincolor_snake = colors24bit[1];    // color of the random snake animation
 bool apmode = false;                          // stores if WiFi AP mode is active
 bool dynColorShiftActive = true;             // stores if dynamic color shift is active
 uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
