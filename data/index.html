@@ -309,7 +309,7 @@
 			</div>
 			
 		</div>
-		<div class="checkbox-container">
+		<div class="checkbox-container" id = "colorshiftcontainer">
 			<label for="ColorShift" style="align-self: flex-start">DynamicColorShift</label>
 			<div>
 				<input name= "ColorShift" id="ColorShift" type="checkbox" class="toggle">
@@ -447,11 +447,14 @@
 					switch(modeid){
 						case 0: // clock
 							document.getElementById("colorcontainer").classList.remove("hidden");
+							document.getElementById("colorshiftcontainer").classList.remove("hidden");
 							break;
 						case 1: // diclock
 							document.getElementById("colorcontainer").classList.remove("hidden");
+							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
 						case 2: // spiral
+							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
 					}
 				}
