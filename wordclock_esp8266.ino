@@ -69,7 +69,7 @@
 #define TIMEOUT_LEDDIRECT 5000
 #define PERIOD_STATECHANGE 10000
 #define PERIOD_NTPUPDATE 30000
-#define PERIOD_TIMEVISUUPDATE 100
+#define PERIOD_TIMEVISUUPDATE 555
 #define PERIOD_MATRIXUPDATE 100
 #define PERIOD_NIGHTMODECHECK 20000
 
@@ -181,7 +181,7 @@ uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital 
 bool apmode = false;                          // stores if WiFi AP mode is active
 bool dynColorShiftActive = true;             // stores if dynamic color shift is active
 uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
-int8_t dynColorShiftSpeed = -2;               // stores the speed of the dynamic color shift, how many steps per update (per 100ms)
+int8_t dynColorShiftSpeed = -1;               // stores the speed of the dynamic color shift, how many steps per update (per 100ms)
 
 
 // nightmode settings
@@ -433,7 +433,7 @@ void loop() {
 
   // periodically write colors to matrix
   if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot){
-    if(dynColorShiftActive){
+    if(dynColorShiftActive && currentState == st_clock){
       ledmatrix.drawOnMatrixInstant();
     }else{
       ledmatrix.drawOnMatrixSmooth(filterFactor);
@@ -542,7 +542,7 @@ void updateStateBehavior(uint8_t state){
     // state diclock
     case st_diclock:
       {
-        dynColorShiftActive = false;
+        ledmatrix.setDynamicColorShiftPhase(-1);
         int hours = ntp.getHours24();
         int minutes = ntp.getMinutes();
         showDigitalClock(hours, minutes, maincolor_clock);
@@ -551,7 +551,7 @@ void updateStateBehavior(uint8_t state){
     // state spiral
     case st_spiral:
       {
-        dynColorShiftActive = false;
+        ledmatrix.setDynamicColorShiftPhase(-1);
         int res = spiral(false, sprialDir, WIDTH-6);
         if(res && sprialDir == 0){
           // change spiral direction to closing (draw empty leds)
