@@ -1,5 +1,5 @@
 
-const String clockStringFrench =  "IL EST DEUXQUATRETROISNEUFUNESEPTHUITSIXCINQMIDI MINUITONZE HEURESMOINS ETDIXETQUART    VINGT-CINQ ET DEMIE   TRENTE-CINQ";
+const String clockStringFrench =  "ILOESTZRTUEDEUXSTTROISQUATRETNEUFUNESEPTHUITSIXDIXKONZECINQDHEURESMIDIRMINUITMOINSAECINQETRQUARTDIXVINGT-CINQEETKDEMIEILI";
 
 /**
  * @brief Draw the given sentence to the word clock
@@ -85,10 +85,9 @@ String numberToFrench(uint8_t number) {
  * @return String time as sentence
  */
 String timeToString_french(uint8_t hours, uint8_t minutes) {
-  // Runden der Minuten auf den nächsten 5-Minuten-Takt
+  // Rounding the minutes to the next 5-minute cycle
   minutes = minutes / 5 * 5;
 
-  // ES IST
   String message = "IL EST ";
   
   if(minutes >= 35)
@@ -98,7 +97,7 @@ String timeToString_french(uint8_t hours, uint8_t minutes) {
 
   if ((hours == 0 && minutes <= 30) || (hours == 24 && minutes >= 35)) {
     message += "MINUIT";
-  } else if (hours == 12 && minutes <= 30) {
+  } else if ((hours == 12 && minutes <= 30) || (hours == 12 && minutes >=35)) {
     message += "MIDI";
   } else {
     uint8_t hours12h = hours;
@@ -108,9 +107,9 @@ String timeToString_french(uint8_t hours, uint8_t minutes) {
     message += numberToFrench(hours12h) + " HEURE" + (hours12h > 1 ? "S" : "");
   }
 
-  // Minuten formatieren
+  // Format minutes
   if (minutes == 0) {
-    // Keine Minuten, nur volle Stunde
+    // No minutes, only full hours
     return message;
   } else if (minutes == 5) {
     message += " CINQ";
@@ -138,4 +137,3 @@ String timeToString_french(uint8_t hours, uint8_t minutes) {
 
   return message;
 }
-
