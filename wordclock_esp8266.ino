@@ -58,6 +58,8 @@
 #define ADR_MC_GREEN 22
 #define ADR_MC_BLUE 24
 #define ADR_STATE 26
+#define ADR_COLSHIFTSPEED 28
+#define ADR_COLSHIFTACTIVE 29
 
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
@@ -102,19 +104,6 @@ enum direction {right, left, up, down};
 #define NUM_STATES 6
 enum ClockState {st_clock, st_diclock, st_spiral, st_tetris, st_snake, st_pingpong};
 const String stateNames[] = {"Clock", "DiClock", "Sprial", "Tetris", "Snake", "PingPong"};
-// PERIODS for each state (different for stateAutoChange or Manual mode)
-const uint16_t PERIODS[2][NUM_STATES] = { { PERIOD_TIMEVISUUPDATE, // stateAutoChange = 0
-                                            PERIOD_TIMEVISUUPDATE, 
-                                            PERIOD_ANIMATION,
-                                            PERIOD_TETRIS, 
-                                            PERIOD_SNAKE,  
-                                            PERIOD_PONG},
-                                          { PERIOD_TIMEVISUUPDATE, // stateAutoChange = 1
-                                            PERIOD_TIMEVISUUPDATE, 
-                                            PERIOD_ANIMATION,
-                                            PERIOD_ANIMATION, 
-                                            PERIOD_ANIMATION,  
-                                            PERIOD_PONG}};
 
 // ports
 const unsigned int localPort = 2390;
@@ -180,6 +169,7 @@ long lastNTPUpdate = millis() - (PERIOD_NTPUPDATE-3000);  // time of last NTP up
 long lastAnimationStep = millis();  // time of last Matrix update
 long lastNightmodeCheck = millis()  - (PERIOD_NIGHTMODECHECK-3000); // time of last nightmode check
 long buttonPressStart = 0;          // time of push button press start 
+uint16_t behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE; // holdes the period in which the behavior should be updated
 
 // Create necessary global objects
 UDPLogger logger;
@@ -197,12 +187,15 @@ bool nightMode = false;                       // stores state of nightmode
 uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital clock
 uint32_t maincolor_snake = colors24bit[1];    // color of the random snake animation
 bool apmode = false;                          // stores if WiFi AP mode is active
+bool dynColorShiftActive = true;              // stores if dynamic color shift is active
+uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
+uint8_t dynColorShiftSpeed = 1;               // stores the speed of the dynamic color shift -> used to calc update period
 
 // nightmode settings
-int nightModeStartHour = 22;
-int nightModeStartMin = 0;
-int nightModeEndHour = 7;
-int nightModeEndMin = 0;
+uint8_t nightModeStartHour = 22;
+uint8_t nightModeStartMin = 0;
+uint8_t nightModeEndHour = 7;
+uint8_t nightModeEndMin = 0;
 
 // Watchdog counter to trigger restart if NTP update was not possible 30 times in a row (5min)
 int watchdogCounter = 30;
@@ -223,9 +216,6 @@ void setup() {
 
   //Init EEPROM
   EEPROM.begin(EEPROM_SIZE);
-
-  // Load color for clock from EEPROM
-  loadMainColor();
 
   // configure button pin as input
   pinMode(BUTTONPIN, INPUT_PULLUP);
@@ -353,31 +343,13 @@ void setup() {
   logger.logString("Time: " +  ntp.getFormattedTime());
   logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
 
-  // Read nightmode setting from EEPROM
-  nightModeStartHour = readIntEEPROM(ADR_NM_START_H);
-  nightModeStartMin = readIntEEPROM(ADR_NM_START_M);
-  nightModeEndHour = readIntEEPROM(ADR_NM_END_H);
-  nightModeEndMin = readIntEEPROM(ADR_NM_END_M);
-  if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
-  if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
-  if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
-  if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
-  logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
-  logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
-
-  // Read brightness setting from EEPROM, lower limit is 10 so that the LEDs are not completely off
-  brightness = readIntEEPROM(ADR_BRIGHTNESS);
-  if(brightness < 10) brightness = 10;
-  logger.logString("Brightness: " + String(brightness));
-  ledmatrix.setBrightness(brightness);
-
-  // Read state from EEPROM
-  currentState = readIntEEPROM(ADR_STATE);
-  if(currentState >= NUM_STATES){
-    currentState = st_clock;
-    writeIntEEPROM(ADR_STATE, currentState);
-  }
-
+  // load persistent variables from EEPROM
+  loadMainColorFromEEPROM();
+  loadCurrentStateFromEEPROM();
+  loadNightmodeSettingsFromEEPROM();
+  loadBrightnessSettingsFromEEPROM();
+  loadColorShiftStateFromEEPROM();
+  
   if(!ESP.getResetReason().equals("Software/System restart")){
     // test quickly each LED
     for(int r = 0; r < HEIGHT; r++){
@@ -407,15 +379,13 @@ void setup() {
     // clear matrix
     ledmatrix.gridFlush();
     ledmatrix.drawOnMatrixInstant();
-
-    entryAction(currentState);
   }
   else {
     waitForTimeAfterReboot = true;
   }
 
-  
-  
+  // run the entry action for the initial state
+  entryAction(currentState);
 }
 
 
@@ -444,7 +414,7 @@ void loop() {
   }
 
   // handle state behaviours (trigger loopCycles of different states depending on current state)
-  if(!nightMode && (millis() - lastStep > PERIODS[stateAutoChange][currentState]) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
+  if(!nightMode && (millis() - lastStep > behaviorUpdatePeriod) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     updateStateBehavior(currentState);    
     lastStep = millis();
   }
@@ -540,6 +510,16 @@ void updateStateBehavior(uint8_t state){
     // state clock
     case st_clock:
       {
+        if(dynColorShiftActive){
+          dynColorShiftPhase = (dynColorShiftPhase + 1) % 256;
+          ledmatrix.setDynamicColorShiftPhase(dynColorShiftPhase);
+          filterFactor = 1.0; // no smoothing
+          behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE / dynColorShiftSpeed;
+        } else {
+          ledmatrix.setDynamicColorShiftPhase(-1);
+          filterFactor = DEFAULT_SMOOTHING_FACTOR;
+          behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE;
+        }
         int hours = ntp.getHours24();
         int minutes = ntp.getMinutes();
         showStringOnClock(timeToString(hours, minutes), maincolor_clock);
@@ -644,32 +624,49 @@ void checkNightmode(){
  * @param state 
  */
 void entryAction(uint8_t state){
-  filterFactor = 0.5;
+  filterFactor = DEFAULT_SMOOTHING_FACTOR;
   switch(state){
+    case st_clock:
+      behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE;
+      break;
+    case st_diclock:
+      behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE;
+      ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
+      break;
     case st_spiral:
+      behaviorUpdatePeriod = PERIOD_ANIMATION;
+      ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
       // Init spiral with normal drawing mode
       sprialDir = 0;
       spiral(true, sprialDir, WIDTH-6);
       break;
     case st_tetris:
+      ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
       filterFactor = 1.0; // no smoothing
       if(stateAutoChange){
+        behaviorUpdatePeriod = PERIOD_ANIMATION;
         randomtetris(true);
       }
       else{
+        behaviorUpdatePeriod = PERIOD_TETRIS;
         mytetris.ctrlStart();
       }
       break;
     case st_snake:
+      ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
       if(stateAutoChange){
+        behaviorUpdatePeriod = PERIOD_ANIMATION;
         randomsnake(true, 8, colors24bit[1], -1);
       }
       else{
+        behaviorUpdatePeriod = PERIOD_SNAKE;
         filterFactor = 1.0; // no smoothing
         mysnake.initGame();
       }
       break;
     case st_pingpong:
+      behaviorUpdatePeriod = PERIOD_PONG;
+      ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
       if(stateAutoChange){
         mypong.initGame(2);
       }
@@ -700,7 +697,8 @@ void stateChange(uint8_t newState, bool persistant){
   logger.logString("State change to: " + stateNames[currentState]);
   if(persistant){
     // save state to EEPROM
-    writeIntEEPROM(ADR_STATE, currentState);
+    EEPROM.write(ADR_STATE, currentState);
+    EEPROM.commit();
   }
 }
 
@@ -799,7 +797,6 @@ void handleButton(){
  * @brief Set main color
  * 
  */
-
 void setMainColor(uint8_t red, uint8_t green, uint8_t blue){
   maincolor_clock = LEDMatrix::Color24bit(red, green, blue);
   EEPROM.put(ADR_MC_RED, red);
@@ -812,8 +809,7 @@ void setMainColor(uint8_t red, uint8_t green, uint8_t blue){
  * @brief Load maincolor from EEPROM
  * 
 */
-
-void loadMainColor(){
+void loadMainColorFromEEPROM(){
   uint8_t red = EEPROM.read(ADR_MC_RED);
   uint8_t green = EEPROM.read(ADR_MC_GREEN);
   uint8_t blue = EEPROM.read(ADR_MC_BLUE);
@@ -822,6 +818,62 @@ void loadMainColor(){
   }else{
     maincolor_clock = LEDMatrix::Color24bit(red, green, blue);
   }
+}
+
+/**
+ * @brief Load the current state from EEPROM
+ * 
+ */
+void loadCurrentStateFromEEPROM(){
+  currentState = EEPROM.read(ADR_STATE);
+  if(currentState >= NUM_STATES){
+    currentState = st_clock;
+    EEPROM.write(ADR_STATE, currentState);
+    EEPROM.commit();
+  }
+}
+
+/**
+ * @brief Load the nightmode settings from EEPROM
+ */
+void loadNightmodeSettingsFromEEPROM()
+{
+  nightModeStartHour = EEPROM.read(ADR_NM_START_H);
+  nightModeStartMin = EEPROM.read(ADR_NM_START_M);
+  nightModeEndHour = EEPROM.read(ADR_NM_END_H);
+  nightModeEndMin = EEPROM.read(ADR_NM_END_M);
+  if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
+  if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
+  if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
+  if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
+  logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
+  logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
+}
+
+/**
+ * @brief Load the brightness settings from EEPROM
+ *
+ * lower limit is 10 so that the LEDs are not completely off
+ */
+void loadBrightnessSettingsFromEEPROM()
+{
+  brightness = EEPROM.read(ADR_BRIGHTNESS);
+  if(brightness < 10) brightness = 10;
+  logger.logString("Brightness: " + String(brightness));
+  ledmatrix.setBrightness(brightness);
+}
+
+/**
+ * @brief load the color shift speed from EEPROM
+ *
+ */
+void loadColorShiftStateFromEEPROM()
+{
+  dynColorShiftSpeed = EEPROM.read(ADR_COLSHIFTSPEED);
+  if (dynColorShiftSpeed == 0) dynColorShiftSpeed = 1;
+  logger.logString("ColorShiftSpeed: " + String(dynColorShiftSpeed));
+  dynColorShiftActive = EEPROM.read(ADR_COLSHIFTACTIVE);
+  logger.logString("ColorShiftActive: " + String(dynColorShiftActive));
 }
 
 /**
@@ -886,16 +938,20 @@ void handleCommand() {
     nightModeEndHour = split(timestr, '-', 2).toInt();
     nightModeEndMin = split(timestr, '-', 3).toInt();
     brightness = split(timestr, '-', 4).toInt();
-    if(brightness < 10) brightness = 10;
+    dynColorShiftSpeed = split(timestr, '-', 5).toInt();
     if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
     if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
     if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
     if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
-    writeIntEEPROM(ADR_NM_START_H, nightModeStartHour);
-    writeIntEEPROM(ADR_NM_START_M, nightModeStartMin);
-    writeIntEEPROM(ADR_NM_END_H, nightModeEndHour);
-    writeIntEEPROM(ADR_NM_END_M, nightModeEndMin);
-    writeIntEEPROM(ADR_BRIGHTNESS, brightness);
+    if(brightness < 10) brightness = 10;
+    if(dynColorShiftSpeed == 0) dynColorShiftSpeed = 1;
+    EEPROM.write(ADR_NM_START_H, nightModeStartHour);
+    EEPROM.write(ADR_NM_START_M, nightModeStartMin);
+    EEPROM.write(ADR_NM_END_H, nightModeEndHour);
+    EEPROM.write(ADR_NM_END_M, nightModeEndMin);
+    EEPROM.write(ADR_BRIGHTNESS, brightness);
+    EEPROM.write(ADR_COLSHIFTSPEED, dynColorShiftSpeed);
+    EEPROM.commit();
     logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
     logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
     logger.logString("Brightness: " + String(brightness));
@@ -985,6 +1041,12 @@ void handleCommand() {
     delay(1000);
     ESP.restart();
   }
+  else if(server.argName(0) == "colorshift"){
+    Serial.println("ColorShift change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") dynColorShiftActive = true;
+    else dynColorShiftActive = false;
+  }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
@@ -1041,6 +1103,8 @@ void handleDataRequest() {
       message += "\"nightModeEnd\":\"" + leadingZero2Digit(nightModeEndHour) + "-" + leadingZero2Digit(nightModeEndMin) + "\"";
       message += ",";
       message += "\"brightness\":\"" + String(brightness) + "\"";
+      message += ",";
+      message += "\"colorshift\":\"" + String(dynColorShiftActive) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
@@ -1057,29 +1121,6 @@ void setNightmode(bool on){
     ledmatrix.gridFlush();
   }
   nightMode = on;
-}
-
-/**
- * @brief Write value to EEPROM
- * 
- * @param address address to write the value
- * @param value value to write
- */
-void writeIntEEPROM(int address, int value){
-  EEPROM.put(address, value);
-  EEPROM.commit();
-}
-
-/**
- * @brief Read value from EEPROM
- * 
- * @param address address
- * @return int value
- */
-int readIntEEPROM(int address){
-  int value;
-  EEPROM.get(address, value);
-  return value;
 }
 
 /**

@@ -277,6 +277,10 @@
 				<input type="range" id="brightness" name="volume" min="10" max="255">
 			</div>
 			<div class="number-container">
+				<label for="colorshiftspeed">Color shift speed:</label>
+				<input type="range" id="colorshiftspeed" name="volume" min="0" max="50">
+			</div>
+			<div class="number-container">
 				<label for="nm_start" style="align-self: flex-start">Nightmode start time: </label> 
 				<input type="time" id="nm_start" name="nm_start" min="00:00" max="23:59">
 			</div>
@@ -317,7 +321,12 @@
 			<div>
 				<input name= "AutoChange" id="AutoChange" type="checkbox" class="toggle">
 			</div>
-			
+		</div>
+		<div class="checkbox-container" id = "colorshiftcontainer">
+			<label for="ColorShift" style="align-self: flex-start">DynamicColorShift</label>
+			<div>
+				<input name= "ColorShift" id="ColorShift" type="checkbox" class="toggle">
+			</div>
 		</div>
 		
 		<div class="main-container hidden" id="colorcontainer">
@@ -480,10 +489,28 @@
 							sendCommand("./cmd?stateautochange=0");
 						}
 					});
+
+					var ckb_colorshift = document.querySelector('input[id="ColorShift"]');
+					if(myVar.colorshift == "1") {
+						console.log("colorshift == 1");
+						ckb_colorshift.checked = true;
+					}
+					else {
+						console.log("colorshift == 0");
+						ckb_colorshift.checked = false;
+					}
+					ckb_colorshift.addEventListener('change', () => {
+						if(ckb_colorshift.checked) {
+							sendCommand("./cmd?colorshift=1");
+						} else {
+							sendCommand("./cmd?colorshift=0");
+						}
+					});
 					
 					document.getElementById("nm_start").value = myVar.nightModeStart.replace("-", ":");
 					document.getElementById("nm_end").value = myVar.nightModeEnd.replace("-", ":");
 					document.getElementById("brightness").value = parseInt(myVar.brightness);
+					document.getElementById("colorshiftspeed").value = parseInt(myVar.colorshiftspeed);
 
 					updateDisplay(parseInt(myVar.modeid));
 					console.log(myVar);
@@ -513,20 +540,26 @@
 					switch(modeid){
 						case 0: // clock
 							document.getElementById("colorcontainer").classList.remove("hidden");
+							document.getElementById("colorshiftcontainer").classList.remove("hidden");
 							break;
 						case 1: // diclock
 							document.getElementById("colorcontainer").classList.remove("hidden");
+							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
 						case 2: // spiral
+							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
 						case 3: // tetris
 							document.getElementById("tetriscontainer").classList.remove("hidden");
+							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
 						case 4: // snake
 							document.getElementById("snakecontainer").classList.remove("hidden");
+							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
 						case 5: // pingping
 							document.getElementById("pongcontainer").classList.remove("hidden");
+							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
 
 					}
@@ -543,14 +576,17 @@
 			function saveSettings(){
 				var nmStart = document.getElementById("nm_start");
 				var nmEnd = document.getElementById("nm_end");
-				var brightnessElmt = document.getElementById("brightness");
+				var sld_brightness = document.getElementById("brightness");
+				var sld_colorshiftspeed = document.getElementById("colorshiftspeed");
 				var ckb_resetWifi = document.querySelector('input[id="ResetWifi"]');
 				var cmdstr = "./cmd?setting=";
 				cmdstr += nmStart.value.replace(":", "-");
 				cmdstr += "-";
 				cmdstr += nmEnd.value.replace(":", "-");
 				cmdstr += "-";
-				cmdstr += brightnessElmt.value;
+				cmdstr += sld_brightness.value;
+				cmdstr += "-";
+				cmdstr += sld_colorshiftspeed.value;
 				console.log(cmdstr);
 				sendCommand(cmdstr);
 				if(ckb_resetWifi.checked) {

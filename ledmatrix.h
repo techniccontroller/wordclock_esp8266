@@ -30,6 +30,7 @@ class LEDMatrix{
         void printChar(uint8_t xpos, uint8_t ypos, char character, uint32_t color);
         void setBrightness(uint8_t mybrightness);
         void setCurrentLimit(uint16_t mycurrentLimit);
+        void setDynamicColorShiftPhase(int16_t phase);
 
     private:
 
@@ -38,6 +39,7 @@ class LEDMatrix{
 
         uint8_t brightness;
         uint16_t currentLimit;
+        int16_t dynamicColorShiftActivePhase = -1; // -1: not active, 0-255: active phase shift
 
         // target representation of matrix as 2D array
         uint32_t targetgrid[HEIGHT][WIDTH] = {0};
