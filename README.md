@@ -152,7 +152,7 @@ MCAST_IF_IP = '192.168.0.7'
 4. Execute the script with following command: 
 
 ```bash
-python multicastUDP_receiver_analyzer.py
+python multicastUDP_receiver.py
 ```
 
 5. Now you should see the log messages of the word clock (every 5 seconds a heartbeat message and the currently displayed time). 
