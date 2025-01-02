@@ -520,9 +520,15 @@ void updateStateBehavior(uint8_t state){
           filterFactor = DEFAULT_SMOOTHING_FACTOR;
           behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE;
         }
-        int hours = ntp.getHours24();
-        int minutes = ntp.getMinutes();
-        showStringOnClock(timeToString(hours, minutes), maincolor_clock);
+        uint8_t hours = ntp.getHours24();
+        uint8_t minutes = ntp.getMinutes();
+        static uint8_t lastMinutes = 0;
+        static String timeAsString = "";
+        if(lastMinutes != minutes){
+          timeAsString = timeToString(hours, minutes);
+          lastMinutes = minutes;
+        }
+        showStringOnClock(timeAsString, maincolor_clock);
         drawMinuteIndicator(minutes, maincolor_clock);
       }
       break;
