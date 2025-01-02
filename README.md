@@ -26,6 +26,7 @@ Thank you to everyone who provided feedback on adding new languages and testing 
 - webserver interface for configuration and control
 - physical button to change mode or enable night mode without webserver
 - automatic current limiting of LEDs
+- dynamic color shift mode 
 
 ## Pictures of clock
 ![modes_images2](https://user-images.githubusercontent.com/36072504/156947689-dd90874d-a887-4254-bede-4947152d85c1.png)
