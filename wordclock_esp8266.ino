@@ -961,6 +961,7 @@ void handleCommand() {
     logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
     logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
     logger.logString("Brightness: " + String(brightness));
+    logger.logString("ColorShiftSpeed: " + String(dynColorShiftSpeed));
     ledmatrix.setBrightness(brightness);
     lastNightmodeCheck = millis()  - PERIOD_NIGHTMODECHECK;
   }
@@ -1052,6 +1053,8 @@ void handleCommand() {
     String str = server.arg(0);
     if(str == "1") dynColorShiftActive = true;
     else dynColorShiftActive = false;
+    EEPROM.write(ADR_COLSHIFTACTIVE, dynColorShiftActive);
+    EEPROM.commit();
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
