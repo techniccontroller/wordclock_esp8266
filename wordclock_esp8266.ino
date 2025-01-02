@@ -1114,6 +1114,8 @@ void handleDataRequest() {
       message += "\"brightness\":\"" + String(brightness) + "\"";
       message += ",";
       message += "\"colorshift\":\"" + String(dynColorShiftActive) + "\"";
+      message += ",";
+      message += "\"colorshiftspeed\":\"" + String(dynColorShiftSpeed) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
