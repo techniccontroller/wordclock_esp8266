@@ -26,6 +26,7 @@ Thank you to everyone who provided feedback on adding new languages and testing 
 - webserver interface for configuration and control
 - physical button to change mode or enable night mode without webserver
 - automatic current limiting of LEDs
+- dynamic color shift mode 
 
 ## Pictures of clock
 ![modes_images2](https://user-images.githubusercontent.com/36072504/156947689-dd90874d-a887-4254-bede-4947152d85c1.png)
@@ -152,7 +153,7 @@ MCAST_IF_IP = '192.168.0.7'
 4. Execute the script with following command: 
 
 ```bash
-python multicastUDP_receiver_analyzer.py
+python multicastUDP_receiver.py
 ```
 
 5. Now you should see the log messages of the word clock (every 5 seconds a heartbeat message and the currently displayed time). 
