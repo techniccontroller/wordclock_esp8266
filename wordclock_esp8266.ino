@@ -340,6 +340,7 @@ void setup() {
   logger.logString("Reset Reason: " + ESP.getResetReason());
 
   // setup NTP
+  updateUTCOffsetFromTimezoneAPI(logger, ntp);
   ntp.setupNTPClient();
   logger.logString("NTP running");
   logger.logString("Time: " +  ntp.getFormattedTime());
