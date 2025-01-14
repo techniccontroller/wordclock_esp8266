@@ -70,6 +70,53 @@ int spiral(bool init, bool empty, uint8_t size){
 }
 
 /**
+ * @brief Function to perform animation of an/multiple words on the matrix 
+ * 
+ * @param init marks if call is the initial step of the animation
+ * @param empty marks if the animation should 'draw' empty leds
+ * @return int 1 if end is reached, else 0
+ */
+int word_animation(bool init, bool empty){
+
+  // coordinate of the letters to light up after each other top left LED = (0, 0)
+  uint8_t coordinatesX[] = {0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5,  5};
+  uint8_t numLEDs = sizeof(coordinatesX)/sizeof(uint8_t);
+
+  static int x;
+  static int y;
+  static int counter1;
+  static int randNum;
+  if(init){
+    logger.logString("Init Word Animation with empty=" + String(empty));
+    x = coordinatesX[0];
+    y = coordinatesY[0];
+    if(!empty)ledmatrix.gridFlush();
+    counter1 = 0;
+    randNum = random(255);
+  }
+  else if (counter1 >= numLEDs){
+    // End reached return 1
+    return 1;
+  }
+  else{
+    // calc color from colorwheel
+    uint32_t color = LEDMatrix::Wheel((randNum + counter1*6)%255);
+    // if draw mode is empty, set color to zero
+    if(empty){
+      color = 0;
+    }
+    
+    x = coordinatesX[counter1];
+    y = coordinatesY[counter1];
+    ledmatrix.gridAddPixel(x, y, color);
+    counter1++;
+  }
+  return 0;
+
+}
+
+/**
  * @brief Run random snake animation
  * 
  * @param init marks if call is the initial step of the animation

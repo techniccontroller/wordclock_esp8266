@@ -158,7 +158,7 @@ const uint32_t colors24bit[NUM_COLORS] = {
   LEDMatrix::Color24bit(0, 0, 255) };
 
 uint8_t brightness = 40;            // current brightness of leds
-bool sprialDir = false;
+bool animationDir = false;
 
 // timestamp variables
 long lastheartbeat = millis();      // time of last heartbeat sending
@@ -543,18 +543,18 @@ void updateStateBehavior(uint8_t state){
     // state spiral
     case st_spiral:
       {
-        int res = spiral(false, sprialDir, WIDTH-6);
-        if(res && sprialDir == 0){
-          // change spiral direction to closing (draw empty leds)
-          sprialDir = 1;
-          // init spiral with new spiral direction
-          spiral(true, sprialDir, WIDTH-6);
+        int res = word_animation(false, animationDir);
+        if(res && animationDir == 0){
+          // change animation direction to closing (draw empty leds)
+          animationDir = 1;
+          // init animation with new animation direction
+          word_animation(true, animationDir);
           
-        }else if(res && sprialDir == 1){
-          // reset spiral direction to normal drawing leds
-          sprialDir = 0;
-          // init spiral with new spiral direction
-          spiral(true, sprialDir, WIDTH-6);
+        }else if(res && animationDir == 1){
+          // reset animation direction to normal drawing leds
+          animationDir = 0;
+          // init animation with new animation direction
+          word_animation(true, animationDir);
         }
       }
       break;
@@ -643,8 +643,8 @@ void entryAction(uint8_t state){
       behaviorUpdatePeriod = PERIOD_ANIMATION;
       ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
       // Init spiral with normal drawing mode
-      sprialDir = 0;
-      spiral(true, sprialDir, WIDTH-6);
+      animationDir = 0;
+      word_animation(true, animationDir);
       break;
     case st_tetris:
       ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
