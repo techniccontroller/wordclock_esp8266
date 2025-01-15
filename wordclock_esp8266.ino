@@ -412,6 +412,16 @@ void loop() {
       ledmatrix.drawOnMatrixInstant();
     }
   }
+  // Show word animation allows from XX:00:00 till XX:00:12 (for 12 seconds every hour)
+  // start
+  if(ntp.getMinutes() == 0 && ntp.getSeconds() == 0 && currentState == st_clock){
+    stateChange(st_spiral, false);
+  }
+
+  //end
+  if(ntp.getMinutes() == 0 && ntp.getSeconds() >= 12 && currentState == st_spiral){
+    stateChange(st_clock, false);
+  }
 
   // handle state behaviours (trigger loopCycles of different states depending on current state)
   if(!nightMode && (millis() - lastStep > behaviorUpdatePeriod) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
