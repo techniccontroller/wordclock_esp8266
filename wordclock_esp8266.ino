@@ -187,7 +187,7 @@ bool nightMode = false;                       // stores state of nightmode
 uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital clock
 uint32_t maincolor_snake = colors24bit[1];    // color of the random snake animation
 bool apmode = false;                          // stores if WiFi AP mode is active
-bool dynColorShiftActive = true;              // stores if dynamic color shift is active
+bool dynColorShiftActive = false;              // stores if dynamic color shift is active
 uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
 uint8_t dynColorShiftSpeed = 1;               // stores the speed of the dynamic color shift -> used to calc update period
 
