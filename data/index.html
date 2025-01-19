@@ -501,8 +501,10 @@
 					}
 					ckb_colorshift.addEventListener('change', () => {
 						if(ckb_colorshift.checked) {
+							document.getElementById("colorcontainer").classList.add("hidden");
 							sendCommand("./cmd?colorshift=1");
 						} else {
+							document.getElementById("colorcontainer").classList.remove("hidden");
 							sendCommand("./cmd?colorshift=0");
 						}
 					});
@@ -539,7 +541,10 @@
 				if(myVar != null && myVar.stateAutoChange == "0"){
 					switch(modeid){
 						case 0: // clock
-							document.getElementById("colorcontainer").classList.remove("hidden");
+							var ckb_colorshift = document.querySelector('input[id="ColorShift"]');
+							if(!ckb_colorshift.checked) {
+								document.getElementById("colorcontainer").classList.remove("hidden");
+							}
 							document.getElementById("colorshiftcontainer").classList.remove("hidden");
 							break;
 						case 1: // diclock
