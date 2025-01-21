@@ -78,9 +78,17 @@ int spiral(bool init, bool empty, uint8_t size){
  */
 int word_animation(bool init, bool empty){
 
+  // colors for the different words, mapping via colorPerCoordinate array
+  uint32_t colors[] = { LEDMatrix::Color24bit(0, 255, 0),   // -> 0
+                        LEDMatrix::Color24bit(255, 0, 0),   // -> 1
+                        LEDMatrix::Color24bit(200, 200, 0), // -> 2
+                        LEDMatrix::Color24bit(255, 0, 200), // -> 3
+                        LEDMatrix::Color24bit(0, 0, 255),   // -> 4
+                      };
   // coordinate of the letters to light up after each other top left LED = (0, 0)
-  uint8_t coordinatesX[] = {0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5,  5};
+  uint8_t coordinatesX[] =        {8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 5, 5, 5, 0, 1, 2, 3, 4, 6, 6, 6, 6, 6};
+  uint8_t coordinatesY[] =        {5, 5,  5, 3, 3, 3, 3, 3, 3, 3, 6, 7, 8, 5, 5, 5, 5, 5, 4, 5, 6, 7, 8};
+  uint8_t colorPerCoordinate[] =  {0, 0,  0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4};
   uint8_t numLEDs = sizeof(coordinatesX)/sizeof(uint8_t);
 
   static int x;
@@ -100,8 +108,7 @@ int word_animation(bool init, bool empty){
     return 1;
   }
   else{
-    // calc color from colorwheel
-    uint32_t color = LEDMatrix::Wheel((randNum + counter1*6)%255);
+    uint32_t color = colors[colorPerCoordinate[counter1]];
     // if draw mode is empty, set color to zero
     if(empty){
       color = 0;

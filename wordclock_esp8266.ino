@@ -192,7 +192,7 @@ bool dynColorShiftActive = false;              // stores if dynamic color shift 
 uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
 uint8_t dynColorShiftSpeed = 1;               // stores the speed of the dynamic color shift -> used to calc update period
 bool hourAnimation = false;                   // stores if the hour animation is active
-uint8_t hourAnimationDuration = 12;           // stores the duration of the hour animation in seconds
+uint8_t hourAnimationDuration = 18;           // stores the duration of the hour animation in seconds
 
 // nightmode settings
 uint8_t nightModeStartHour = 22;
