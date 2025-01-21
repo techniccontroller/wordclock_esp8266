@@ -328,6 +328,12 @@
 				<input name= "ColorShift" id="ColorShift" type="checkbox" class="toggle">
 			</div>
 		</div>
+		<div class="checkbox-container" id = "hour_animation">
+			<label for="HourAnimation" style="align-self: flex-start">Stundenanimation</label>
+			<div>
+				<input name= "HourAnimation" id="HourAnimation" type="checkbox" class="toggle">
+			</div>
+		</div>
 		
 		<div class="main-container hidden" id="colorcontainer">
 			<div class="verticalline">
@@ -508,6 +514,23 @@
 							sendCommand("./cmd?colorshift=0");
 						}
 					});
+
+					var ckb_houranimation = document.querySelector('input[id="HourAnimation"]');
+					if(myVar.houranimation == "1") {
+						console.log("houranimation == 1");
+						ckb_houranimation.checked = true;
+					}
+					else {
+						console.log("houranimation == 0");
+						ckb_houranimation.checked = false;
+					}
+					ckb_houranimation.addEventListener('change', () => {
+						if(ckb_houranimation.checked) {
+							sendCommand("./cmd?houranimation=1");
+						} else {
+							sendCommand("./cmd?houranimation=0");
+						}
+					});
 					
 					document.getElementById("nm_start").value = myVar.nightModeStart.replace("-", ":");
 					document.getElementById("nm_end").value = myVar.nightModeEnd.replace("-", ":");
@@ -546,25 +569,31 @@
 								document.getElementById("colorcontainer").classList.remove("hidden");
 							}
 							document.getElementById("colorshiftcontainer").classList.remove("hidden");
+							document.getElementById("hour_animation").classList.remove("hidden");
 							break;
 						case 1: // diclock
 							document.getElementById("colorcontainer").classList.remove("hidden");
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
+							document.getElementById("hour_animation").classList.add("hidden");
 							break;
 						case 2: // spiral
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
+							document.getElementById("hour_animation").classList.add("hidden");
 							break;
 						case 3: // tetris
 							document.getElementById("tetriscontainer").classList.remove("hidden");
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
+							document.getElementById("hour_animation").classList.add("hidden");
 							break;
 						case 4: // snake
 							document.getElementById("snakecontainer").classList.remove("hidden");
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
+							document.getElementById("hour_animation").classList.add("hidden");
 							break;
 						case 5: // pingping
 							document.getElementById("pongcontainer").classList.remove("hidden");
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
+							document.getElementById("hour_animation").classList.add("hidden");
 							break;
 
 					}

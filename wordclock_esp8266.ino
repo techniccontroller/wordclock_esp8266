@@ -48,7 +48,7 @@
 //                                        CONSTANTS
 // ----------------------------------------------------------------------------------
 
-#define EEPROM_SIZE 30      // size of EEPROM to save persistent variables
+#define EEPROM_SIZE 32      // size of EEPROM to save persistent variables
 #define ADR_NM_START_H 0
 #define ADR_NM_END_H 4
 #define ADR_NM_START_M 8
@@ -60,6 +60,7 @@
 #define ADR_STATE 26
 #define ADR_COLSHIFTSPEED 28
 #define ADR_COLSHIFTACTIVE 29
+#define ADR_HOURANIMATION 30
 
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
@@ -190,6 +191,8 @@ bool apmode = false;                          // stores if WiFi AP mode is activ
 bool dynColorShiftActive = false;              // stores if dynamic color shift is active
 uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
 uint8_t dynColorShiftSpeed = 1;               // stores the speed of the dynamic color shift -> used to calc update period
+bool hourAnimation = false;                   // stores if the hour animation is active
+uint8_t hourAnimationDuration = 12;           // stores the duration of the hour animation in seconds
 
 // nightmode settings
 uint8_t nightModeStartHour = 22;
@@ -349,6 +352,7 @@ void setup() {
   loadNightmodeSettingsFromEEPROM();
   loadBrightnessSettingsFromEEPROM();
   loadColorShiftStateFromEEPROM();
+  loadHourAnimationSettingsFromEEPROM();
   
   if(!ESP.getResetReason().equals("Software/System restart")){
     // test quickly each LED
@@ -412,15 +416,17 @@ void loop() {
       ledmatrix.drawOnMatrixInstant();
     }
   }
-  // Show word animation allows from XX:00:00 till XX:00:12 (for 12 seconds every hour)
-  // start
-  if(ntp.getMinutes() == 0 && ntp.getSeconds() == 0 && currentState == st_clock){
-    stateChange(st_spiral, false);
-  }
+  if(hourAnimation){
+    // Show word animation allows from XX:00:00 till XX:00:12 (for 12 seconds every hour)
+    // start
+    if(ntp.getMinutes() == 0 && ntp.getSeconds() == 0 && currentState == st_clock){
+      stateChange(st_spiral, false);
+    }
 
-  //end
-  if(ntp.getMinutes() == 0 && ntp.getSeconds() >= 12 && currentState == st_spiral){
-    stateChange(st_clock, false);
+    // end
+    if(ntp.getMinutes() == 0 && ntp.getSeconds() >= hourAnimationDuration && currentState == st_spiral){
+      stateChange(st_clock, false);
+    }
   }
 
   // handle state behaviours (trigger loopCycles of different states depending on current state)
@@ -893,6 +899,17 @@ void loadColorShiftStateFromEEPROM()
 }
 
 /**
+ * @brief load the hour animation setting from EEPROM
+ * 
+ */
+void loadHourAnimationSettingsFromEEPROM()
+{
+  hourAnimation = EEPROM.read(ADR_HOURANIMATION);
+  logger.logString("HourAnimation: " + String(hourAnimation));
+}
+
+
+/**
  * @brief Handler for handling commands sent to "/cmd" url
  * 
  */
@@ -1066,6 +1083,14 @@ void handleCommand() {
     EEPROM.write(ADR_COLSHIFTACTIVE, dynColorShiftActive);
     EEPROM.commit();
   }
+  else if(server.argName(0) == "houranimation"){
+    Serial.println("HourAnimation change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") hourAnimation = true;
+    else hourAnimation = false;
+    EEPROM.write(ADR_HOURANIMATION, hourAnimation);
+    EEPROM.commit();
+  }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
@@ -1126,6 +1151,8 @@ void handleDataRequest() {
       message += "\"colorshift\":\"" + String(dynColorShiftActive) + "\"";
       message += ",";
       message += "\"colorshiftspeed\":\"" + String(dynColorShiftSpeed) + "\"";
+      message += ",";
+      message += "\"houranimation\":\"" + String(hourAnimation) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
