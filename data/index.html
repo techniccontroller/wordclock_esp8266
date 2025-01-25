@@ -311,9 +311,15 @@
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a onclick="sendCommand('./cmd?mode=pingpong')" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
 		</div>
 		<div class="checkbox-container">
-			<label for="Nightmode" style="align-self: flex-start">Nightmode</label> 
+			<label for="NightMode" style="align-self: flex-start">Nightmode</label> 
 			<div>
-				<input name= "Nightmode" id="Nightmode" type="checkbox" class="toggle">
+				<span style="font-weight: 800; color: green;" id="NightMode">active</span>
+			</div>
+		</div>
+		<div class="checkbox-container">
+			<label for="LED_Off" style="align-self: flex-start">LEDs OFF</label> 
+			<div>
+				<input name= "LED_Off" id="LED_Off" type="checkbox" class="toggle">
 			</div>
 		</div>
 		<div class="checkbox-container">
@@ -456,20 +462,33 @@
 					modebuttons[state].classList.add("active");
 
 					// set checkbox states
-					var ckb_nightmode = document.querySelector('input[id="Nightmode"]');
+					var span_nightMode = document.querySelector('span[id="NightMode"]');
 					if(myVar.nightMode == "1") {
 						console.log("nightMode == 1");
-						ckb_nightmode.checked = true;
+						span_nightMode.textContent = "active";
+						span_nightMode.style.color = "green";
 					}
 					else {
 						console.log("nightMode == 0");
-						ckb_nightmode.checked = false;
+						span_nightMode.textContent = "inactive";
+						span_nightMode.style.color = "red";
 					}
-					ckb_nightmode.addEventListener('change', () => {
-						if(ckb_nightmode.checked) {
-							sendCommand("./cmd?nightmode=1");
+
+					// set checkbox states
+					var ckb_ledoff = document.querySelector('input[id="LED_Off"]');
+					if(myVar.ledoff == "1") {
+						console.log("ledoff == 1");
+						ckb_ledoff.checked = true;
+					}
+					else {
+						console.log("ledoff == 0");
+						ckb_ledoff.checked = false;
+					}
+					ckb_ledoff.addEventListener('change', () => {
+						if(ckb_ledoff.checked) {
+							sendCommand("./cmd?ledoff=1");
 						} else {
-							sendCommand("./cmd?nightmode=0");
+							sendCommand("./cmd?ledoff=0");
 						}
 					});
 
