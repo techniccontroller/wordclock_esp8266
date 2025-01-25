@@ -420,6 +420,8 @@ void loop() {
     // Show word animation allows from XX:00:00 till XX:00:12 (for 12 seconds every hour)
     // start
     if(ntp.getMinutes() == 0 && ntp.getSeconds() == 0 && currentState == st_clock){
+      logger.logString("Start hour animation");
+      logger.logString("Time: " +  ntp.getFormattedTime());
       stateChange(st_spiral, false);
     }
 
