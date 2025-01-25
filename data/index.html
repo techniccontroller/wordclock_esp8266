@@ -243,7 +243,7 @@
 	}
 
 	.show{
-		height: 230px;
+		height: 280px;
 		transition: height 1s;
 	}
 
@@ -289,6 +289,12 @@
 				<input type="time" id="nm_end" name="nm_end" min="00:00" max="23:59">
 			</div>
 			<div class="checkbox-container">
+				<label for="NightMode" style="align-self: flex-start">Nightmode</label> 
+				<div>
+					<input name= "NightMode" id="NightMode" type="checkbox" class="toggle">
+				</div>
+			</div>
+			<div class="checkbox-container">
 				<label for="ResetWifi" style="align-self: flex-start">Reset Wifi</label> 
 				<div>
 					<input name= "ResetWifi" id="ResetWifi" type="checkbox" class="toggle">
@@ -309,12 +315,6 @@
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 3)"><a onclick="sendCommand('./cmd?mode=tetris')" class="buttonClass" style="width: 100%;"><img src = "./icons/tetris.svg" style="height:50px"/></a></span></div>
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 4)"><a onclick="sendCommand('./cmd?mode=snake')" class="buttonClass" style="width: 100%;"><img src = "./icons/snake.svg" style="height:50px"/></a></span></div>
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a onclick="sendCommand('./cmd?mode=pingpong')" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
-		</div>
-		<div class="checkbox-container">
-			<label for="NightMode" style="align-self: flex-start">Nightmode</label> 
-			<div>
-				<span style="font-weight: 800; color: green;" id="NightMode">active</span>
-			</div>
 		</div>
 		<div class="checkbox-container">
 			<label for="LED_Off" style="align-self: flex-start">LEDs OFF</label> 
@@ -462,17 +462,22 @@
 					modebuttons[state].classList.add("active");
 
 					// set checkbox states
-					var span_nightMode = document.querySelector('span[id="NightMode"]');
-					if(myVar.nightMode == "1") {
-						console.log("nightMode == 1");
-						span_nightMode.textContent = "active";
-						span_nightMode.style.color = "green";
+					var ckb_nightmodeactivated = document.querySelector('input[id="NightMode"]');
+					if(myVar.nightModeActivated == "1") {
+						console.log("nightmodeactivated == 1");
+						ckb_nightmodeactivated.checked = true;
 					}
 					else {
-						console.log("nightMode == 0");
-						span_nightMode.textContent = "inactive";
-						span_nightMode.style.color = "red";
+						console.log("nightmodeactivated == 0");
+						ckb_nightmodeactivated.checked = false;
 					}
+					ckb_nightmodeactivated.addEventListener('change', () => {
+						if(ckb_nightmodeactivated.checked) {
+							sendCommand("./cmd?nightmodeactivated=1");
+						} else {
+							sendCommand("./cmd?nightmodeactivated=0");
+						}
+					});
 
 					// set checkbox states
 					var ckb_ledoff = document.querySelector('input[id="LED_Off"]');

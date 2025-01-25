@@ -58,6 +58,7 @@
 #define ADR_MC_GREEN 22
 #define ADR_MC_BLUE 24
 #define ADR_STATE 26
+#define ADR_NM_ACTIVATED 27
 #define ADR_COLSHIFTSPEED 28
 #define ADR_COLSHIFTACTIVE 29
 
@@ -184,6 +185,7 @@ float filterFactor = DEFAULT_SMOOTHING_FACTOR;// stores smoothing factor for led
 uint8_t currentState = st_clock;              // stores current state
 bool stateAutoChange = false;                 // stores state of automatic state change
 bool nightMode = false;                       // stores state of nightmode
+bool nightModeActivated = true;               // stores if the function nightmode is activated (its not the state of nightmode)
 bool ledOff = false;                          // stores state of led off
 uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital clock
 uint32_t maincolor_snake = colors24bit[1];    // color of the random snake animation
@@ -617,15 +619,15 @@ void checkNightmode(){
   int startInMinutes = nightModeStartHour * 60 + nightModeStartMin;
   int endInMinutes = nightModeEndHour * 60 + nightModeEndMin;
 
-  if (startInMinutes < endInMinutes) { // Same day scenario
+  if (startInMinutes < endInMinutes && nightModeActivated) { // Same day scenario
       if (startInMinutes < currentTimeInMinutes && currentTimeInMinutes < endInMinutes) {
           nightMode = true;
-          logger.logString("Nightmode activated");
+          logger.logString("Nightmode active");
       }
-  } else if (startInMinutes > endInMinutes) { // Overnight scenario
+  } else if (startInMinutes > endInMinutes && nightModeActivated) { // Overnight scenario
       if (currentTimeInMinutes >= startInMinutes || currentTimeInMinutes < endInMinutes) {
           nightMode = true;
-          logger.logString("Nightmode activated");
+          logger.logString("Nightmode active");
       }
   }
 }
@@ -853,10 +855,12 @@ void loadNightmodeSettingsFromEEPROM()
   nightModeStartMin = EEPROM.read(ADR_NM_START_M);
   nightModeEndHour = EEPROM.read(ADR_NM_END_H);
   nightModeEndMin = EEPROM.read(ADR_NM_END_M);
+  nightModeActivated = EEPROM.read(ADR_NM_ACTIVATED);
   if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
   if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
   if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
   if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
+  logger.logString("Nightmode activated: " + String(nightModeActivated));
   logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
   logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
 }
@@ -940,6 +944,15 @@ void handleCommand() {
     logger.logString("LED off change via Webserver to: " + modestr);
     if(modestr == "1") ledOff = true;
     else ledOff = false;
+  }
+  else if(server.argName(0) == "nightmodeactivated"){
+    String modestr = server.arg(0);
+    logger.logString("nightModeActivated change via Webserver to: " + modestr);
+    if(modestr == "1") nightModeActivated = true;
+    else nightModeActivated = false;
+    EEPROM.write(ADR_NM_ACTIVATED, nightModeActivated);
+    EEPROM.commit();
+    checkNightmode();
   }
   else if(server.argName(0) == "setting"){
     String timestr = server.arg(0) + "-";
@@ -1112,7 +1125,7 @@ void handleDataRequest() {
       message += ",";
       message += "\"ledoff\":\"" + String(ledOff) + "\"";
       message += ",";
-      message += "\"nightMode\":\"" + String(nightMode) + "\"";
+      message += "\"nightModeActivated\":\"" + String(nightModeActivated) + "\"";
       message += ",";
       message += "\"nightModeStart\":\"" + leadingZero2Digit(nightModeStartHour) + "-" + leadingZero2Digit(nightModeStartMin) + "\"";
       message += ",";
