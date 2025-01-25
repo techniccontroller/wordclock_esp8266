@@ -184,6 +184,7 @@ float filterFactor = DEFAULT_SMOOTHING_FACTOR;// stores smoothing factor for led
 uint8_t currentState = st_clock;              // stores current state
 bool stateAutoChange = false;                 // stores state of automatic state change
 bool nightMode = false;                       // stores state of nightmode
+bool ledOff = false;                          // stores state of led off
 uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital clock
 uint32_t maincolor_snake = colors24bit[1];    // color of the random snake animation
 bool apmode = false;                          // stores if WiFi AP mode is active
@@ -414,9 +415,15 @@ void loop() {
   }
 
   // handle state behaviours (trigger loopCycles of different states depending on current state)
-  if(!nightMode && (millis() - lastStep > behaviorUpdatePeriod) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
+  if(!nightMode && !ledOff && (millis() - lastStep > behaviorUpdatePeriod) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     updateStateBehavior(currentState);    
     lastStep = millis();
+  }
+
+  // Turn off LEDs if ledOff is true or nightmode is active
+  if((ledOff || nightMode) && !waitForTimeAfterReboot){
+    ledmatrix.gridFlush();
+    ledmatrix.drawOnMatrixInstant();
   }
 
   // periodically write colors to matrix
@@ -429,7 +436,7 @@ void loop() {
   handleButton();
 
   // handle state changes
-  if(stateAutoChange && (millis() - lastStateChange > PERIOD_STATECHANGE) && !nightMode){
+  if(stateAutoChange && (millis() - lastStateChange > PERIOD_STATECHANGE) && !nightMode && !ledOff){
     // increment state variable and trigger state change
     stateChange((currentState + 1) % NUM_STATES, false);
     
@@ -621,7 +628,6 @@ void checkNightmode(){
           logger.logString("Nightmode activated");
       }
   }
-  setNightmode(nightMode);
 }
 
 /**
@@ -691,9 +697,8 @@ void entryAction(uint8_t state){
  * @param persistant if true, the state will be saved to EEPROM
  */
 void stateChange(uint8_t newState, bool persistant){
-  if(nightMode){
-    // deactivate Nightmode
-    setNightmode(false);
+  if(ledOff){
+    ledOff = false;
   }
   // first clear matrix
   ledmatrix.gridFlush();
@@ -782,14 +787,14 @@ void handleButton(){
       // longpress -> nightmode
       logger.logString("Button press ended - longpress");
 
-      setNightmode(true);
+      ledOff = true;
     }
     else if((millis() - buttonPressStart) > SHORTPRESS){
       // shortpress -> state change 
       logger.logString("Button press ended - shortpress");
 
-      if(nightMode){
-        setNightmode(false);
+      if(ledOff){
+        ledOff = false;
       }else{
         stateChange((currentState + 1) % NUM_STATES, true);
       }
@@ -930,11 +935,11 @@ void handleCommand() {
       stateChange(st_pingpong, true);
     } 
   }
-  else if(server.argName(0) == "nightmode"){
+  else if(server.argName(0) == "ledoff"){
     String modestr = server.arg(0);
-    logger.logString("Nightmode change via Webserver to: " + modestr);
-    if(modestr == "1") setNightmode(true);
-    else setNightmode(false);
+    logger.logString("LED off change via Webserver to: " + modestr);
+    if(modestr == "1") ledOff = true;
+    else ledOff = false;
   }
   else if(server.argName(0) == "setting"){
     String timestr = server.arg(0) + "-";
@@ -1105,6 +1110,8 @@ void handleDataRequest() {
       message += ",";
       message += "\"stateAutoChange\":\"" + String(stateAutoChange) + "\"";
       message += ",";
+      message += "\"ledoff\":\"" + String(ledOff) + "\"";
+      message += ",";
       message += "\"nightMode\":\"" + String(nightMode) + "\"";
       message += ",";
       message += "\"nightModeStart\":\"" + leadingZero2Digit(nightModeStartHour) + "-" + leadingZero2Digit(nightModeStartMin) + "\"";
@@ -1120,18 +1127,6 @@ void handleDataRequest() {
     message += "}";
     server.send(200, "application/json", message);
   }
-}
-
-/**
- * @brief Set the nightmode state
- * 
- * @param on true -> nightmode on
- */
-void setNightmode(bool on){
-  if(on){
-    ledmatrix.gridFlush();
-  }
-  nightMode = on;
 }
 
 /**
