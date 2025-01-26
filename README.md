@@ -7,8 +7,8 @@ More details on my website: https://techniccontroller.com/word-clock-with-wifi-a
 
 **Languages**
 
-The Wordclock is available in **German**, **English**, **Italian** and **French** language. By default the language is German. 
-To use the English or Italian language please replace the file *wordclockfunctions.ino* with *wordclockfunctions.ino_english* or *wordclockfunctions.ino_italian*.
+The Wordclock is available in **German**, **English**, **Italian**, **French** and **Javanese** language. By default the language is German. 
+To use other languages like English or Italian please replace the file *wordclockfunctions.ino* with *wordclockfunctions.ino_english* or *wordclockfunctions.ino_italian*.
 The code compiles only with one file named *wordclockfunctions.ino*. So please rename the file you want to use to *wordclockfunctions.ino* and replace the existing file.
 
 Thank you to everyone who provided feedback on adding new languages and testing their accuracy — your efforts have been invaluable in making this project truly inclusive and reliable!
@@ -26,6 +26,7 @@ Thank you to everyone who provided feedback on adding new languages and testing 
 - webserver interface for configuration and control
 - physical button to change mode or enable night mode without webserver
 - automatic current limiting of LEDs
+- dynamic color shift mode 
 
 ## Pictures of clock
 ![modes_images2](https://user-images.githubusercontent.com/36072504/156947689-dd90874d-a887-4254-bede-4947152d85c1.png)
@@ -152,7 +153,7 @@ MCAST_IF_IP = '192.168.0.7'
 4. Execute the script with following command: 
 
 ```bash
-python multicastUDP_receiver_analyzer.py
+python multicastUDP_receiver.py
 ```
 
 5. Now you should see the log messages of the word clock (every 5 seconds a heartbeat message and the currently displayed time). 
