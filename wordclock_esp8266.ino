@@ -55,8 +55,9 @@
 #define ADR_NM_END_M 12
 #define ADR_BRIGHTNESS 16
 #define ADR_MC_RED 20
-#define ADR_MC_GREEN 22
-#define ADR_MC_BLUE 24
+#define ADR_MC_GREEN 21
+#define ADR_MC_BLUE 22
+#define ADR_MC_WHITE 23
 #define ADR_STATE 26
 #define ADR_NM_ACTIVATED 27
 #define ADR_COLSHIFTSPEED 28
@@ -144,7 +145,7 @@ WiFiManager wifiManager;
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, HEIGHT+1, NEOPIXELPIN,
   NEO_MATRIX_TOP + NEO_MATRIX_LEFT +
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
-  NEO_GRB            + NEO_KHZ800);
+  NEO_GRBW + NEO_KHZ800); // change to NEO_RGBW if order is different
 
 
 // seven predefined colors24bit (green, red, yellow, purple, orange, lightgreen, blue) 
@@ -809,8 +810,9 @@ void handleButton(){
  * @brief Set main color
  * 
  */
-void setMainColor(uint8_t red, uint8_t green, uint8_t blue){
-  maincolor_clock = LEDMatrix::Color24bit(red, green, blue);
+void setMainColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t white = 0){
+  maincolor_clock = LEDMatrix::Color32bit(red, green, blue, white);
+  EEPROM.put(ADR_MC_WHITE, white);
   EEPROM.put(ADR_MC_RED, red);
   EEPROM.put(ADR_MC_GREEN, green);
   EEPROM.put(ADR_MC_BLUE, blue);
@@ -822,13 +824,14 @@ void setMainColor(uint8_t red, uint8_t green, uint8_t blue){
  * 
 */
 void loadMainColorFromEEPROM(){
+  uint8_t white = EEPROM.read(ADR_MC_WHITE);
   uint8_t red = EEPROM.read(ADR_MC_RED);
   uint8_t green = EEPROM.read(ADR_MC_GREEN);
   uint8_t blue = EEPROM.read(ADR_MC_BLUE);
   if(int(red) + int(green) + int(blue) < 50){
     maincolor_clock = colors24bit[2];
   }else{
-    maincolor_clock = LEDMatrix::Color24bit(red, green, blue);
+    maincolor_clock = LEDMatrix::Color32bit(red, green, blue, white);
   }
 }
 
@@ -907,12 +910,14 @@ void handleCommand() {
     String redstr = split(colorstr, '-', 0);
     String greenstr= split(colorstr, '-', 1);
     String bluestr = split(colorstr, '-', 2);
+    String whitestr = split(colorstr, '-', 3);
     logger.logString(colorstr);
     logger.logString("r: " + String(redstr.toInt()));
     logger.logString("g: " + String(greenstr.toInt()));
     logger.logString("b: " + String(bluestr.toInt()));
+    logger.logString("w: " + String(whitestr.toInt()));
     // set new main color
-    setMainColor(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
+    setMainColor(redstr.toInt(), greenstr.toInt(), bluestr.toInt(), whitestr.toInt());
   }
   else if (server.argName(0) == "mode") // the parameter which was sent to this server is mode change
   {

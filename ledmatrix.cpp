@@ -29,6 +29,20 @@ uint32_t LEDMatrix::Color24bit(uint8_t r, uint8_t g, uint8_t b)
 }
 
 /**
+ * @brief Convert RGBW value to 32bit color value
+ * 
+ * @param r red value (0-255)
+ * @param g green value (0-255)
+ * @param b blue value (0-255)
+ * @param w white value (0-255)
+ * @return uint32_t 24bit color value
+ */
+uint32_t LEDMatrix::Color32bit(uint8_t r, uint8_t g, uint8_t b, uint8_t w) 
+{
+  return ((uint32_t)w << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
+}
+
+/**
  * @brief Convert 24bit color to 16bit color
  * 
  * @param color24bit 24bit color value
@@ -82,6 +96,27 @@ uint32_t LEDMatrix::interpolateColor24bit(uint32_t color1, uint32_t color2, floa
     resultGreen = (uint8_t)(resultGreen + (int16_t)(factor * ((int16_t)(color2 >> 8 & 0xff) - (int16_t)resultGreen)));
     resultBlue = (uint8_t)(resultBlue + (int16_t)(factor * ((int16_t)(color2 & 0xff) - (int16_t)resultBlue)));
     return Color24bit(resultRed, resultGreen, resultBlue);
+}
+
+/**
+ * @brief Interpolates two colors32bit and returns an color of the result
+ * 
+ * @param color1 startcolor for interpolation
+ * @param color2 endcolor for interpolatio
+ * @param factor which color is wanted on the path from start to end color
+ * @return uint32_t interpolated color
+ */
+uint32_t LEDMatrix::interpolateColor32bit(uint32_t color1, uint32_t color2, float factor)
+{
+    uint8_t resultWhite = color1 >> 24 & 0xff;
+    uint8_t resultRed = color1 >> 16 & 0xff;
+    uint8_t resultGreen = color1 >> 8 & 0xff;
+    uint8_t resultBlue = color1 & 0xff;
+    resultWhite = (uint8_t)(resultWhite + (int16_t)(factor * ((int16_t)(color2 >> 24 & 0xff) - (int16_t)resultWhite)));
+    resultRed = (uint8_t)(resultRed + (int16_t)(factor * ((int16_t)(color2 >> 16 & 0xff) - (int16_t)resultRed)));
+    resultGreen = (uint8_t)(resultGreen + (int16_t)(factor * ((int16_t)(color2 >> 8 & 0xff) - (int16_t)resultGreen)));
+    resultBlue = (uint8_t)(resultBlue + (int16_t)(factor * ((int16_t)(color2 & 0xff) - (int16_t)resultBlue)));
+    return Color32bit(resultRed, resultGreen, resultBlue, resultWhite);
 }
 
 /**
@@ -195,9 +230,10 @@ void LEDMatrix::drawOnMatrix(float factor){
   // loop over all leds in matrix
   for(int s = 0; s < WIDTH; s++){
     for(int z = 0; z < HEIGHT; z++){
-      // inplement momentum as smooth transistion function
-      uint32_t filteredColor = interpolateColor24bit(currentgrid[z][s], targetgrid[z][s], factor);
-      (*neomatrix).drawPixel(s, z, color24to16bit(filteredColor)); 
+      // implement momentum as smooth transition function
+      uint32_t filteredColor = interpolateColor32bit(currentgrid[z][s], targetgrid[z][s], factor);
+      (*neomatrix).setPassThruColor(filteredColor);
+      (*neomatrix).drawPixel(s, z, 0); 
       currentgrid[z][s] = filteredColor;
       totalCurrent += calcEstimatedLEDCurrent(filteredColor);
     } 
@@ -205,8 +241,9 @@ void LEDMatrix::drawOnMatrix(float factor){
 
   // loop over all minute indicator leds
   for(int i = 0; i < 4; i++){
-    uint32_t filteredColor = interpolateColor24bit(currentindicators[i], targetindicators[i], factor);
-    (*neomatrix).drawPixel(WIDTH - (1+i), HEIGHT, color24to16bit(filteredColor));
+    uint32_t filteredColor = interpolateColor32bit(currentindicators[i], targetindicators[i], factor);
+    (*neomatrix).setPassThruColor(filteredColor);
+    (*neomatrix).drawPixel(WIDTH - (1+i),  HEIGHT, 0);
     currentindicators[i] = filteredColor;
     totalCurrent += calcEstimatedLEDCurrent(filteredColor);
   }
@@ -284,13 +321,14 @@ void LEDMatrix::setBrightness(uint8_t mybrightness){
  */
 uint16_t LEDMatrix::calcEstimatedLEDCurrent(uint32_t color){
   // extract rgb values
+  uint8_t white = color >> 24 & 0xff;
   uint8_t red = color >> 16 & 0xff;
   uint8_t green = color >> 8 & 0xff;
   uint8_t blue = color & 0xff;
   
   // Linear estimation: 20mA for full brightness per LED 
   // (calculation avoids float numbers)
-  uint32_t estimatedCurrent = (20 * red) + (20 * green) + (20 * blue);
+  uint32_t estimatedCurrent = (20 * red) + (20 * green) + (20 * blue) + (20 * white);
   estimatedCurrent /= 255;
   estimatedCurrent = (estimatedCurrent * brightness)/255;
 
