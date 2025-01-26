@@ -101,9 +101,9 @@ enum direction {right, left, up, down};
 #define HEIGHT 11
 
 // own datatype for state machine states
-#define NUM_STATES 6
-enum ClockState {st_clock, st_diclock, st_spiral, st_tetris, st_snake, st_pingpong};
-const String stateNames[] = {"Clock", "DiClock", "Sprial", "Tetris", "Snake", "PingPong"};
+#define NUM_STATES 7
+enum ClockState {st_clock, st_diclock, st_seconds, st_spiral, st_tetris, st_snake, st_pingpong};
+const String stateNames[] = {"Clock", "DiClock", "Seconds", "Sprial", "Tetris", "Snake", "PingPong"};
 
 // ports
 const unsigned int localPort = 2390;
@@ -548,6 +548,12 @@ void updateStateBehavior(uint8_t state){
         showDigitalClock(hours, minutes, maincolor_clock);
       }
       break;
+    case st_seconds:
+      {
+        int seconds = ntp.getSeconds();
+        showSeconds(seconds, maincolor_clock);
+      }
+      break;
     // state spiral
     case st_spiral:
       {
@@ -643,6 +649,10 @@ void entryAction(uint8_t state){
       behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE;
       break;
     case st_diclock:
+      behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE;
+      ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
+      break;
+    case st_seconds:
       behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE;
       ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
       break;
@@ -924,6 +934,9 @@ void handleCommand() {
     }
     else if(modestr == "diclock"){
       stateChange(st_diclock, true);
+    }
+    else if(modestr == "seconds"){
+      stateChange(st_seconds, true);
     }
     else if(modestr == "spiral"){
       stateChange(st_spiral, true);

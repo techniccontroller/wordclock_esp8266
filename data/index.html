@@ -311,10 +311,11 @@
 		<div class="grid-container">
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 0)"><a onclick="sendCommand('./cmd?mode=clock')" class="buttonClass" style="width: 100%;"><img src = "./icons/clock.svg" style="height:50px"/></a></span></div>
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 1)"><a onclick="sendCommand('./cmd?mode=diclock')" class="buttonClass" style="width: 100%;"><img src = "./icons/diclock.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 2)"><a onclick="sendCommand('./cmd?mode=spiral')" class="buttonClass" style="width: 100%;"><img src = "./icons/spiral.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 3)"><a onclick="sendCommand('./cmd?mode=tetris')" class="buttonClass" style="width: 100%;"><img src = "./icons/tetris.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 4)"><a onclick="sendCommand('./cmd?mode=snake')" class="buttonClass" style="width: 100%;"><img src = "./icons/snake.svg" style="height:50px"/></a></span></div>
-			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a onclick="sendCommand('./cmd?mode=pingpong')" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 2)"><a onclick="sendCommand('./cmd?mode=seconds')" class="buttonClass" style="width: 100%;"><img src = "./icons/seconds.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 3)"><a onclick="sendCommand('./cmd?mode=spiral')" class="buttonClass" style="width: 100%;"><img src = "./icons/spiral.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 4)"><a onclick="sendCommand('./cmd?mode=tetris')" class="buttonClass" style="width: 100%;"><img src = "./icons/tetris.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a onclick="sendCommand('./cmd?mode=snake')" class="buttonClass" style="width: 100%;"><img src = "./icons/snake.svg" style="height:50px"/></a></span></div>
+			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 6)"><a onclick="sendCommand('./cmd?mode=pingpong')" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
 		</div>
 		<div class="checkbox-container">
 			<label for="LED_Off" style="align-self: flex-start">LEDs OFF</label> 
@@ -575,18 +576,22 @@
 							document.getElementById("colorcontainer").classList.remove("hidden");
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
-						case 2: // spiral
+						case 2: // seconds
+							document.getElementById("colorcontainer").classList.remove("hidden");
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
-						case 3: // tetris
+						case 3: // spiral
+							document.getElementById("colorshiftcontainer").classList.add("hidden");
+							break;
+						case 4: // tetris
 							document.getElementById("tetriscontainer").classList.remove("hidden");
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
-						case 4: // snake
+						case 5: // snake
 							document.getElementById("snakecontainer").classList.remove("hidden");
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;
-						case 5: // pingping
+						case 6: // pingping
 							document.getElementById("pongcontainer").classList.remove("hidden");
 							document.getElementById("colorshiftcontainer").classList.add("hidden");
 							break;

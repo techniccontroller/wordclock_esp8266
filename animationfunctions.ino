@@ -211,6 +211,21 @@ void showDigitalClock(uint8_t hours, uint8_t minutes, uint32_t color){
 }
 
 /**
+ * @brief Show the seconds as digits on the wordclock
+ * 
+ * @param seconds seconds to display
+ * @param color color to display (24bit)
+ */
+void showSeconds(uint8_t seconds, uint32_t color){
+  ledmatrix.gridFlush();
+  uint8_t fstDigitS = seconds/10;
+  uint8_t sndDigitS = seconds%10;
+  ledmatrix.printNumber(2, 3, fstDigitS, color);
+  ledmatrix.printNumber(6, 3, sndDigitS, color);
+}
+
+
+/**
  * @brief Run random tetris animation
  * 
  * @param init marks if call is the initial step of the animation
