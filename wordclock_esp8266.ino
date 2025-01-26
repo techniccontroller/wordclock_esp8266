@@ -64,7 +64,6 @@
 
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
-#define NUMPIXELS 125       // number of pixels attached
 #define BUTTONPIN 14        // pin to which the button is attached
 #define LEFT 1
 #define RIGHT 2
