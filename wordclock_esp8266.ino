@@ -170,7 +170,8 @@ long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis() - (PERIOD_NTPUPDATE-3000);  // time of last NTP update
 long lastAnimationStep = millis();  // time of last Matrix update
 long lastNightmodeCheck = millis()  - (PERIOD_NIGHTMODECHECK-3000); // time of last nightmode check
-long buttonPressStart = 0;          // time of push button press start 
+long buttonPressStart = 0;          // time of push button press start
+long hourAnimationStart = 0;        // time of hour animation start 
 uint16_t behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE; // holdes the period in which the behavior should be updated
 
 // Create necessary global objects
@@ -422,15 +423,20 @@ void loop() {
   if(hourAnimation){
     // Show word animation allows from XX:00:00 till XX:00:12 (for 12 seconds every hour)
     // start
-    if(ntp.getMinutes() == 0 && ntp.getSeconds() == 0 && currentState == st_clock){
+    static uint8_t lastMinutes = 0;
+    uint8_t minutes = ntp.getMinutes();
+    if(lastMinutes == 59 && minutes == 0 && currentState == st_clock){
       logger.logString("Start hour animation");
       logger.logString("Time: " +  ntp.getFormattedTime());
       stateChange(st_spiral, false);
+      hourAnimationStart = millis();
     }
+    lastMinutes = minutes;
 
     // end
-    if(ntp.getMinutes() == 0 && ntp.getSeconds() >= hourAnimationDuration && currentState == st_spiral){
+    if((millis() - hourAnimationStart) >= hourAnimationDuration*1000 && currentState == st_spiral && hourAnimationStart != 0){
       stateChange(st_clock, false);
+      hourAnimationStart = 0;
     }
   }
 
