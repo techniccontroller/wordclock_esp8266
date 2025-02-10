@@ -98,7 +98,13 @@ String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
   //ES IST
   String message = "";
 
-  if(!puristModeActive && (minutes < 5 || (minutes >=30 && minutes < 35))){
+  if(puristModeActive){
+    message = "";
+    if(minutes < 5 || (minutes >=30 && minutes < 35)){
+      message = "ES IST ";
+    }
+  }
+  else{
     message = "ES IST ";
   }
   

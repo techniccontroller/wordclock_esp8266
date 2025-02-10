@@ -535,10 +535,12 @@ void updateStateBehavior(uint8_t state){
         uint8_t hours = ntp.getHours24();
         uint8_t minutes = ntp.getMinutes();
         static uint8_t lastMinutes = 0;
+        static bool lastPuristModeActive = false;
         static String timeAsString = "";
-        if(lastMinutes != minutes){
+        if(lastMinutes != minutes || lastPuristModeActive != puristModeActive){
           timeAsString = timeToString(hours, minutes, puristModeActive);
           lastMinutes = minutes;
+          lastPuristModeActive = puristModeActive;
         }
         showStringOnClock(timeAsString, maincolor_clock);
         drawMinuteIndicator(minutes, maincolor_clock);
@@ -1208,8 +1210,9 @@ void showStaticBackgroundPattern(){
 
   if(patternBrightness < 10) patternBrightness = 10;
   if(patternBrightness > 255) patternBrightness = 255;
-  float factor = patternBrightness / 255.0;
+  float factor = 1; //patternBrightness / 255.0;
   uint32_t color = LEDMatrix::Color24bit(red * factor, green * factor, blue * factor);
+  ledmatrix.setDynamicColorShiftPhase(-1);
   for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
     ledmatrix.gridAddPixel(coordinatesX[i], coordinatesY[i], color);
   }
