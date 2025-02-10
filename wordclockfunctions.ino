@@ -93,11 +93,14 @@ int showStringOnClock(String message, uint32_t color){
  * @param minutes minutes of the time value
  * @return String time as sentence
  */
-String timeToString(uint8_t hours,uint8_t minutes){
+String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
   
   //ES IST
-  String message = "ES IST ";
+  String message = "";
 
+  if(!puristModeActive && (minutes < 5 || (minutes >=30 && minutes < 35))){
+    message = "ES IST ";
+  }
   
   //show minutes
   if(minutes >= 5 && minutes < 10)
@@ -204,7 +207,7 @@ String timeToString(uint8_t hours,uint8_t minutes){
     message += "ELF ";
     break;
   }
-  if(minutes < 5)
+  if(minutes < 5 && !puristModeActive)
   {
     message += "UHR ";
   }

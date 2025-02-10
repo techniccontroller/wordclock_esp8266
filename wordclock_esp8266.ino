@@ -50,13 +50,15 @@
 
 #define EEPROM_SIZE 30      // size of EEPROM to save persistent variables
 #define ADR_NM_START_H 0
-#define ADR_NM_END_H 4
-#define ADR_NM_START_M 8
-#define ADR_NM_END_M 12
-#define ADR_BRIGHTNESS 16
-#define ADR_MC_RED 20
-#define ADR_MC_GREEN 22
-#define ADR_MC_BLUE 24
+#define ADR_NM_END_H 1
+#define ADR_NM_START_M 2
+#define ADR_NM_END_M 3
+#define ADR_BRIGHTNESS 4
+#define ADR_MC_RED 5
+#define ADR_MC_GREEN 6
+#define ADR_MC_BLUE 7
+#define ADR_PURIST_MODE_ACTIVE 8
+#define ADR_STATICBACKGROUND 9
 #define ADR_STATE 26
 #define ADR_NM_ACTIVATED 27
 #define ADR_COLSHIFTSPEED 28
@@ -192,6 +194,8 @@ bool apmode = false;                          // stores if WiFi AP mode is activ
 bool dynColorShiftActive = false;              // stores if dynamic color shift is active
 uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
 uint8_t dynColorShiftSpeed = 1;               // stores the speed of the dynamic color shift -> used to calc update period
+bool puristModeActive = false;                // stores if purist mode is active
+bool staticBackgroundActive = false;                // stores if static background is active
 
 // nightmode settings
 uint8_t nightModeStartHour = 22;
@@ -533,11 +537,16 @@ void updateStateBehavior(uint8_t state){
         static uint8_t lastMinutes = 0;
         static String timeAsString = "";
         if(lastMinutes != minutes){
-          timeAsString = timeToString(hours, minutes);
+          timeAsString = timeToString(hours, minutes, puristModeActive);
           lastMinutes = minutes;
         }
         showStringOnClock(timeAsString, maincolor_clock);
         drawMinuteIndicator(minutes, maincolor_clock);
+        
+        // show static background pattern every 5 minutes for 1 minute
+        if(minutes % 5 == 0 && staticBackgroundActive){
+          showStaticBackgroundPattern();
+        }
       }
       break;
     // state diclock
@@ -843,6 +852,9 @@ void loadCurrentStateFromEEPROM(){
     EEPROM.write(ADR_STATE, currentState);
     EEPROM.commit();
   }
+
+  puristModeActive = EEPROM.read(ADR_PURIST_MODE_ACTIVE);
+  staticBackgroundActive = EEPROM.read(ADR_STATICBACKGROUND);
 }
 
 /**
@@ -1073,6 +1085,22 @@ void handleCommand() {
     EEPROM.write(ADR_COLSHIFTACTIVE, dynColorShiftActive);
     EEPROM.commit();
   }
+  else if(server.argName(0) == "puristmode"){
+    Serial.println("PuristMode change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") puristModeActive = true;
+    else puristModeActive = false;
+    EEPROM.write(ADR_PURIST_MODE_ACTIVE, puristModeActive);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "staticbackground"){
+    Serial.println("StaticBackground change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") staticBackgroundActive = true;
+    else staticBackgroundActive = false;
+    EEPROM.write(ADR_STATICBACKGROUND, staticBackgroundActive);
+    EEPROM.commit();
+  }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
@@ -1135,6 +1163,10 @@ void handleDataRequest() {
       message += "\"colorshift\":\"" + String(dynColorShiftActive) + "\"";
       message += ",";
       message += "\"colorshiftspeed\":\"" + String(dynColorShiftSpeed) + "\"";
+      message += ",";
+      message += "\"puristmode\":\"" + String(puristModeActive) + "\"";
+      message += ",";
+      message += "\"staticbackground\":\"" + String(staticBackgroundActive) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
@@ -1154,4 +1186,31 @@ String leadingZero2Digit(int value){
   }
   msg += String(value);
   return msg;
+}
+
+/**
+ * @brief Show a static background pattern on the matrix
+ * 
+ * You can define which leds should be lit up by changing the coordinatesX and coordinatesY arrays.
+ * You can define the color by changing the color variable.
+ * 
+ */
+void showStaticBackgroundPattern(){
+  // define the coordinates of the background pattern to light up
+  // top left corner is (0,0)
+  uint8_t coordinatesX[] = {0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5,  5};
+
+  uint8_t red = 255; // red color value (0-255)
+  uint8_t green = 0; // green color value (0-255)
+  uint8_t blue = 0;  // blue color value (0-255)
+  uint8_t patternBrightness = 0.5 * brightness; // brightness of the pattern (0-255)
+
+  if(patternBrightness < 10) patternBrightness = 10;
+  if(patternBrightness > 255) patternBrightness = 255;
+  float factor = patternBrightness / 255.0;
+  uint32_t color = LEDMatrix::Color24bit(red * factor, green * factor, blue * factor);
+  for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
+    ledmatrix.gridAddPixel(coordinatesX[i], coordinatesY[i], color);
+  }
 }

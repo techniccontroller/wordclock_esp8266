@@ -295,6 +295,18 @@
 				</div>
 			</div>
 			<div class="checkbox-container">
+				<label for="PuristMode" style="align-self: flex-start">Puristmode</label> 
+				<div>
+					<input name= "PuristMode" id="PuristMode" type="checkbox" class="toggle">
+				</div>
+			</div>
+			<div class="checkbox-container">
+				<label for="StaticBackgroundPattern" style="align-self: flex-start">showStaticBackgroundPattern</label> 
+				<div>
+					<input name= "StaticBackgroundPattern" id="StaticBackgroundPattern" type="checkbox" class="toggle">
+				</div>
+			</div>
+			<div class="checkbox-container">
 				<label for="ResetWifi" style="align-self: flex-start">Reset Wifi</label> 
 				<div>
 					<input name= "ResetWifi" id="ResetWifi" type="checkbox" class="toggle">
@@ -476,6 +488,42 @@
 							sendCommand("./cmd?nightmodeactivated=1");
 						} else {
 							sendCommand("./cmd?nightmodeactivated=0");
+						}
+					});
+
+					// set checkbox states
+					var ckb_puristmode = document.querySelector('input[id="PuristMode"]');
+					if(myVar.puristmode == "1") {
+						console.log("puristmode == 1");
+						ckb_puristmode.checked = true;
+					}
+					else {
+						console.log("puristmode == 0");
+						ckb_puristmode.checked = false;
+					}
+					ckb_puristmode.addEventListener('change', () => {
+						if(ckb_puristmode.checked) {
+							sendCommand("./cmd?puristmode=1");
+						} else {
+							sendCommand("./cmd?puristmode=0");
+						}
+					});
+
+					// set checkbox states
+					var ckb_staticbackground = document.querySelector('input[id="PuristMode"]');
+					if(myVar.staticbackground == "1") {
+						console.log("staticbackground == 1");
+						ckb_staticbackground.checked = true;
+					}
+					else {
+						console.log("staticbackground == 0");
+						ckb_staticbackground.checked = false;
+					}
+					ckb_staticbackground.addEventListener('change', () => {
+						if(ckb_staticbackground.checked) {
+							sendCommand("./cmd?staticbackground=1");
+						} else {
+							sendCommand("./cmd?staticbackground=0");
 						}
 					});
 
