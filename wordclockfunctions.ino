@@ -213,7 +213,7 @@ String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
     message += "ELF ";
     break;
   }
-  if(minutes < 5 && !puristModeActive)
+  if(minutes < 5)
   {
     message += "UHR ";
   }
