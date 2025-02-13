@@ -13,6 +13,14 @@ The code compiles only with one file named *wordclockfunctions.ino*. So please r
 
 Thank you to everyone who provided feedback on adding new languages and testing their accuracy — your efforts have been invaluable in making this project truly inclusive and reliable!
 
+**Special Branches**
+
+We've got some interesting branches in this repo inspired by user feedback. These branches explore unique features and experimental ideas. Some will stay updated with the main branch's features.
+
+- [**hour_animation**](https://github.com/techniccontroller/wordclock_esp8266/tree/hour_animation): This branch replaces the spiral animation with some custom pattern animation defined as x/y coordinate pattern including custom color for each letter. Also, this animation is show ones per hour.
+- [**mode_seconds**](https://github.com/techniccontroller/wordclock_esp8266/tree/mode_seconds): This branch adds one additional mode to show the seconds as numbers on the clock. Thanks to [@Bram](https://github.com/BramWerbrouck)
+- [**rgbw_leds**](https://github.com/techniccontroller/wordclock_esp8266/tree/rgbw_leds): This branch uses RGBW LEDs instead of RGB LEDs.
+- [**static_background_pattern**](https://github.com/techniccontroller/wordclock_esp8266/tree/static_background_pattern): This branch allows to light up specific letters always during clock mode. E.G., to display some special words in another color.
 
 ## Features
 - 6 modes (Clock, Digital Clock, SPIRAL animation, TETRIS, SNAKE, PONG)

@@ -243,7 +243,7 @@
 	}
 
 	.show{
-		height: 230px;
+		height: 280px;
 		transition: height 1s;
 	}
 
@@ -289,6 +289,12 @@
 				<input type="time" id="nm_end" name="nm_end" min="00:00" max="23:59">
 			</div>
 			<div class="checkbox-container">
+				<label for="NightMode" style="align-self: flex-start">Nightmode</label> 
+				<div>
+					<input name= "NightMode" id="NightMode" type="checkbox" class="toggle">
+				</div>
+			</div>
+			<div class="checkbox-container">
 				<label for="ResetWifi" style="align-self: flex-start">Reset Wifi</label> 
 				<div>
 					<input name= "ResetWifi" id="ResetWifi" type="checkbox" class="toggle">
@@ -311,9 +317,9 @@
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a onclick="sendCommand('./cmd?mode=pingpong')" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
 		</div>
 		<div class="checkbox-container">
-			<label for="Nightmode" style="align-self: flex-start">Nightmode</label> 
+			<label for="LED_Off" style="align-self: flex-start">LEDs OFF</label> 
 			<div>
-				<input name= "Nightmode" id="Nightmode" type="checkbox" class="toggle">
+				<input name= "LED_Off" id="LED_Off" type="checkbox" class="toggle">
 			</div>
 		</div>
 		<div class="checkbox-container">
@@ -456,20 +462,38 @@
 					modebuttons[state].classList.add("active");
 
 					// set checkbox states
-					var ckb_nightmode = document.querySelector('input[id="Nightmode"]');
-					if(myVar.nightMode == "1") {
-						console.log("nightMode == 1");
-						ckb_nightmode.checked = true;
+					var ckb_nightmodeactivated = document.querySelector('input[id="NightMode"]');
+					if(myVar.nightModeActivated == "1") {
+						console.log("nightmodeactivated == 1");
+						ckb_nightmodeactivated.checked = true;
 					}
 					else {
-						console.log("nightMode == 0");
-						ckb_nightmode.checked = false;
+						console.log("nightmodeactivated == 0");
+						ckb_nightmodeactivated.checked = false;
 					}
-					ckb_nightmode.addEventListener('change', () => {
-						if(ckb_nightmode.checked) {
-							sendCommand("./cmd?nightmode=1");
+					ckb_nightmodeactivated.addEventListener('change', () => {
+						if(ckb_nightmodeactivated.checked) {
+							sendCommand("./cmd?nightmodeactivated=1");
 						} else {
-							sendCommand("./cmd?nightmode=0");
+							sendCommand("./cmd?nightmodeactivated=0");
+						}
+					});
+
+					// set checkbox states
+					var ckb_ledoff = document.querySelector('input[id="LED_Off"]');
+					if(myVar.ledoff == "1") {
+						console.log("ledoff == 1");
+						ckb_ledoff.checked = true;
+					}
+					else {
+						console.log("ledoff == 0");
+						ckb_ledoff.checked = false;
+					}
+					ckb_ledoff.addEventListener('change', () => {
+						if(ckb_ledoff.checked) {
+							sendCommand("./cmd?ledoff=1");
+						} else {
+							sendCommand("./cmd?ledoff=0");
 						}
 					});
 
@@ -501,8 +525,10 @@
 					}
 					ckb_colorshift.addEventListener('change', () => {
 						if(ckb_colorshift.checked) {
+							document.getElementById("colorcontainer").classList.add("hidden");
 							sendCommand("./cmd?colorshift=1");
 						} else {
+							document.getElementById("colorcontainer").classList.remove("hidden");
 							sendCommand("./cmd?colorshift=0");
 						}
 					});
@@ -539,7 +565,10 @@
 				if(myVar != null && myVar.stateAutoChange == "0"){
 					switch(modeid){
 						case 0: // clock
-							document.getElementById("colorcontainer").classList.remove("hidden");
+							var ckb_colorshift = document.querySelector('input[id="ColorShift"]');
+							if(!ckb_colorshift.checked) {
+								document.getElementById("colorcontainer").classList.remove("hidden");
+							}
 							document.getElementById("colorshiftcontainer").classList.remove("hidden");
 							break;
 						case 1: // diclock
