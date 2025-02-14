@@ -352,7 +352,7 @@ void setup() {
   loadBrightnessSettingsFromEEPROM();
   loadColorShiftStateFromEEPROM();
   
-  if(!ESP.getResetReason().equals("Software/System restart")){
+  if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // test quickly each LED
     for(int r = 0; r < HEIGHT; r++){
         for(int c = 0; c < WIDTH; c++){
