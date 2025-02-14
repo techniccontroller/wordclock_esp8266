@@ -1206,11 +1206,11 @@ void showStaticBackgroundPattern(){
   uint8_t red = 255; // red color value (0-255)
   uint8_t green = 0; // green color value (0-255)
   uint8_t blue = 0;  // blue color value (0-255)
-  uint8_t patternBrightness = 0.5 * brightness; // brightness of the pattern (0-255)
+  uint8_t patternBrightness = 0.7 * brightness; // brightness of the pattern (0-255)
 
   if(patternBrightness < 10) patternBrightness = 10;
   if(patternBrightness > 255) patternBrightness = 255;
-  float factor = 1; //patternBrightness / 255.0;
+  float factor = patternBrightness / 255.0;
   uint32_t color = LEDMatrix::Color24bit(red * factor, green * factor, blue * factor);
   ledmatrix.setDynamicColorShiftPhase(-1);
   for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
