@@ -246,6 +246,9 @@ void setup() {
   // set custom ip for portal
   //wifiManager.setAPStaticIPConfig(IPAdress_AccessPoint, Gateway_AccessPoint, Subnetmask_AccessPoint);
 
+  // set a custom hostname
+  wifiManager.setHostname(hostname);
+  
   // fetches ssid and pass from eeprom and tries to connect
   // if it does not connect it starts an access point with the specified name
   // here "wordclockAP"
@@ -354,7 +357,7 @@ void setup() {
   loadBrightnessSettingsFromEEPROM();
   loadColorShiftStateFromEEPROM();
   
-  if(!ESP.getResetReason().equals("Software/System restart")){
+  if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // test quickly each LED
     for(int r = 0; r < HEIGHT; r++){
         for(int c = 0; c < WIDTH; c++){
