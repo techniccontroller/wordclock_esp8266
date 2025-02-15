@@ -69,8 +69,11 @@ Please download all these libraries as ZIP from GitHub, and extract them in the 
 - https://github.com/adafruit/Adafruit_NeoPixel
 - https://github.com/tzapu/WiFiManager
 - https://github.com/adafruit/Adafruit_BusIO
+- https://github.com/bxparks/AceTime
 
-folder structure should look like this:
+You can als install these libraries via the library manager in the Arduino IDE.
+
+The folder structure should look like this:
 
 ```
 MySketchbookLocation 

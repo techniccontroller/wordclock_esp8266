@@ -125,6 +125,8 @@ const String hostname = "wordclock";
 // URL DNS server
 const char WebserverURL[] = "www.wordclock.local";
 
+int utcOffset = 60; // UTC offset in minutes
+
 // ----------------------------------------------------------------------------------
 //                                        GLOBAL VARIABLES
 // ----------------------------------------------------------------------------------
@@ -174,7 +176,7 @@ uint16_t behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE; // holdes the period in w
 // Create necessary global objects
 UDPLogger logger;
 WiFiUDP NTPUDP;
-NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
+NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", utcOffset, true);
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
 Tetris mytetris = Tetris(&ledmatrix, &logger);
 Snake mysnake = Snake(&ledmatrix, &logger);
@@ -343,10 +345,10 @@ void setup() {
   logger.logString("Reset Reason: " + ESP.getResetReason());
 
   // setup NTP
+  updateUTCOffsetFromTimezoneAPI(logger, ntp);
   ntp.setupNTPClient();
   logger.logString("NTP running");
   logger.logString("Time: " +  ntp.getFormattedTime());
-  logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
 
   // load persistent variables from EEPROM
   loadMainColorFromEEPROM();
@@ -457,7 +459,6 @@ void loop() {
       logger.logString("Time: " +  ntp.getFormattedTime());
       logger.logString("Date: " +  ntp.getFormattedDate());
       logger.logString("Day of Week (Mon=1, Sun=7): " +  String(ntp.getDayOfWeek()));
-      logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate = millis();
       watchdogCounter = 30;
@@ -480,7 +481,6 @@ void loop() {
       logger.logString("Time: " +  ntp.getFormattedTime());
       logger.logString("Date: " +  ntp.getFormattedDate());
       logger.logString("Day of Week (Mon=1, Sun=7): " +  ntp.getDayOfWeek());
-      logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate += 10000;
       watchdogCounter--;
