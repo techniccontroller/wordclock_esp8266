@@ -26,6 +26,7 @@ We've got some interesting branches in this repo inspired by user feedback. Thes
 - 6 modes (Clock, Digital Clock, SPIRAL animation, TETRIS, SNAKE, PONG)
 - time update via NTP server
 - automatic summer/wintertime change
+- automatic timezone selection
 - easy WIFI setup with WifiManager
 - configurable color
 - configurable night mode (start and end time)
