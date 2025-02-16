@@ -165,7 +165,7 @@ bool sprialDir = false;
 // timestamp variables
 long lastheartbeat = millis();      // time of last heartbeat sending
 long lastStep = millis();           // time of last animation step
-long lastLEDdirect = 0;             // time of last direct LED command (=> fall back to normal mode after timeout)
+long lastLEDdirect = -TIMEOUT_LEDDIRECT; // time of last direct LED command (=> fall back to normal mode after timeout)
 long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis() - (PERIOD_NTPUPDATE-3000);  // time of last NTP update
 long lastAnimationStep = millis();  // time of last Matrix update
@@ -228,7 +228,7 @@ void setup() {
   ledmatrix.setupMatrix();
   ledmatrix.setCurrentLimit(CURRENT_LIMIT_LED);
 
-  if(!ESP.getResetReason().equals("Software/System restart")){
+  if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // Turn on minutes leds (blue)
     ledmatrix.setMinIndicator(15, colors24bit[6]);
     ledmatrix.drawOnMatrixInstant();
@@ -260,7 +260,7 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP()); 
 
-  if(!ESP.getResetReason().equals("Software/System restart")){
+  if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // Turn off minutes leds
     ledmatrix.setMinIndicator(15, 0);
     ledmatrix.drawOnMatrixInstant();
@@ -429,11 +429,10 @@ void loop() {
   // Turn off LEDs if ledOff is true or nightmode is active
   if((ledOff || nightMode) && !waitForTimeAfterReboot){
     ledmatrix.gridFlush();
-    ledmatrix.drawOnMatrixInstant();
   }
 
   // periodically write colors to matrix
-  if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot){
+  if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     ledmatrix.drawOnMatrixSmooth(filterFactor);
     lastAnimationStep = millis();
   }
