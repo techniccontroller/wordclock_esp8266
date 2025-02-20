@@ -21,7 +21,7 @@
 #define DEBOUNCE_TIME_PONG 10  // in ms
 
 #define X_MAX 11
-#define Y_MAX 11
+#define Y_MAX 10
 
 #define GAME_DELAY_PONG 80         // in ms
 #define BALL_DELAY_MAX   350  // in ms
