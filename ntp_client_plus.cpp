@@ -265,10 +265,10 @@ void NTPClientPlus::calcDate()
         daysInMonth[2] = 28;
     }
 
-    unsigned int dayOfYear = (days1900 - ((this->_dateYear - 1900) * 365) - leapDays);
+     this->_dayOfYear = (days1900 - ((this->_dateYear - 1900) * 365) - leapDays);
 
     // calc current month
-    this->_dateMonth = this->getMonth(dayOfYear);
+    this->_dateMonth = this->getMonth(this->_dayOfYear);
 
     this->_dateDay = 0;
 
@@ -277,7 +277,7 @@ void NTPClientPlus::calcDate()
     {
         this->_dateDay = this->_dateDay + daysInMonth[i];
     }
-    this->_dateDay = dayOfYear - this->_dateDay;
+    this->_dateDay = this->_dayOfYear - this->_dateDay;
 
     // calc day of week:
     // Monday = 1, Tuesday = 2, Wednesday = 3, Thursday = 4, Friday = 5, Saturday = 6, Sunday = 7
@@ -312,6 +312,16 @@ void NTPClientPlus::calcDate()
 unsigned int NTPClientPlus::getDayOfWeek()
 {
     return this->_dayOfWeek;
+}
+
+/**
+ * @brief Getter for day of the year
+ * 
+ * @return unsigned int 
+ */
+unsigned int NTPClientPlus::getDayOfYear()
+{
+    return this->_dayOfYear;
 }
 
 /**

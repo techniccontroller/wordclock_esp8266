@@ -98,7 +98,7 @@ enum direction {right, left, up, down};
 // width of the led matrix
 #define WIDTH 11
 // height of the led matrix
-#define HEIGHT 11
+#define HEIGHT 10
 
 // own datatype for state machine states
 #define NUM_STATES 6
@@ -126,6 +126,10 @@ const String hostname = "wordclock";
 const char WebserverURL[] = "www.wordclock.local";
 
 int utcOffset = 60; // UTC offset in minutes
+
+const unsigned int num_coeff = 5; // number of coeffients + 1
+// Sunsetminutes (without summer- wintertimeshift!)
+const double sunsetMinutes[] = { 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1014, 1015, 1016, 1017, 1019, 1020, 1021, 1023, 1024, 1026, 1027, 1028, 1030, 1031, 1033, 1034, 1036, 1037, 1039, 1040, 1042, 1043, 1045, 1047, 1048, 1050, 1051, 1053, 1054, 1056, 1057, 1059, 1061, 1062, 1064, 1065, 1067, 1068, 1070, 1071, 1073, 1075, 1076, 1078, 1079, 1081, 1082, 1084, 1085, 1087, 1088, 1090, 1091, 1093, 1094, 1096, 1097, 1098, 1100, 1101, 1103, 1104, 1106, 1107, 1109, 1110, 1111, 1113, 1114, 1116, 1117, 1119, 1120, 1121, 1123, 1124, 1126, 1127, 1128, 1130, 1131, 1133, 1134, 1135, 1137, 1138, 1140, 1141, 1142, 1144, 1145, 1147, 1148, 1149, 1151, 1152, 1154, 1155, 1156, 1158, 1159, 1161, 1162, 1163, 1165, 1166, 1168, 1169, 1170, 1172, 1173, 1174, 1176, 1177, 1179, 1180, 1181, 1183, 1184, 1185, 1187, 1188, 1189, 1190, 1192, 1193, 1194, 1195, 1197, 1198, 1199, 1200, 1202, 1203, 1204, 1205, 1206, 1207, 1208, 1209, 1210, 1211, 1212, 1213, 1214, 1215, 1216, 1216, 1217, 1218, 1219, 1219, 1220, 1221, 1221, 1222, 1222, 1223, 1223, 1223, 1224, 1224, 1224, 1224, 1225, 1225, 1225, 1225, 1225, 1225, 1225, 1225, 1224, 1224, 1224, 1224, 1223, 1223, 1222, 1222, 1221, 1221, 1220, 1220, 1219, 1218, 1217, 1217, 1216, 1215, 1214, 1213, 1212, 1211, 1210, 1209, 1208, 1207, 1205, 1204, 1203, 1202, 1200, 1199, 1198, 1196, 1195, 1193, 1192, 1190, 1189, 1187, 1186, 1184, 1182, 1181, 1179, 1177, 1176, 1174, 1172, 1170, 1169, 1167, 1165, 1163, 1161, 1159, 1158, 1156, 1154, 1152, 1150, 1148, 1146, 1144, 1142, 1140, 1138, 1136, 1134, 1132, 1130, 1128, 1126, 1124, 1122, 1120, 1118, 1116, 1114, 1112, 1110, 1108, 1106, 1104, 1102, 1100, 1098, 1096, 1094, 1092, 1090, 1088, 1086, 1084, 1082, 1080, 1078, 1076, 1074, 1072, 1070, 1068, 1066, 1064, 1062, 1060, 1058, 1056, 1055, 1053, 1051, 1049, 1047, 1046, 1044, 1042, 1040, 1039, 1037, 1035, 1034, 1032, 1030, 1029, 1027, 1026, 1024, 1023, 1021, 1020, 1019, 1017, 1016, 1015, 1013, 1012, 1011, 1010, 1009, 1008, 1007, 1006, 1005, 1004, 1003, 1002, 1001, 1000, 1000, 999, 998, 998, 997, 997, 996, 996, 995, 995, 995, 994, 994, 994, 994, 994, 994, 994, 994, 994, 994, 995, 995, 995, 996, 996, 997, 997, 998, 998, 999, 1000, 1000, 1001, 1002, 1003, 1004};
 
 // ----------------------------------------------------------------------------------
 //                                        GLOBAL VARIABLES
@@ -612,23 +616,39 @@ void checkNightmode(){
   logger.logString("Check nightmode");
   int hours = ntp.getHours24();
   int minutes = ntp.getMinutes();
-  
+  int dayofyear = ntp.getDayOfYear();
+  bool summertime = ntp.updateSWChange();
+
+  dayofyear = limit(dayofyear, 1, 365);
   nightMode = false; // Initial assumption
 
   // Convert all times to minutes for easier comparison
   int currentTimeInMinutes = hours * 60 + minutes;
-  int startInMinutes = nightModeStartHour * 60 + nightModeStartMin;
   int endInMinutes = nightModeEndHour * 60 + nightModeEndMin;
+
+  //double poly[] = {1.0208E+3, -170.4552E-3, 30.0056E-3, -173.0480E-6, 251.6062E-9}; // a0+a1*x+a2*x^2+a3*x^3+a4*x^4
+  //int startInMinutes = poly_eval(poly, dayofyear);
+  //if (summertime == true) startInMinutes += 60;
+  //logger.logString("Sunset startInminutes (polynomial): " + String(startInMinutes));
+  int startInMinutes = sunsetMinutes[dayofyear - 1];
+  if (summertime == true) startInMinutes += 60;
+  logger.logString("Sunset startInminutes: " + String(startInMinutes));
+
+  loadBrightnessSettingsFromEEPROM();
 
   if (startInMinutes < endInMinutes && nightModeActivated) { // Same day scenario
       if (startInMinutes < currentTimeInMinutes && currentTimeInMinutes < endInMinutes) {
-          nightMode = true;
-          logger.logString("Nightmode active");
+          brightness = (uint8_t)(brightness * 0.5);
+          ledmatrix.setBrightness(brightness);
+          logger.logString("Darkmode Brightness: " + String(brightness));
+          logger.logString("Darkmode active");
       }
   } else if (startInMinutes > endInMinutes && nightModeActivated) { // Overnight scenario
       if (currentTimeInMinutes >= startInMinutes || currentTimeInMinutes < endInMinutes) {
-          nightMode = true;
-          logger.logString("Nightmode active");
+          brightness = (uint8_t)(brightness * 0.5);
+          ledmatrix.setBrightness(brightness);
+          logger.logString("Darkmode Brightness: " + String(brightness));
+          logger.logString("Darkmode active");
       }
   }
 }
@@ -1156,4 +1176,36 @@ String leadingZero2Digit(int value){
   }
   msg += String(value);
   return msg;
+}
+
+/**
+ * @brief Polynomial evaluation (num_coeff = grade simplified)
+ * 
+ * @param coeff
+ * @param x
+ * @return double 
+ */
+double poly_eval(double coeff[num_coeff], double x) {
+    double result = coeff[num_coeff-1];
+    for (size_t i = num_coeff-1; i --> 0;)
+        result = coeff[i] + x * result;
+    return result;
+}
+
+/**
+ * @brief Limit value to min/max
+ * 
+ * @param value
+ * @param min
+ * @param max
+ * @return int
+ */
+int limit(int value, int min, int max) {
+  if (value < min) {
+    return min;
+  } else if (value > max) {
+    return max;
+  } else {
+    return value;
+  }
 }

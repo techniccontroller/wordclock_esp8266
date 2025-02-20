@@ -1,5 +1,5 @@
 
-const String clockStringGerman =  "ESPISTAFUNFVIERTELZEHNZWANZIGUVORTECHNICNACHHALBMELFUNFXCONTROLLEREINSEAWZWEIDREITUMVIERSECHSQYACHTSIEBENZWOLFZEHNEUNJUHR";
+const String clockStringGerman =  "ESKISCHUFUFVIERTUNFZAAZWANZGSEVORABCHAUBIECMEISZWOISDRUVIERIFUFISTSACHSISIBNIACHTINUNIELZANIECHEUFIZWOUFIENGSI";
 
 /**
  * @brief control the four minute indicator LEDs
@@ -96,53 +96,53 @@ int showStringOnClock(String message, uint32_t color){
 String timeToString(uint8_t hours,uint8_t minutes){
   
   //ES IST
-  String message = "ES IST ";
+  String message = "ES ISCH ";
 
   
   //show minutes
   if(minutes >= 5 && minutes < 10)
   {
-    message += "FUNF NACH ";
+    message += "FUF AB ";
   }
   else if(minutes >= 10 && minutes < 15)
   {
-    message += "ZEHN NACH ";
+    message += "ZAA AB ";
   }
   else if(minutes >= 15 && minutes < 20)
   {
-    message += "VIERTEL NACH ";
+    message += "VIERTU AB ";
   }
   else if(minutes >= 20 && minutes < 25)
   {
-    message += "ZEHN VOR HALB "; 
+    message += "ZWANZG AB "; 
   }
   else if(minutes >= 25 && minutes < 30)
   {
-    message += "FUNF VOR HALB ";
+    message += "FUF VOR HAUBI ";
   }
   else if(minutes >= 30 && minutes < 35)
   {
-    message += "HALB ";
+    message += "HAUBI ";
   }
   else if(minutes >= 35 && minutes < 40)
   {
-    message += "FUNF NACH HALB ";
+    message += "FUF AB HAUBI ";
   }
   else if(minutes >= 40 && minutes < 45)
   {
-    message += "ZEHN NACH HALB ";
+    message += "ZWANZG VOR ";
   }
   else if(minutes >= 45 && minutes < 50)
   {
-    message += "VIERTEL VOR ";
+    message += "VIERTU VOR ";
   }
   else if(minutes >= 50 && minutes < 55)
   {
-    message += "ZEHN VOR ";
+    message += "ZAA VOR ";
   }
   else if(minutes >= 55 && minutes < 60)
   {
-    message += "FUNF VOR ";
+    message += "FUF VOR ";
   }
 
   //convert hours to 12h format
@@ -150,7 +150,7 @@ String timeToString(uint8_t hours,uint8_t minutes){
   {
       hours -= 12;
   }
-  if(minutes >= 20)
+  if(minutes >= 25)
   {
       hours++;
   }
@@ -163,54 +163,49 @@ String timeToString(uint8_t hours,uint8_t minutes){
   switch(hours)
   {
   case 0:
-    message += "ZWOLF ";
+    message += "ZWOUFI ";
     break;
   case 1:
-    message += "EIN";
+    message += "EIS ";
     //EIN(S)
-    if(minutes > 4){
-      message += "S";
-    }
-    message += " ";
     break;
   case 2:
-    message += "ZWEI ";
+    message += "ZWOI ";
     break;
   case 3:
-    message += "DREI ";
+    message += "DRU ";
     break;
   case 4:
-    message += "VIER ";
+    message += "VIERI ";
     break;
   case 5:
-    message += "FUNF ";
+    message += "FUFI ";
     break;
   case 6:
-    message += "SECHS ";
+    message += "SACHSI ";
     break;
   case 7:
-    message += "SIEBEN ";
+    message += "SIBNI ";
     break;
   case 8:
-    message += "ACHT ";
+    message += "ACHTI ";
     break;
   case 9:
-    message += "NEUN ";
+    message += "NUNI ";
     break;
   case 10:
-    message += "ZEHN ";
+    message += "ZANI ";
     break;
   case 11:
-    message += "ELF ";
+    message += "EUFI ";
     break;
   }
-  if(minutes < 5)
+  if(minutes % 5 != 0)
   {
-    message += "UHR ";
+    message += "GSI ";
   }
 
   logger.logString("time as String: " + String(message));
 
   return message;
 }
-
