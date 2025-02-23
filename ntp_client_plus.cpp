@@ -12,7 +12,6 @@ NTPClientPlus::NTPClientPlus(UDP &udp, const char *poolServerName, int utcx, boo
 {
     this->_udp = &udp;
     this->_utcx = utcx;
-    this->_timeOffset = this->secondperhour * this->_utcx;
     this->_poolServerName = poolServerName;
     this->_swChange = _swChange;
 }
@@ -104,18 +103,13 @@ void NTPClientPlus::end()
 }
 
 /**
- * @brief Setter TimeOffset
+ * @brief Setter UTC offset
  * 
- * @param timeOffset offset from UTC in seconds
+ * @param utcOffset offset from UTC in minutes
  */
-void NTPClientPlus::setTimeOffset(int timeOffset)
+void NTPClientPlus::setUTCOffset(int utcOffset)
 {
-    this->_timeOffset = timeOffset;
-}
-
-long NTPClientPlus::getTimeOffset()
-{
-    return this->_timeOffset;
+    this->_utcx = utcOffset;
 }
 
 /**
@@ -135,9 +129,10 @@ void NTPClientPlus::setPoolServerName(const char *poolServerName)
  */
 unsigned long NTPClientPlus::getSecsSince1900() const
 {
-    return this->_timeOffset +                      // User offset
-           this->_secsSince1900 +                   // seconds returned by the NTP server
-           ((millis() - this->_lastUpdate) / 1000); // Time since last update
+    return this->_utcx * this->secondperminute +            // UTC offset
+            this->_summertime * this->secondperhour +       // Summer time offset
+            this->_secsSince1900 +                          // seconds returned by the NTP server
+            ((millis() - this->_lastUpdate) / 1000);        // Time since last update
 }
 
 /**
@@ -556,18 +551,11 @@ void NTPClientPlus::sendNTPPacket()
  */
 void NTPClientPlus::setSummertime(bool summertime)
 {
-    if (summertime)
-    {
-        this->_timeOffset = this->secondperhour * (this->_utcx + 1);
-    }
-    else
-    {
-        this->_timeOffset = this->secondperhour * (this->_utcx);
-    }
+    this->_summertime = summertime;
 }
 
 /**
- * @brief (private) Update Summer/Winter time change
+ * @brief Update Summer/Winter time change
  * 
  * @returns bool summertime active
  */
