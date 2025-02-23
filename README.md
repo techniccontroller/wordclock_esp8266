@@ -18,10 +18,14 @@ Thank you to everyone who provided feedback on adding new languages and testing 
 
 We've got some interesting branches in this repo inspired by user feedback. These branches explore unique features and experimental ideas. Some will stay updated with the main branch's features.
 
-- [**hour_animation**](https://github.com/techniccontroller/wordclock_esp8266/tree/hour_animation): This branch replaces the spiral animation with some custom pattern animation defined as x/y coordinate pattern including custom color for each letter. Also, this animation is show ones per hour.
+- [**hour_animation**](https://github.com/techniccontroller/wordclock_esp8266/tree/hour_animation): This branch replaces the spiral animation with some custom pattern animation defined as x/y coordinate pattern including custom color for each letter. Also, this animation is show ones per hour.  
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=hour_animation)
 - [**mode_seconds**](https://github.com/techniccontroller/wordclock_esp8266/tree/mode_seconds): This branch adds one additional mode to show the seconds as numbers on the clock. Thanks to [@Bram](https://github.com/BramWerbrouck)
-- [**rgbw_leds**](https://github.com/techniccontroller/wordclock_esp8266/tree/rgbw_leds): This branch uses RGBW LEDs instead of RGB LEDs.
-- [**static_background_pattern**](https://github.com/techniccontroller/wordclock_esp8266/tree/static_background_pattern): This branch allows to light up specific letters always during clock mode. E.G., to display some special words in another color.
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=mode_seconds)
+- [**rgbw_leds**](https://github.com/techniccontroller/wordclock_esp8266/tree/rgbw_leds): This branch uses RGBW LEDs instead of RGB LEDs.  
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=rgbw_leds)
+- [**static_background_pattern**](https://github.com/techniccontroller/wordclock_esp8266/tree/static_background_pattern): This branch allows to light up specific letters always during clock mode. E.G., to display some special words in another color.  
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=static_background_pattern)
 
 
 
