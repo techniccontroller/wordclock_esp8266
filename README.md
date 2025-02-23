@@ -1,4 +1,5 @@
 # Wordclock 2.0
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=main)
 
 Wordclock 2.0 with ESP8266 and NTP time
 
@@ -21,6 +22,8 @@ We've got some interesting branches in this repo inspired by user feedback. Thes
 - [**mode_seconds**](https://github.com/techniccontroller/wordclock_esp8266/tree/mode_seconds): This branch adds one additional mode to show the seconds as numbers on the clock. Thanks to [@Bram](https://github.com/BramWerbrouck)
 - [**rgbw_leds**](https://github.com/techniccontroller/wordclock_esp8266/tree/rgbw_leds): This branch uses RGBW LEDs instead of RGB LEDs.
 - [**static_background_pattern**](https://github.com/techniccontroller/wordclock_esp8266/tree/static_background_pattern): This branch allows to light up specific letters always during clock mode. E.G., to display some special words in another color.
+
+
 
 ## Features
 - 6 modes (Clock, Digital Clock, SPIRAL animation, TETRIS, SNAKE, PONG)
