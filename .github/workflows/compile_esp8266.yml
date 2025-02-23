@@ -1,3 +1,4 @@
+
 name: Compile ESP8266 Sketch
 
 on:
@@ -38,4 +39,5 @@ jobs:
 
       - name: Compile Sketch
         run: |
+          mv secrets_example.h secrets.h
           arduino-cli compile -v --fqbn esp8266:esp8266:nodemcuv2 wordclock_esp8266.ino
