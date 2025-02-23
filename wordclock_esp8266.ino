@@ -417,6 +417,7 @@ void loop() {
       Serial.println("connection lost");
       ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
       ledmatrix.drawOnMatrixInstant();
+      delay(1000);
     }
   }
 

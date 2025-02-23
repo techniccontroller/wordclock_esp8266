@@ -39,11 +39,11 @@ def start(filters=None):
         data, address = sock.recvfrom(1024)
         data_str = data.decode("utf-8").strip()
         timestamped_data = f"[{address[0]} - {datetime.now().strftime('%b-%d-%Y_%H:%M:%S')}] {data_str}"
-        print(timestamped_data)
 
         # Check each filter and process data accordingly
         for filter_val in filters:
             if filter_val in data_str:
+                print(timestamped_data)
                 buffers[filter_val].put(timestamped_data)
                 if buffers[filter_val].full():
                     buffers[filter_val].get()
