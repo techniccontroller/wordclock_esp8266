@@ -1174,6 +1174,7 @@ void showStaticBackgroundPattern(){
   uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5,  5};
   uint32_t color = LEDMatrix::Color24bit(255, 0, 0);
 
+  ledmatrix.setDynamicColorShiftPhase(-1);
   for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
     ledmatrix.gridAddPixel(coordinatesX[i], coordinatesY[i], color);
   }
