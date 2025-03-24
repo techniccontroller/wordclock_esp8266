@@ -2,7 +2,9 @@
 <html lang="de">
 	<head>
 	<meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=0.85">
+	<link rel="apple-touch-icon" sizes="128x128" href="./icons/wortuhr.png">
+	<link rel="icon" sizes="192x192" href="./icons/wortuhr_high.png">
     <style>
 	
 	body{
@@ -90,6 +92,16 @@
 	  grid-column-gap: 5px;
 	  grid-row-gap: 5px;
 	  grid-template-columns: auto auto auto;
+	  padding: 10px;
+	}
+
+	.grid-containerSandro {
+	  font-size:15px;
+	  font-family:Arial;
+	  display: grid;
+	  grid-column-gap: 5px;
+	  grid-row-gap: 5px;
+	  grid-template-columns: auto auto auto auto;
 	  padding: 10px;
 	}
 
@@ -254,7 +266,7 @@
 	.number-container{
 		display:flex;
 		flex-direction: row;
-		justify-content: left;
+		justify-content: space-between;
 		align-items: center;
 		margin: 10px;
 	}
@@ -273,45 +285,45 @@
 	<body oncontextmenu="return false"> <!-- prevent opening of contextmenu --> 
 		<div class="setting-button" onclick="toggleSettings()"><img src = "./icons/settings.svg" style="height:20px; filter: invert(100%);"/></div>
 		
-		<h1 id="headline">WORDCLOCK 2.0</h1>
+		<h1 id="headline">WORTUHR NESSI 1.1</h1>
 		
 		<div id="settings-container" class="settings-container">
 			<div class="number-container">
-				<label for="brightness">Brightness:</label>
+				<label for="brightness">Helligkeit:</label>
 				<input type="range" id="brightness" name="volume" min="10" max="255">
 			</div>
 			<div class="number-container">
-				<label for="colorshiftspeed">Color shift speed:</label>
+				<label for="colorshiftspeed">Wechsel dynamische Farben:</label>
 				<input type="range" id="colorshiftspeed" name="volume" min="0" max="50">
 			</div>
 			<div class="number-container">
-				<label for="nm_start" style="align-self: flex-start">Nightmode start time: </label> 
+				<label for="nm_start" style="align-self: flex-start">Nachtmodus Startzeit: </label> 
 				<input type="time" id="nm_start" name="nm_start" min="00:00" max="23:59">
 			</div>
 			<div class="number-container">
-				<label for="nm_end" style="align-self: flex-start">Nightmode end time: </label>
+				<label for="nm_end" style="align-self: flex-start">Nachmodus Endzeit: </label>
 				<input type="time" id="nm_end" name="nm_end" min="00:00" max="23:59">
 			</div>
 			<div class="checkbox-container">
-				<label for="NightMode" style="align-self: flex-start">Nightmode</label> 
+				<label for="NightMode" style="align-self: flex-start">Nachtmodus: Aus/Ein</label> 
 				<div>
 					<input name= "NightMode" id="NightMode" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="PuristMode" style="align-self: flex-start">Puristmode</label> 
+				<label for="PuristMode" style="align-self: flex-start">"ES ESCH" Ein/Aus</label> 
 				<div>
 					<input name= "PuristMode" id="PuristMode" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="StaticBackgroundPattern" style="align-self: flex-start">showStaticBackgroundPattern</label> 
+				<label for="StaticBackgroundPattern" style="align-self: flex-start">"WORTUHR NESSI" jede 5. Minuten: Aus/Ein</label> 
 				<div>
 					<input name= "StaticBackgroundPattern" id="StaticBackgroundPattern" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="ResetWifi" style="align-self: flex-start">Reset Wifi</label> 
+				<label for="ResetWifi" style="align-self: flex-start">WLAN Anmeldedaten zurücksetzen!</label> 
 				<div>
 					<input name= "ResetWifi" id="ResetWifi" type="checkbox" class="toggle">
 				</div>
@@ -322,7 +334,7 @@
 		<div class="verticalline">
 		</div>
 		<div class="headline">
-			MODE
+			MODUS
 		</div>
 		<div class="grid-container">
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 0)"><a onclick="sendCommand('./cmd?mode=clock')" class="buttonClass" style="width: 100%;"><img src = "./icons/clock.svg" style="height:50px"/></a></span></div>
@@ -333,44 +345,48 @@
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a onclick="sendCommand('./cmd?mode=pingpong')" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
 		</div>
 		<div class="checkbox-container">
-			<label for="LED_Off" style="align-self: flex-start">LEDs OFF</label> 
+			<label for="LED_Off" style="align-self: flex-start">Alle LED: Ein/Aus</label> 
 			<div>
 				<input name= "LED_Off" id="LED_Off" type="checkbox" class="toggle">
 			</div>
 		</div>
 		<div class="checkbox-container">
-			<label for="AutoChange" style="align-self: flex-start">Automatic mode change</label>
+			<label for="AutoChange" style="align-self: flex-start">Modus automatisch wechseln: Aus/Ein</label>
 			<div>
 				<input name= "AutoChange" id="AutoChange" type="checkbox" class="toggle">
 			</div>
 		</div>
 		<div class="checkbox-container" id = "colorshiftcontainer">
-			<label for="ColorShift" style="align-self: flex-start">DynamicColorShift</label>
+			<label for="ColorShift" style="align-self: flex-start">Dynamische Farben: Aus/Ein</label>
 			<div>
 				<input name= "ColorShift" id="ColorShift" type="checkbox" class="toggle">
 			</div>
 		</div>
 		
 		<div class="main-container hidden" id="colorcontainer">
-			<div class="verticalline">
+			<div class="verticalline"> 
 			</div>
 			<div class="headline">
-				COLOR
+				FARBEN
 			</div>
 			<div class="control-container">
-				<div class="grid-container">
+				<div class="grid-containerSandro">
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-0-0')" class="buttonClass" style="background:rgb(255,0,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-0-128')" class="buttonClass" style="background:rgb(255,0,128);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=205-0-0')" class="buttonClass" style="background:rgb(205,0,0);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-0-255')" class="buttonClass" style="background:rgb(255,0,255);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=128-0-255')" class="buttonClass" style="background:rgb(128,0,255);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-0-255')" class="buttonClass" style="background:rgb(0,0,255);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-128-255')" class="buttonClass" style="background:rgb(0,128,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=128-200-200')" class="buttonClass" style="background:rgb(128,200,200);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-255-255')" class="buttonClass" style="background:rgb(0,255,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-120-255')" class="buttonClass" style="background:rgb(0,120,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=200-155-255')" class="buttonClass" style="background:rgb(200,155,255);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-255-255')" class="buttonClass" style="background:rgb(255,255,255);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-255-128')" class="buttonClass" style="background:rgb(0,255,128);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=200-255-128')" class="buttonClass" style="background:rgb(200,255,128);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-255-0')" class="buttonClass" style="background:rgb(0,255,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=128-255-0')" class="buttonClass" style="background:rgb(128,255,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=200-200-0')" class="buttonClass" style="background:rgb(200,200,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=155-200-100')" class="buttonClass" style="background:rgb(155,200,100);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-200-100')" class="buttonClass" style="background:rgb(255,200,100);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-255-0')" class="buttonClass" style="background:rgb(255,255,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=152-245-255')" class="buttonClass" style="background:rgb(152,245,255);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-128-0')" class="buttonClass" style="background:rgb(255,128,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-193-193')" class="buttonClass" style="background:rgb(255,193,193);"></a></span></div>
 				</div>
 			</div>
 		</div>
