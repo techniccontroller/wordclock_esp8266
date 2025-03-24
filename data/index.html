@@ -243,7 +243,7 @@
 	}
 
 	.show{
-		height: 280px;
+		height: 450px;
 		transition: height 1s;
 	}
 
@@ -295,9 +295,19 @@
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="ResetWifi" style="align-self: flex-start">Reset Wifi</label> 
+				<label for="ResetWifi" style="align-self: flex-start">WLAN Anmeldedaten zurücksetzen!</label> 
 				<div>
-					<input name= "ResetWifi" id="ResetWifi" type="checkbox" class="toggle">
+					<input name= "frameLight" id="frameLight" type="checkbox" class="toggle">
+				</div>
+			</div>
+			<div class="number-container">
+				<label for="brightnessFrame">Helligkeit Rahmen:</label>
+				<input type="range" id="brightnessFrame" name="volume" min="10" max="255">
+			</div>
+			<div class="checkbox-container">
+				<label for="frameLight" style="align-self: flex-start">Rahmen Ein/Aus</label> 
+				<div>
+					<input name= "frameLight" id="frameLight" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="buttonClass save-button" onclick="saveSettings()">SAVE</div>
@@ -532,10 +542,28 @@
 							sendCommand("./cmd?colorshift=0");
 						}
 					});
+
+					var ckb_frameLight = document.querySelector('input[id="frameLight"]');
+					if(myVar.frameLight == "1") {
+						console.log("frameLight == 1");
+						ckb_frameLight.checked = true;
+					}
+					else {
+						console.log("frameLight == 0");
+						ckb_frameLight.checked = false;
+					}
+					ckb_frameLight.addEventListener('change', () => {
+						if(ckb_frameLight.checked) {
+							sendCommand("./cmd?frameLight=1");
+						} else {
+							sendCommand("./cmd?frameLight=0");
+						}
+					});
 					
 					document.getElementById("nm_start").value = myVar.nightModeStart.replace("-", ":");
 					document.getElementById("nm_end").value = myVar.nightModeEnd.replace("-", ":");
 					document.getElementById("brightness").value = parseInt(myVar.brightness);
+					document.getElementById("brightnessFrame").value = parseInt(myVar.brightnessFrame);
 					document.getElementById("colorshiftspeed").value = parseInt(myVar.colorshiftspeed);
 
 					updateDisplay(parseInt(myVar.modeid));
@@ -606,6 +634,7 @@
 				var nmStart = document.getElementById("nm_start");
 				var nmEnd = document.getElementById("nm_end");
 				var sld_brightness = document.getElementById("brightness");
+				var sld_brightnessFrame = document.getElementById("brightnessFrame");
 				var sld_colorshiftspeed = document.getElementById("colorshiftspeed");
 				var ckb_resetWifi = document.querySelector('input[id="ResetWifi"]');
 				var cmdstr = "./cmd?setting=";
@@ -616,6 +645,8 @@
 				cmdstr += sld_brightness.value;
 				cmdstr += "-";
 				cmdstr += sld_colorshiftspeed.value;
+				cmdstr += "-";
+				cmdstr += sld_brightnessFrame.value;
 				console.log(cmdstr);
 				sendCommand(cmdstr);
 				if(ckb_resetWifi.checked) {
