@@ -1,0 +1,43 @@
+
+name: Compile ESP8266 Sketch
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Arduino CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          echo "$(pwd)/bin" >> $GITHUB_PATH
+
+      - name: Configure Arduino CLI
+        run: |
+          cat <<EOF > .cli-config.yml
+          board_manager:
+            additional_urls:
+              - http://arduino.esp8266.com/stable/package_esp8266com_index.json
+          EOF
+          arduino-cli config init
+          arduino-cli core update-index
+          arduino-cli core install esp8266:esp8266 --config-file .cli-config.yml
+
+      - name: Install Required Libraries
+        run: |
+          arduino-cli lib install "Adafruit GFX Library"
+          arduino-cli lib install "Adafruit NeoMatrix"
+          arduino-cli lib install "Adafruit NeoPixel"
+          arduino-cli lib install "WiFiManager"
+          arduino-cli lib install "Adafruit BusIO"
+
+      - name: Compile Sketch
+        run: |
+          mv secrets_example.h secrets.h
+          arduino-cli compile -v --fqbn esp8266:esp8266:nodemcuv2 wordclock_esp8266.ino

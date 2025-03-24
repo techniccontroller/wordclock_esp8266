@@ -127,6 +127,8 @@ const String hostname = "wordclock";
 // URL DNS server
 const char WebserverURL[] = "www.wordclock.local";
 
+int utcOffset = 60; // UTC offset in minutes
+
 // ----------------------------------------------------------------------------------
 //                                        GLOBAL VARIABLES
 // ----------------------------------------------------------------------------------
@@ -165,7 +167,7 @@ bool sprialDir = false;
 // timestamp variables
 long lastheartbeat = millis();      // time of last heartbeat sending
 long lastStep = millis();           // time of last animation step
-long lastLEDdirect = 0;             // time of last direct LED command (=> fall back to normal mode after timeout)
+long lastLEDdirect = -TIMEOUT_LEDDIRECT; // time of last direct LED command (=> fall back to normal mode after timeout)
 long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis() - (PERIOD_NTPUPDATE-3000);  // time of last NTP update
 long lastAnimationStep = millis();  // time of last Matrix update
@@ -176,7 +178,7 @@ uint16_t behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE; // holdes the period in w
 // Create necessary global objects
 UDPLogger logger;
 WiFiUDP NTPUDP;
-NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", 1, true);
+NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", utcOffset, true);
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
 Tetris mytetris = Tetris(&ledmatrix, &logger);
 Snake mysnake = Snake(&ledmatrix, &logger);
@@ -230,7 +232,7 @@ void setup() {
   ledmatrix.setupMatrix();
   ledmatrix.setCurrentLimit(CURRENT_LIMIT_LED);
 
-  if(!ESP.getResetReason().equals("Software/System restart")){
+  if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // Turn on minutes leds (blue)
     ledmatrix.setMinIndicator(15, colors24bit[6]);
     ledmatrix.drawOnMatrixInstant();
@@ -248,6 +250,9 @@ void setup() {
   // set custom ip for portal
   //wifiManager.setAPStaticIPConfig(IPAdress_AccessPoint, Gateway_AccessPoint, Subnetmask_AccessPoint);
 
+  // set a custom hostname
+  wifiManager.setHostname(hostname);
+  
   // fetches ssid and pass from eeprom and tries to connect
   // if it does not connect it starts an access point with the specified name
   // here "wordclockAP"
@@ -259,7 +264,7 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP()); 
 
-  if(!ESP.getResetReason().equals("Software/System restart")){
+  if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // Turn off minutes leds
     ledmatrix.setMinIndicator(15, 0);
     ledmatrix.drawOnMatrixInstant();
@@ -344,10 +349,10 @@ void setup() {
   logger.logString("Reset Reason: " + ESP.getResetReason());
 
   // setup NTP
+  updateUTCOffsetFromTimezoneAPI(logger, ntp);
   ntp.setupNTPClient();
   logger.logString("NTP running");
   logger.logString("Time: " +  ntp.getFormattedTime());
-  logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
 
   // load persistent variables from EEPROM
   loadMainColorFromEEPROM();
@@ -356,7 +361,7 @@ void setup() {
   loadBrightnessSettingsFromEEPROM();
   loadColorShiftStateFromEEPROM();
   
-  if(!ESP.getResetReason().equals("Software/System restart")){
+  if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // test quickly each LED
     for(int r = 0; r < HEIGHT; r++){
         for(int c = 0; c < WIDTH; c++){
@@ -416,6 +421,7 @@ void loop() {
       Serial.println("connection lost");
       ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
       ledmatrix.drawOnMatrixInstant();
+      delay(1000);
     }
   }
 
@@ -428,11 +434,10 @@ void loop() {
   // Turn off LEDs if ledOff is true or nightmode is active
   if((ledOff || nightMode) && !waitForTimeAfterReboot){
     ledmatrix.gridFlush();
-    ledmatrix.drawOnMatrixInstant();
   }
 
   // periodically write colors to matrix
-  if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot){
+  if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     ledmatrix.drawOnMatrixSmooth(filterFactor);
     lastAnimationStep = millis();
   }
@@ -458,7 +463,6 @@ void loop() {
       logger.logString("Time: " +  ntp.getFormattedTime());
       logger.logString("Date: " +  ntp.getFormattedDate());
       logger.logString("Day of Week (Mon=1, Sun=7): " +  String(ntp.getDayOfWeek()));
-      logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate = millis();
       watchdogCounter = 30;
@@ -481,7 +485,6 @@ void loop() {
       logger.logString("Time: " +  ntp.getFormattedTime());
       logger.logString("Date: " +  ntp.getFormattedDate());
       logger.logString("Day of Week (Mon=1, Sun=7): " +  ntp.getDayOfWeek());
-      logger.logString("TimeOffset (seconds): " + String(ntp.getTimeOffset()));
       logger.logString("Summertime: " + String(ntp.updateSWChange()));
       lastNTPUpdate += 10000;
       watchdogCounter--;
