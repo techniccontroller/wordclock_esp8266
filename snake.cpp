@@ -267,16 +267,16 @@ void Snake::toggleLed(uint8_t x, uint8_t y, uint8_t type)
 
   switch(type) {
     case LED_TYPE_SNAKE:
-      color = LEDMatrix::Color24bit(0, 100, 100);
+      color = LEDMatrix::Color24bit(0, 255, 255);
       break;
     case LED_TYPE_EMPTY:
       color = LEDMatrix::Color24bit(0, 0, 0);
       break;
     case LED_TYPE_FOOD:
-      color = LEDMatrix::Color24bit(0, 150, 0);
+      color = LEDMatrix::Color24bit(0, 255, 0);
       break;
     case LED_TYPE_BLOOD:
-      color = LEDMatrix::Color24bit(150, 0, 0);
+      color = LEDMatrix::Color24bit(255, 0, 0);
       break;
   }
 
