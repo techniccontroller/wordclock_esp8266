@@ -452,7 +452,7 @@ void loop() {
   // periodically write colors to matrix
   if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     ledmatrix.drawOnMatrixSmooth(filterFactor);
-    if (frameLightActive) turnOnFrameLight(maincolor_clock);
+    if (frameLightActive && !nightMode) turnOnFrameLight(maincolor_clock);
     else turnOffFrameLight();
     lastAnimationStep = millis();
   }
