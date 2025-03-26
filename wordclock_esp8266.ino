@@ -903,7 +903,7 @@ void loadNightmodeSettingsFromEEPROM()
 void loadBrightnessSettingsFromEEPROM()
 {
   brightness = EEPROM.read(ADR_BRIGHTNESS);
-  brightness = EEPROM.read(ADR_BRIGHTNESS_FRAME);
+  brightnessFrame = EEPROM.read(ADR_BRIGHTNESS_FRAME);
   if(brightness < 10) brightness = 10;
   if(brightnessFrame < 10) brightnessFrame = 10;
   logger.logString("Brightness: " + String(brightness));
