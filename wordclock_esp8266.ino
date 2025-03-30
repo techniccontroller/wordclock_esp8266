@@ -90,7 +90,7 @@
 #define SHORTPRESS 100
 #define LONGPRESS 2000
 
-#define CURRENT_LIMIT_LED 2500 // limit the total current sonsumed by LEDs (mA)
+#define CURRENT_LIMIT_LED 3000 // limit the total current sonsumed by LEDs (mA)
 
 #define DEFAULT_SMOOTHING_FACTOR 0.5
 
@@ -432,7 +432,7 @@ void loop() {
       Serial.println("connection lost");
       ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
       ledmatrix.drawOnMatrixInstant();
-      delay(1000);
+      delay(2000); // Sandro 1000
     }
   }
 
@@ -562,9 +562,9 @@ void updateStateBehavior(uint8_t state){
         drawMinuteIndicator(minutes, maincolor_clock);
         
         // show static background pattern every 5 minutes for 1 minute
-        if(minutes % 5 == 0 && staticBackgroundActive){
-          showStaticBackgroundPattern();
-        }
+        // if(minutes % 5 == 0 && staticBackgroundActive){ // Sandro
+        //  showStaticBackgroundPattern(); // Sandro
+        // } // Sandro
       }
       break;
     // state diclock
@@ -578,7 +578,7 @@ void updateStateBehavior(uint8_t state){
     // state spiral
     case st_spiral:
       {
-        int res = spiral(false, sprialDir, WIDTH-6);
+        int res = spiral(false, sprialDir, WIDTH-0); // Sandro WIDTH-6);
         if(res && sprialDir == 0){
           // change spiral direction to closing (draw empty leds)
           sprialDir = 1;
@@ -824,7 +824,8 @@ void handleButton(){
       if(ledOff){
         ledOff = false;
       }else{
-        stateChange((currentState + 1) % NUM_STATES, true);
+        // stateChange((currentState + 1) % NUM_STATES, true);  // Sandro, umschalten 6 Modi
+        stateChange((currentState + 1) % 2, true); // Sandro, umschalten nur Uhr und Digi
       }
       
     }
@@ -1238,13 +1239,13 @@ String leadingZero2Digit(int value){
 void showStaticBackgroundPattern(){
   // define the coordinates of the background pattern to light up
   // top left corner is (0,0)
-  uint8_t coordinatesX[] = {0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5,  5};
+  uint8_t coordinatesX[] = {4, 5, 6, 7, 8, 9, 10, 6, 7, 8, 9, 10}; // Sandro
+  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4,  4}; // Sandro
 
-  uint8_t red = 255; // red color value (0-255)
-  uint8_t green = 0; // green color value (0-255)
+  uint8_t red = 0; // red color value (0-255)
+  uint8_t green = 255; // green color value (0-255)
   uint8_t blue = 0;  // blue color value (0-255)
-  uint8_t patternBrightness = 0.7 * brightness; // brightness of the pattern (0-255)
+  uint8_t patternBrightness = 0.9 * brightness; // brightness of the pattern (0-255) // Sandro 0.7 entspricht 70%
 
   if(patternBrightness < 10) patternBrightness = 10;
   if(patternBrightness > 255) patternBrightness = 255;
