@@ -39,6 +39,7 @@
 #include "udplogger.h"
 #include "ntp_client_plus.h"
 #include "ledmatrix.h"
+#include "ledring.h"
 #include "tetris.h"
 #include "snake.h"
 #include "pong.h"
@@ -61,6 +62,9 @@
 #define ADR_STATICBACKGROUND 9
 #define ADR_BRIGHTNESS_FRAME 10
 #define ADR_FRAMELIGHTACTIVE 11
+#define ADR_FRAMELIGHTSECONDSACTIVE 12
+#define ADR_FRAMELIGHTSECONDSSINGLE 13
+#define ADR_FRAMELIGHTSECONDSINCDECCYCLE 14
 #define ADR_STATE 26
 #define ADR_NM_ACTIVATED 27
 #define ADR_COLSHIFTSPEED 28
@@ -104,8 +108,6 @@ enum direction {right, left, up, down};
 #define WIDTH 11
 // height of the led matrix
 #define HEIGHT 11
-
-#define NUM_LEDS_FRAME_LIGHT 56
 
 // own datatype for state machine states
 #define NUM_STATES 6
@@ -155,7 +157,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, HEIGHT+1, NEOPIXELPIN,
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
 
-Adafruit_NeoPixel backgroundLEDStrip = Adafruit_NeoPixel(NUM_LEDS_FRAME_LIGHT, NEOPIXELPIN_FRAME, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel frameLEDStrip = Adafruit_NeoPixel(RING_LED_COUNT, NEOPIXELPIN_FRAME, NEO_GRB + NEO_KHZ800);
 
 // seven predefined colors24bit (green, red, yellow, purple, orange, lightgreen, blue) 
 const uint32_t colors24bit[NUM_COLORS] = {
@@ -187,6 +189,7 @@ UDPLogger logger;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", utcOffset, true);
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
+LEDRing frameLED = LEDRing(&frameLEDStrip, &logger);
 Tetris mytetris = Tetris(&ledmatrix, &logger);
 Snake mysnake = Snake(&ledmatrix, &logger);
 Pong mypong = Pong(&ledmatrix, &logger);
@@ -206,6 +209,10 @@ uint8_t dynColorShiftSpeed = 1;               // stores the speed of the dynamic
 bool puristModeActive = false;                // stores if purist mode is active
 bool staticBackgroundActive = false;          // stores if static background is active
 bool frameLightActive = false;                // stores if frame light is active
+bool frameSecondsActive = false;              // stores if frame light should be active for seconds
+bool frameSecondsSingle = false;              // stores if frame light should be active for seconds in single mode (false == increment mode)
+bool frameSecondsIncDecCycle = false;         // stores if frame light should be active for seconds in increment+decrement mode
+
 
 // nightmode settings
 uint8_t nightModeStartHour = 22;
@@ -237,7 +244,8 @@ void setup() {
   pinMode(BUTTONPIN, INPUT_PULLUP);
 
   // init background LED strip
-  backgroundLEDStrip.begin();
+  frameLED.setupRing();
+  frameLED.setBrightness(brightnessFrame);
 
   // setup Matrix LED functions
   ledmatrix.setupMatrix();
@@ -450,8 +458,7 @@ void loop() {
   // periodically write colors to matrix
   if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     ledmatrix.drawOnMatrixSmooth(filterFactor);
-    if (frameLightActive && !nightMode) turnOnFrameLight(maincolor_clock);
-    else turnOffFrameLight();
+    updateFrame();
     lastAnimationStep = millis();
   }
 
@@ -875,6 +882,9 @@ void loadCurrentStateFromEEPROM(){
   puristModeActive = EEPROM.read(ADR_PURIST_MODE_ACTIVE);
   staticBackgroundActive = EEPROM.read(ADR_STATICBACKGROUND);
   frameLightActive = EEPROM.read(ADR_FRAMELIGHTACTIVE);
+  frameSecondsActive = EEPROM.read(ADR_FRAMELIGHTSECONDSACTIVE);
+  frameSecondsSingle = EEPROM.read(ADR_FRAMELIGHTSECONDSSINGLE);
+  frameSecondsIncDecCycle = EEPROM.read(ADR_FRAMELIGHTSECONDSINCDECCYCLE);
 }
 
 /**
@@ -910,7 +920,7 @@ void loadBrightnessSettingsFromEEPROM()
   logger.logString("Brightness: " + String(brightness));
   logger.logString("Brightness Frame: " + String(brightnessFrame));
   ledmatrix.setBrightness(brightness);
-  backgroundLEDStrip.setBrightness(brightnessFrame);
+  frameLED.setBrightness(brightnessFrame);
 }
 
 /**
@@ -1020,7 +1030,7 @@ void handleCommand() {
     logger.logString("Brightness Frame: " + String(brightnessFrame));
     logger.logString("ColorShiftSpeed: " + String(dynColorShiftSpeed));
     ledmatrix.setBrightness(brightness);
-    backgroundLEDStrip.setBrightness(brightnessFrame);
+    frameLED.setBrightness(brightnessFrame);
     lastNightmodeCheck = millis()  - PERIOD_NIGHTMODECHECK;
   }
   else if (server.argName(0) == "resetwifi"){
@@ -1138,6 +1148,30 @@ void handleCommand() {
     EEPROM.write(ADR_FRAMELIGHTACTIVE, frameLightActive);
     EEPROM.commit();
   }
+  else if(server.argName(0) == "frameSecondsActive"){
+    Serial.println("FrameSecondsActive change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") frameSecondsActive = true;
+    else frameSecondsActive = false;
+    EEPROM.write(ADR_FRAMELIGHTSECONDSACTIVE, frameSecondsActive);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "frameSecondsSingle"){
+    Serial.println("FrameSecondsSingle change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") frameSecondsSingle = false;
+    else frameSecondsSingle = true;
+    EEPROM.write(ADR_FRAMELIGHTSECONDSSINGLE, frameSecondsSingle);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "frameSecondsIncDecCycle"){
+    Serial.println("FrameSecondsIncDecCycle change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") frameSecondsIncDecCycle = true;
+    else frameSecondsIncDecCycle = false;
+    EEPROM.write(ADR_FRAMELIGHTSECONDSINCDECCYCLE, frameSecondsIncDecCycle);
+    EEPROM.commit();
+  }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
@@ -1208,6 +1242,12 @@ void handleDataRequest() {
       message += "\"staticbackground\":\"" + String(staticBackgroundActive) + "\"";
       message += ",";
       message += "\"frameLight\":\"" + String(frameLightActive) + "\"";
+      message += ",";
+      message += "\"frameSecondsActive\":\"" + String(frameSecondsActive) + "\"";
+      message += ",";
+      message += "\"frameSecondsSingle\":\"" + String(frameSecondsSingle) + "\"";
+      message += ",";
+      message += "\"frameSecondsIncDecCycle\":\"" + String(frameSecondsIncDecCycle) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
@@ -1255,23 +1295,4 @@ void showStaticBackgroundPattern(){
   for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
     ledmatrix.gridAddPixel(coordinatesX[i], coordinatesY[i], color);
   }
-}
-
-/**
- * @brief Turn on the frame light with given color
- * 
- * @param color 
- */
-void turnOnFrameLight(uint32_t color){
-  backgroundLEDStrip.fill(color);
-  backgroundLEDStrip.show();
-}
-
-/**
- * @brief Turn off the frame light
- * 
- */
-void turnOffFrameLight(){
-  backgroundLEDStrip.clear();
-  backgroundLEDStrip.show();
 }

@@ -63,8 +63,8 @@
 	.buttonClass {
 	  font-size:15px;
 	  font-family:Arial;
-	  width:70px;
-	  height:70px;
+	  width:62px;
+	  height:62px;
 	  color:#fff;
 	  font-weight:200;
 	  border-top-left-radius:14px;
@@ -95,13 +95,13 @@
 	  padding: 10px;
 	}
 
-	.grid-containerSandro {
+	.grid-containerNessi {
 	  font-size:15px;
 	  font-family:Arial;
 	  display: grid;
 	  grid-column-gap: 5px;
 	  grid-row-gap: 5px;
-	  grid-template-columns: auto auto auto auto;
+	  grid-template-columns: auto auto auto auto auto auto;
 	  padding: 10px;
 	}
 
@@ -285,57 +285,51 @@
 	<body oncontextmenu="return false"> <!-- prevent opening of contextmenu --> 
 		<div class="setting-button" onclick="toggleSettings()"><img src = "./icons/settings.svg" style="height:20px; filter: invert(100%);"/></div>
 		
-		<h1 id="headline">WORTUHR NESSI 1.1</h1>
+		<h1 id="headline">WORTUHR NESSI 3.0</h1>
 		
 		<div id="settings-container" class="settings-container">
 			<div class="number-container">
-				<label for="brightness">Helligkeit:</label>
+				<label for="brightness">Helligkeit Uhr </label>
 				<input type="range" id="brightness" name="volume" min="10" max="255">
 			</div>
 			<div class="number-container">
-				<label for="colorshiftspeed">Wechsel dynamische Farben:</label>
+				<label for="brightnessFrame">Helligkeit Hintergrund </label>
+				<input type="range" id="brightnessFrame" name="volume" min="10" max="255">
+			</div>
+			<div class="number-container">
+				<label for="colorshiftspeed">Geschwindigkeit dyn. Farben</label>
 				<input type="range" id="colorshiftspeed" name="volume" min="0" max="50">
 			</div>
 			<div class="number-container">
-				<label for="nm_start" style="align-self: flex-start">Nachtmodus Startzeit: </label> 
+				<label for="nm_start" style="align-self: flex-start">Nachtmodus Startzeit </label> 
 				<input type="time" id="nm_start" name="nm_start" min="00:00" max="23:59">
 			</div>
 			<div class="number-container">
-				<label for="nm_end" style="align-self: flex-start">Nachmodus Endzeit: </label>
+				<label for="nm_end" style="align-self: flex-start">Nachtmodus Endzeit </label>
 				<input type="time" id="nm_end" name="nm_end" min="00:00" max="23:59">
 			</div>
 			<div class="checkbox-container">
-				<label for="NightMode" style="align-self: flex-start">Nachtmodus: Aus/Ein</label> 
+				<label for="NightMode" style="align-self: flex-start">Nachtmodus: Aus/Ein </label> 
 				<div>
 					<input name= "NightMode" id="NightMode" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="PuristMode" style="align-self: flex-start">"ES ESCH" Ein/Aus</label> 
+				<label for="PuristMode" style="align-self: flex-start">"ES ESCH" Ein/Aus </label> 
 				<div>
 					<input name= "PuristMode" id="PuristMode" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="StaticBackgroundPattern" style="align-self: flex-start">"WORTUHR NESSI" jede 5. Minuten: Aus/Ein</label> 
+				<label for="StaticBackgroundPattern" style="align-self: flex-start">"WORTUHR NESSI" jede 5. Minuten: Aus/Ein </label> 
 				<div>
 					<input name= "StaticBackgroundPattern" id="StaticBackgroundPattern" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="ResetWifi" style="align-self: flex-start">WLAN Anmeldedaten zurücksetzen!</label> 
+				<label for="ResetWifi" style="align-self: flex-start">WLAN Anmeldedaten zurücksetzen! </label> 
 				<div>
 					<input name= "ResetWifi" id="ResetWifi" type="checkbox" class="toggle">
-				</div>
-			</div>
-			<div class="number-container">
-				<label for="brightnessFrame">Helligkeit Rahmen:</label>
-				<input type="range" id="brightnessFrame" name="volume" min="10" max="255">
-			</div>
-			<div class="checkbox-container">
-				<label for="frameLight" style="align-self: flex-start">Rahmen Ein/Aus</label> 
-				<div>
-					<input name= "frameLight" id="frameLight" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="buttonClass save-button" onclick="saveSettings()">SAVE</div>
@@ -355,19 +349,43 @@
 			<div class="grid-item mode-item"><span class="dot-mode" onclick="modechange(this, 5)"><a onclick="sendCommand('./cmd?mode=pingpong')" class="buttonClass" style="width: 100%;"><img src = "./icons/pingpong.svg" style="height:50px"/></a></span></div>
 		</div>
 		<div class="checkbox-container">
-			<label for="LED_Off" style="align-self: flex-start">Alle LED: Ein/Aus</label> 
+			<label for="LED_Off" style="align-self: flex-start">Uhr LED: Ein/Aus </label> 
 			<div>
 				<input name= "LED_Off" id="LED_Off" type="checkbox" class="toggle">
 			</div>
 		</div>
+			<div class="checkbox-container">
+				<label for="frameLight" style="align-self: flex-start">Hintergrund LED Ein/Aus </label> 
+				<div>
+					<input name= "frameLight" id="frameLight" type="checkbox" class="toggle">
+				</div>
+			</div>
+			<div class="checkbox-container">
+				<label for="frameSecondsActive" style="align-self: flex-start">Hintergrund Voll/Sek. </label> 
+				<div>
+					<input name= "frameSecondsActive" id="frameSecondsActive" type="checkbox" class="toggle">
+				</div>
+			</div>
+			<div class="checkbox-container">
+				<label for="frameSecondsSingle" style="align-self: flex-start">Hintergrund Sek. Einzeln/Aufsteigend </label> 
+				<div>
+					<input name= "frameSecondsSingle" id="frameSecondsSingle" type="checkbox" class="toggle">
+				</div>
+			</div>
+			<div class="checkbox-container">
+				<label for="frameSecondsIncDecCycle" style="align-self: flex-start">Hintergrund Sek. Aufsteigend/Absteigend </label> 
+				<div>
+					<input name= "frameSecondsIncDecCycle" id="frameSecondsIncDecCycle" type="checkbox" class="toggle">
+				</div>
+			</div>
 		<div class="checkbox-container">
-			<label for="AutoChange" style="align-self: flex-start">Modus automatisch wechseln: Aus/Ein</label>
+			<label for="AutoChange" style="align-self: flex-start">Modus automatisch wechseln: Aus/Ein </label>
 			<div>
 				<input name= "AutoChange" id="AutoChange" type="checkbox" class="toggle">
 			</div>
 		</div>
 		<div class="checkbox-container" id = "colorshiftcontainer">
-			<label for="ColorShift" style="align-self: flex-start">Dynamische Farben: Aus/Ein</label>
+			<label for="ColorShift" style="align-self: flex-start">Dynamische Farben: Aus/Ein </label>
 			<div>
 				<input name= "ColorShift" id="ColorShift" type="checkbox" class="toggle">
 			</div>
@@ -380,7 +398,7 @@
 				FARBEN
 			</div>
 			<div class="control-container">
-				<div class="grid-containerSandro">
+				<div class="grid-containerNessi">
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-0-0')" class="buttonClass" style="background:rgb(255,0,0);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=205-0-0')" class="buttonClass" style="background:rgb(205,0,0);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-0-255')" class="buttonClass" style="background:rgb(255,0,255);"></a></span></div>
@@ -391,12 +409,8 @@
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-255-255')" class="buttonClass" style="background:rgb(255,255,255);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=200-255-128')" class="buttonClass" style="background:rgb(200,255,128);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-255-0')" class="buttonClass" style="background:rgb(0,255,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=155-200-100')" class="buttonClass" style="background:rgb(155,200,100);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-200-100')" class="buttonClass" style="background:rgb(255,200,100);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-255-0')" class="buttonClass" style="background:rgb(255,255,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=152-245-255')" class="buttonClass" style="background:rgb(152,245,255);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-128-0')" class="buttonClass" style="background:rgb(255,128,0);"></a></span></div>
-					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-193-193')" class="buttonClass" style="background:rgb(255,193,193);"></a></span></div>
 				</div>
 			</div>
 		</div>
@@ -625,6 +639,57 @@
 							sendCommand("./cmd?frameLight=1");
 						} else {
 							sendCommand("./cmd?frameLight=0");
+						}
+					});
+
+					var ckb_frameSecondsActive = document.querySelector('input[id="frameSecondsActive"]');
+					if(myVar.frameSecondsActive == "1") {
+						console.log("frameSecondsActive == 1");
+						ckb_frameSecondsActive.checked = true;
+					}
+					else {
+						console.log("frameSecondsActive == 0");
+						ckb_frameSecondsActive.checked = false;
+					}
+					ckb_frameSecondsActive.addEventListener('change', () => {
+						if(ckb_frameSecondsActive.checked) {
+							sendCommand("./cmd?frameSecondsActive=1");
+						} else {
+							sendCommand("./cmd?frameSecondsActive=0");
+						}
+					});
+
+					var ckb_frameSecondsSingle = document.querySelector('input[id="frameSecondsSingle"]');
+					if(myVar.frameSecondsSingle == "1") {
+						console.log("frameSecondsSingle == 1");
+						ckb_frameSecondsSingle.checked = true;
+					}
+					else {
+						console.log("frameSecondsSingle == 0");
+						ckb_frameSecondsSingle.checked = false;
+					}
+					ckb_frameSecondsSingle.addEventListener('change', () => {
+						if(ckb_frameSecondsSingle.checked) {
+							sendCommand("./cmd?frameSecondsSingle=1");
+						} else {
+							sendCommand("./cmd?frameSecondsSingle=0");
+						}
+					});
+
+					var ckb_frameSecondsIncDecCycle = document.querySelector('input[id="frameSecondsIncDecCycle"]');
+					if(myVar.frameSecondsIncDecCycle == "1") {
+						console.log("frameSecondsIncDecCycle == 1");
+						ckb_frameSecondsIncDecCycle.checked = true;
+					}
+					else {
+						console.log("frameSecondsIncDecCycle == 0");
+						ckb_frameSecondsIncDecCycle.checked = false;
+					}
+					ckb_frameSecondsIncDecCycle.addEventListener('change', () => {
+						if(ckb_frameSecondsIncDecCycle.checked) {
+							sendCommand("./cmd?frameSecondsIncDecCycle=1");
+						} else {
+							sendCommand("./cmd?frameSecondsIncDecCycle=0");
 						}
 					});
 					
