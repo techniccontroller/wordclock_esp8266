@@ -58,7 +58,7 @@ void showSeconds(uint8_t minutes) // use minutes to calculate the seconds (more 
             if(i == activePixelSeconds){
                 for(int j = 0; j < NUM_LED_PER_SECOND; j++)
                 {
-                    frameLED.setPixel((i - j) % RING_LED_COUNT, maincolor_clock);
+                    frameLED.setPixel((i - j + RING_LED_COUNT) % RING_LED_COUNT, maincolor_clock);
                 }
             }
         }

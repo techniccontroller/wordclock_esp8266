@@ -65,6 +65,7 @@
 #define ADR_FRAMELIGHTSECONDSACTIVE 12
 #define ADR_FRAMELIGHTSECONDSSINGLE 13
 #define ADR_FRAMELIGHTSECONDSINCDECCYCLE 14
+#define ADR_STATICBACKGROUND2 15
 #define ADR_STATE 26
 #define ADR_NM_ACTIVATED 27
 #define ADR_COLSHIFTSPEED 28
@@ -208,6 +209,7 @@ uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic
 uint8_t dynColorShiftSpeed = 1;               // stores the speed of the dynamic color shift -> used to calc update period
 bool puristModeActive = false;                // stores if purist mode is active
 bool staticBackgroundActive = false;          // stores if static background is active
+bool staticBackground2Active = false;          // stores if static background is active
 bool frameLightActive = false;                // stores if frame light is active
 bool frameSecondsActive = false;              // stores if frame light should be active for seconds
 bool frameSecondsSingle = false;              // stores if frame light should be active for seconds in single mode (false == increment mode)
@@ -440,7 +442,7 @@ void loop() {
       Serial.println("connection lost");
       ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
       ledmatrix.drawOnMatrixInstant();
-      delay(2000); // Sandro 1000
+      delay(2000); // Nessi (1000)
     }
   }
 
@@ -567,13 +569,9 @@ void updateStateBehavior(uint8_t state){
         }
         showStringOnClock(timeAsString, maincolor_clock);
         drawMinuteIndicator(minutes, maincolor_clock);
-        
-        // show static background pattern every 5 minutes for 1 minute
-        // if(minutes % 5 == 0 && staticBackgroundActive){ // Sandro
-        //  showStaticBackgroundPattern(); // Sandro
-        // } // Sandro
       }
       break;
+
     // state diclock
     case st_diclock:
       {
@@ -585,7 +583,7 @@ void updateStateBehavior(uint8_t state){
     // state spiral
     case st_spiral:
       {
-        int res = spiral(false, sprialDir, WIDTH-0); // Sandro WIDTH-6);
+        int res = spiral(false, sprialDir, WIDTH-0); // Nessi WIDTH-6);
         if(res && sprialDir == 0){
           // change spiral direction to closing (draw empty leds)
           sprialDir = 1;
@@ -831,8 +829,8 @@ void handleButton(){
       if(ledOff){
         ledOff = false;
       }else{
-        // stateChange((currentState + 1) % NUM_STATES, true);  // Sandro, umschalten 6 Modi
-        stateChange((currentState + 1) % 2, true); // Sandro, umschalten nur Uhr und Digi
+        // stateChange((currentState + 1) % NUM_STATES, true);  // Nessi, umschalten 6 Modi
+        stateChange((currentState + 1) % 2, true); // Nessi, umschalten nur Uhr und Digi
       }
       
     }
@@ -881,6 +879,7 @@ void loadCurrentStateFromEEPROM(){
 
   puristModeActive = EEPROM.read(ADR_PURIST_MODE_ACTIVE);
   staticBackgroundActive = EEPROM.read(ADR_STATICBACKGROUND);
+  staticBackground2Active = EEPROM.read(ADR_STATICBACKGROUND2);
   frameLightActive = EEPROM.read(ADR_FRAMELIGHTACTIVE);
   frameSecondsActive = EEPROM.read(ADR_FRAMELIGHTSECONDSACTIVE);
   frameSecondsSingle = EEPROM.read(ADR_FRAMELIGHTSECONDSSINGLE);
@@ -1140,6 +1139,14 @@ void handleCommand() {
     EEPROM.write(ADR_STATICBACKGROUND, staticBackgroundActive);
     EEPROM.commit();
   }
+  else if(server.argName(0) == "staticbackground2"){
+    Serial.println("StaticBackground2 change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") staticBackground2Active = true;
+    else staticBackground2Active = false;
+    EEPROM.write(ADR_STATICBACKGROUND2, staticBackground2Active);
+    EEPROM.commit();
+  }
   else if(server.argName(0) == "frameLight"){
     Serial.println("FrameLight change via Webserver");
     String str = server.arg(0);
@@ -1241,6 +1248,8 @@ void handleDataRequest() {
       message += ",";
       message += "\"staticbackground\":\"" + String(staticBackgroundActive) + "\"";
       message += ",";
+      message += "\"staticbackground2\":\"" + String(staticBackground2Active) + "\"";
+      message += ",";
       message += "\"frameLight\":\"" + String(frameLightActive) + "\"";
       message += ",";
       message += "\"frameSecondsActive\":\"" + String(frameSecondsActive) + "\"";
@@ -1279,13 +1288,41 @@ String leadingZero2Digit(int value){
 void showStaticBackgroundPattern(){
   // define the coordinates of the background pattern to light up
   // top left corner is (0,0)
-  uint8_t coordinatesX[] = {4, 5, 6, 7, 8, 9, 10, 6, 7, 8, 9, 10}; // Sandro
-  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4,  4}; // Sandro
+  uint8_t coordinatesX[] = {4, 5, 6, 7, 8, 9, 10}; // Nessi (WORTUHR)
+  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3}; // Nessi (NESSI)
 
   uint8_t red = 0; // red color value (0-255)
   uint8_t green = 255; // green color value (0-255)
   uint8_t blue = 0;  // blue color value (0-255)
-  uint8_t patternBrightness = 0.9 * brightness; // brightness of the pattern (0-255) // Sandro 0.7 entspricht 70%
+  uint8_t patternBrightness = 0.9 * brightness; // brightness of the pattern (0-255) // Nessi 0.7 entspricht 70%
+
+  if(patternBrightness < 10) patternBrightness = 10;
+  if(patternBrightness > 255) patternBrightness = 255;
+  float factor = patternBrightness / 255.0;
+  uint32_t color = LEDMatrix::Color24bit(red * factor, green * factor, blue * factor);
+  ledmatrix.setDynamicColorShiftPhase(-1);
+  for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
+    ledmatrix.gridAddPixel(coordinatesX[i], coordinatesY[i], color);
+  }
+}
+
+/**
+ * @brief Show a second static background pattern on the matrix
+ * 
+ * You can define which leds should be lit up by changing the coordinatesX and coordinatesY arrays.
+ * You can define the color by changing the color variable.
+ * 
+ */
+void showStaticBackgroundPattern2(){
+  // define the coordinates of the background pattern to light up
+  // top left corner is (0,0)
+  uint8_t coordinatesX[] = { 6, 7, 8, 9, 10}; // Nessi (WORTUHR)
+  uint8_t coordinatesY[] = { 4, 4, 4, 4,  4}; // Nessi (NESSI)
+
+  uint8_t red = 0; // red color value (0-255)
+  uint8_t green = 0; // green color value (0-255)
+  uint8_t blue = 255;  // blue color value (0-255)
+  uint8_t patternBrightness = 0.9 * brightness; // brightness of the pattern (0-255) // Nessi 0.7 entspricht 70%
 
   if(patternBrightness < 10) patternBrightness = 10;
   if(patternBrightness > 255) patternBrightness = 255;

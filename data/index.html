@@ -24,7 +24,8 @@
 		background-size: 400% 400%;
 		/*-webkit-animation: gradientBG 14s ease infinite forwards;
 		animation: gradientBG 14s ease infinite forwards;*/
-		font-weight: lighter;
+		font-weight: dark;
+		font-size: 18px;
 	}
 	/** Animated background: Code By Webdevtrick ( https://webdevtrick.com ) **/
 	@-webkit-keyframes gradientBG {
@@ -52,9 +53,9 @@
 	}
 	
 	h1 {
-	  font-weight: lighter;
+	  font-weight: dark;
 	  letter-spacing: .125rem;
-	  text-transform: uppercase;
+	  text-transform: upercase;
 	  color: black;
 	  text-align: center;
 	  font-size: x-large;
@@ -101,7 +102,7 @@
 	  display: grid;
 	  grid-column-gap: 5px;
 	  grid-row-gap: 5px;
-	  grid-template-columns: auto auto auto auto auto auto;
+	  grid-template-columns: auto auto auto auto auto;
 	  padding: 10px;
 	}
 
@@ -203,9 +204,19 @@
 		margin: 10px;
 	}
 
+	.checkbox-containerNessi{
+		display:flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		margin: 10px;
+		color: red;
+				/*font-size: 10px;*/
+	}
+
 	.headline{
 		text-align: center;
-		font-weight: 200;
+		font-weight: 400;
 		font-size: larger;
 		margin-bottom: 5px;
 	}
@@ -278,7 +289,7 @@
 	}
   
 	</style>
-	<title>WORDCLOCK 2.0</title>
+	<title>WORTUHR NESSI 3.0</title>
 	<link rel="icon" type="image/svg" href="./icons/clock.svg">
 	</head>
 
@@ -321,12 +332,18 @@
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="StaticBackgroundPattern" style="align-self: flex-start">"WORTUHR NESSI" jede 5. Minuten: Aus/Ein </label> 
+				<label for="StaticBackgroundPattern" style="align-self: flex-start">"HOPP HCD" (jede 5. Min.): Aus/Ein </label> 
 				<div>
 					<input name= "StaticBackgroundPattern" id="StaticBackgroundPattern" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
+				<label for="StaticBackgroundPattern2" style="align-self: flex-start">"EVZ" (jede 5. Min.): Aus/Ein </label> 
+				<div>
+					<input name= "StaticBackgroundPattern2" id="StaticBackgroundPattern2" type="checkbox" class="toggle">
+				</div>
+			</div>
+			<div class="checkbox-containerNessi">
 				<label for="ResetWifi" style="align-self: flex-start">WLAN Anmeldedaten zurücksetzen! </label> 
 				<div>
 					<input name= "ResetWifi" id="ResetWifi" type="checkbox" class="toggle">
@@ -354,26 +371,26 @@
 				<input name= "LED_Off" id="LED_Off" type="checkbox" class="toggle">
 			</div>
 		</div>
-			<div class="checkbox-container">
-				<label for="frameLight" style="align-self: flex-start">Hintergrund LED Ein/Aus </label> 
+					<div class="checkbox-container">
+				<label for="frameLight" style="align-self: flex-start">Hintergrund LED: Ein/Aus </label> 
 				<div>
 					<input name= "frameLight" id="frameLight" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="frameSecondsActive" style="align-self: flex-start">Hintergrund Voll/Sek. </label> 
+				<label for="frameSecondsActive" style="align-self: flex-start">Hintergrund LED: Voll/Sek. </label> 
 				<div>
 					<input name= "frameSecondsActive" id="frameSecondsActive" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="frameSecondsSingle" style="align-self: flex-start">Hintergrund Sek. Einzeln/Aufsteigend </label> 
+				<label for="frameSecondsSingle" style="align-self: flex-start">Hintergrund Sek.: Einzeln/Aufsteigend </label> 
 				<div>
 					<input name= "frameSecondsSingle" id="frameSecondsSingle" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="frameSecondsIncDecCycle" style="align-self: flex-start">Hintergrund Sek. Aufsteigend/Absteigend </label> 
+				<label for="frameSecondsIncDecCycle" style="align-self: flex-start">Hintergrund Sek.: Auf.-/Absteigend </label> 
 				<div>
 					<input name= "frameSecondsIncDecCycle" id="frameSecondsIncDecCycle" type="checkbox" class="toggle">
 				</div>
@@ -411,6 +428,9 @@
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=0-255-0')" class="buttonClass" style="background:rgb(0,255,0);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-255-0')" class="buttonClass" style="background:rgb(255,255,0);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-128-0')" class="buttonClass" style="background:rgb(255,128,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=200-128-0')" class="buttonClass" style="background:rgb(200,128,0);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=152-245-255')" class="buttonClass" style="background:rgb(152,245,255);"></a></span></div>
+					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-193-193')" class="buttonClass" style="background:rgb(255,193,193);"></a></span></div>
 				</div>
 			</div>
 		</div>
@@ -553,7 +573,7 @@
 						}
 					});
 
-					// set checkbox states
+					// set checkbox (HOPP HCD)
 					var ckb_staticbackground = document.querySelector('input[id="StaticBackgroundPattern"]');
 					if(myVar.staticbackground == "1") {
 						console.log("staticbackground == 1");
@@ -568,6 +588,24 @@
 							sendCommand("./cmd?staticbackground=1");
 						} else {
 							sendCommand("./cmd?staticbackground=0");
+						}
+					});
+					
+					// set checkbox (EVZ)
+					var ckb_staticbackground2 = document.querySelector('input[id="StaticBackgroundPattern2"]');
+					if(myVar.staticbackground == "1") {
+						console.log("staticbackground2 == 1");
+						ckb_staticbackground2.checked = true;
+					}
+					else {
+						console.log("staticbackground2 == 0");
+						ckb_staticbackground2.checked = false;
+					}
+					ckb_staticbackground2.addEventListener('change', () => {
+						if(ckb_staticbackground2.checked) {
+							sendCommand("./cmd?staticbackground2=1");
+						} else {
+							sendCommand("./cmd?staticbackground2=0");
 						}
 					});
 
@@ -628,17 +666,17 @@
 					var ckb_frameLight = document.querySelector('input[id="frameLight"]');
 					if(myVar.frameLight == "1") {
 						console.log("frameLight == 1");
-						ckb_frameLight.checked = true;
+						ckb_frameLight.checked = false;
 					}
 					else {
 						console.log("frameLight == 0");
-						ckb_frameLight.checked = false;
+						ckb_frameLight.checked = true;
 					}
 					ckb_frameLight.addEventListener('change', () => {
 						if(ckb_frameLight.checked) {
-							sendCommand("./cmd?frameLight=1");
-						} else {
 							sendCommand("./cmd?frameLight=0");
+						} else {
+							sendCommand("./cmd?frameLight=1");
 						}
 					});
 

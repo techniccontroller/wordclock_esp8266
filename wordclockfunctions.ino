@@ -1,5 +1,8 @@
 
-const String clockStringSwiss =  "ESPESCHAFUFVIERTUBFZAAZWANZGSIVORABOHWORTUHRHAUBIANESSIEISZWOISDRUVIERIYFUFIOSACHSISEBNIACHTINUNIELZANIERBEUFIZWOUFINAGSI";
+
+// Angepasst am 01.04.2025 Sandro Nessenzia (NESSI)
+
+const String clockStringSwiss =  "ESPESCHAFUFVIERTUBFZAAZWANZGSIVORABOHOPPOHCDHAUBIAEVZILEISZWOISDRUVIERIYFUFIOSACHSISEBNIACHTINUNIELZANIEREUFIBZWOUFINAGSI";
 
 /**
  * @brief control the four minute indicator LEDs
@@ -13,37 +16,40 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
   switch (minutes%5)
     { 
       case 0:
-       if(staticBackgroundActive){
-       showStaticBackgroundPattern();
-       }
+        if(staticBackgroundActive){         // Nessi show static background pattern every 5 minutes for 1 minute
+          showStaticBackgroundPattern();    // Nessi 
+        }                                   // Nessi
+        if(staticBackground2Active){      // Nessi show static background pattern every 5 minutes for 1 minute
+          showStaticBackgroundPattern2();    // Nessi 
+        }                                   // Nessi
         break;
           
       case 1:
         ledmatrix.setMinIndicator(0b1000, color);
-        // if(staticBackgroundActive){ // Sandro
-        // showStaticBackgroundPattern();
-        // }
+        // if(staticBackgroundActive){     // Nessi show static background pattern every 1 minutes for 1 minute
+        // showStaticBackgroundPattern();  // Nessi
+        // }                               // Nessi
         break;
 
       case 2:
         ledmatrix.setMinIndicator(0b1100, color);
-        // if(staticBackgroundActive){
-        // showStaticBackgroundPattern();
-        // }
+        // if(staticBackgroundActive){     // Nessi show static background pattern every 2 minutes for 1 minute
+        // showStaticBackgroundPattern();  // Nessi
+        // }                               // Nessi
         break;
 
       case 3:
         ledmatrix.setMinIndicator(0b1110, color);
-        // if(staticBackgroundActive){
-        // showStaticBackgroundPattern();
-        // }
+        // if(staticBackgroundActive){     // Nessi show static background pattern every 3 minutes for 1 minute
+        // showStaticBackgroundPattern();  // Nessi
+        // }                               // Nessi
         break;
 
       case 4:
         ledmatrix.setMinIndicator(0b1111, color);
-        // if(staticBackgroundActive){
-        // showStaticBackgroundPattern();
-        // }
+        // if(staticBackgroundActive){     // Nessi show static background pattern every 4 minutes for 1 minute
+        // showStaticBackgroundPattern();  // Nessi
+        // }                               // Nessi
         break;
     }
   }
@@ -138,7 +144,7 @@ String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
   }
   else if(minutes >= 20 && minutes < 25)
   {
-    message += "ZWANZG AB "; //Sandro
+    message += "ZWANZG AB "; // Nessi
   }
   else if(minutes >= 25 && minutes < 30)
   {
@@ -154,7 +160,7 @@ String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
   }
   else if(minutes >= 40 && minutes < 45)
   {
-    message += "ZWANZG VOR "; //Sandro
+    message += "ZWANZG VOR "; // Nessi
   }
   else if(minutes >= 45 && minutes < 50)
   {
@@ -174,7 +180,7 @@ String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
   {
       hours -= 12;
   }
-  if(minutes >= 25) //Sandro 20
+  if(minutes >= 25) // Nessi >= 20
   {
       hours++;
   }
@@ -191,8 +197,8 @@ String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
     break;
   case 1:
     message += "EIS ";
-    // //EIN(S) 
-    // if(minutes > 4){  // Sandro
+    // //EIN(S)       // Nessi
+    // if(minutes > 4){  
     //   message += "S";
     // }
     // message += " ";
