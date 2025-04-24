@@ -34,6 +34,7 @@
 #include <DNSServer.h>
 #include <WiFiManager.h>                //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 #include <EEPROM.h>                     //from ESP8266 Arduino Core (automatically installed when ESP8266 was installed via Boardmanager)
+#include <PubSubClient.h>               // MQTT library
 
 // own libraries
 #include "udplogger.h"
@@ -113,6 +114,15 @@ const unsigned int DNSPort = 53;
 
 // ip addresses for multicast logging
 IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
+
+// MQTT Configuration
+const char* mqtt_server = "192.168.1.170"; // Replace with your Home Assistant MQTT broker IP
+const char* mqtt_user = "mqtt_user";       // Replace with your MQTT username
+const char* mqtt_password = "mqqt_password";   // Replace with your MQTT password
+const char* mqtt_client_id = "wordclock";  // Unique client ID for the Word Clock
+
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
 
 // ip addresses for Access Point
 IPAddress IPAdress_AccessPoint(192,168,10,2);
@@ -241,7 +251,7 @@ void setup() {
 
 
   // Uncomment and run it once, if you want to erase all the stored information
-  //wifiManager.resetSettings();
+  // wifiManager.resetSettings();
 
   // set custom ip for portal
   //wifiManager.setAPStaticIPConfig(IPAdress_AccessPoint, Gateway_AccessPoint, Subnetmask_AccessPoint);
@@ -356,6 +366,13 @@ void setup() {
   loadNightmodeSettingsFromEEPROM();
   loadBrightnessSettingsFromEEPROM();
   loadColorShiftStateFromEEPROM();
+
+  // Initialize MQTT
+  mqttClient.setServer(mqtt_server, 1883);
+  mqttClient.setCallback(mqttCallback);
+
+  // Connect to MQTT
+  connectToMQTT();
   
   if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // test quickly each LED
@@ -407,6 +424,12 @@ void loop() {
   // handle Webserver
   server.handleClient();
 
+  // Handle MQTT connection
+  if (!mqttClient.connected()) {
+    connectToMQTT();
+  }
+  mqttClient.loop();
+
   // send regularly heartbeat messages via UDP multicast
   if(millis() - lastheartbeat > PERIOD_HEARTBEAT){
     logger.logString("Heartbeat, state: " + stateNames[currentState] + ", FreeHeap: " + ESP.getFreeHeap() + ", HeapFrag: " + ESP.getHeapFragmentation() + ", MaxFreeBlock: " + ESP.getMaxFreeBlockSize() + "\n");
@@ -420,6 +443,9 @@ void loop() {
       delay(1000);
     }
   }
+
+  // Publish a heartbeat message
+  mqttClient.publish("wordclock/status", "Word Clock is running");
 
   // handle state behaviours (trigger loopCycles of different states depending on current state)
   if(!nightMode && !ledOff && (millis() - lastStep > behaviorUpdatePeriod) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
@@ -512,6 +538,113 @@ void loop() {
 // ----------------------------------------------------------------------------------
 //                                        OTHER FUNCTIONS
 // ----------------------------------------------------------------------------------
+
+/**
+ * @brief Handle incoming MQTT messages
+ * 
+ * @param topic The topic of the message
+ * @param payload The payload of the message
+ * @param length The length of the payload
+ */
+ void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  String message;
+  for (int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+  Serial.printf("Message received on topic %s: %s\n", topic, message.c_str());
+
+  // Handle LED on/off commands
+  if (String(topic) == "wordclock/led") {
+    ledOff = (message == "off");
+  }
+
+  // Handle mode change
+  else if (String(topic) == "wordclock/mode") {
+    if (message == "clock") stateChange(st_clock, true);
+    else if (message == "diclock") stateChange(st_diclock, true);
+    else if (message == "spiral") stateChange(st_spiral, true);
+    else if (message == "tetris") stateChange(st_tetris, true);
+    else if (message == "snake") stateChange(st_snake, true);
+    else if (message == "pingpong") stateChange(st_pingpong, true);
+  }
+
+  // Handle brightness change
+  else if (String(topic) == "wordclock/brightness") {
+    brightness = message.toInt();
+    if (brightness < 10) brightness = 10; // Ensure minimum brightness
+    ledmatrix.setBrightness(brightness); // Apply brightness to the LED matrix
+    EEPROM.write(ADR_BRIGHTNESS, brightness); // Save to EEPROM
+    EEPROM.commit();
+    logger.logString("Brightness set to: " + String(brightness));
+  }
+
+  // Handle night mode activation
+  else if (String(topic) == "wordclock/nightmode/activated") {
+    nightModeActivated = (message == "1");
+    EEPROM.write(ADR_NM_ACTIVATED, nightModeActivated);
+    EEPROM.commit();
+    checkNightmode();
+  }
+
+  // Handle night mode start time
+  else if (String(topic) == "wordclock/nightmode/start") {
+    int separator = message.indexOf(':');
+    nightModeStartHour = message.substring(0, separator).toInt();
+    nightModeStartMin = message.substring(separator + 1).toInt();
+    EEPROM.write(ADR_NM_START_H, nightModeStartHour);
+    EEPROM.write(ADR_NM_START_M, nightModeStartMin);
+    EEPROM.commit();
+  }
+
+  // Handle night mode end time
+  else if (String(topic) == "wordclock/nightmode/end") {
+    int separator = message.indexOf(':');
+    nightModeEndHour = message.substring(0, separator).toInt();
+    nightModeEndMin = message.substring(separator + 1).toInt();
+    EEPROM.write(ADR_NM_END_H, nightModeEndHour);
+    EEPROM.write(ADR_NM_END_M, nightModeEndMin);
+    EEPROM.commit();
+  }
+
+  // Handle dynamic color shift activation
+  else if (String(topic) == "wordclock/colorshift/active") {
+    dynColorShiftActive = (message == "1");
+    EEPROM.write(ADR_COLSHIFTACTIVE, dynColorShiftActive);
+    EEPROM.commit();
+  }
+
+  // Handle dynamic color shift speed
+  else if (String(topic) == "wordclock/colorshift/speed") {
+    dynColorShiftSpeed = message.toInt();
+    if (dynColorShiftSpeed == 0) dynColorShiftSpeed = 1; // Ensure minimum speed
+    EEPROM.write(ADR_COLSHIFTSPEED, dynColorShiftSpeed); // Save to EEPROM
+    EEPROM.commit();
+    logger.logString("Color shift speed set to: " + String(dynColorShiftSpeed));
+  }
+
+  // Handle state auto-change
+  else if (String(topic) == "wordclock/state/autochange") {
+    stateAutoChange = (message == "1");
+  }
+
+  // change the LED color
+  else if (String(topic) == "wordclock/led/color") {
+    // Expecting payload in the format "R,G,B" (e.g., "255,100,50")
+    int firstComma = message.indexOf(',');
+    int secondComma = message.indexOf(',', firstComma + 1);
+  
+    if (firstComma != -1 && secondComma != -1) {
+      uint8_t red = message.substring(0, firstComma).toInt();
+      uint8_t green = message.substring(firstComma + 1, secondComma).toInt();
+      uint8_t blue = message.substring(secondComma + 1).toInt();
+  
+      setMainColor(red, green, blue); // Set the main color
+      logger.logString("LED color set via MQTT to R:" + String(red) + " G:" + String(green) + " B:" + String(blue));
+    } else {
+      logger.logString("Invalid LED color format received via MQTT: " + message);
+    }
+  }
+}
 
 /**
  * @brief Update mode behaviour depending on current state
@@ -631,6 +764,36 @@ void checkNightmode(){
           nightMode = true;
           logger.logString("Nightmode active");
       }
+  }
+}
+
+/**
+ * @brief Connect to MQTT
+ * 
+ */
+void connectToMQTT() {
+  while (!mqttClient.connected()) {
+    Serial.print("Connecting to MQTT...");
+    if (mqttClient.connect(mqtt_client_id, mqtt_user, mqtt_password)) {
+      Serial.println("connected");
+
+      // Subscribe to topics
+      mqttClient.subscribe("wordclock/led");
+      mqttClient.subscribe("wordclock/mode");
+      mqttClient.subscribe("wordclock/brightness");
+      mqttClient.subscribe("wordclock/nightmode/activated");
+      mqttClient.subscribe("wordclock/nightmode/start");
+      mqttClient.subscribe("wordclock/nightmode/end");
+      mqttClient.subscribe("wordclock/colorshift/active");
+      mqttClient.subscribe("wordclock/colorshift/speed");
+      mqttClient.subscribe("wordclock/state/autochange");
+      mqttClient.subscribe("wordclock/led/color");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqttClient.state());
+      Serial.println(" retrying in 5 seconds");
+      delay(5000);
+    }
   }
 }
 
@@ -812,12 +975,13 @@ void handleButton(){
  * @brief Set main color
  * 
  */
-void setMainColor(uint8_t red, uint8_t green, uint8_t blue){
-  maincolor_clock = LEDMatrix::Color24bit(red, green, blue);
-  EEPROM.put(ADR_MC_RED, red);
-  EEPROM.put(ADR_MC_GREEN, green);
-  EEPROM.put(ADR_MC_BLUE, blue);
+void setMainColor(uint8_t red, uint8_t green, uint8_t blue) {
+  maincolor_clock = LEDMatrix::Color24bit(red, green, blue); // Update the main color
+  EEPROM.put(ADR_MC_RED, red); // Save red to EEPROM
+  EEPROM.put(ADR_MC_GREEN, green); // Save green to EEPROM
+  EEPROM.put(ADR_MC_BLUE, blue); // Save blue to EEPROM
   EEPROM.commit();
+  logger.logString("Main color updated to R:" + String(red) + " G:" + String(green) + " B:" + String(blue));
 }
 
 /**
