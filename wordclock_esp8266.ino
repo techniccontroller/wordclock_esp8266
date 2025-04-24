@@ -116,7 +116,7 @@ const unsigned int DNSPort = 53;
 IPAddress logMulticastIP = IPAddress(230, 120, 10, 2);
 
 // MQTT Configuration
-const char* mqtt_server = "192.168.1.170"; // Replace with your Home Assistant MQTT broker IP
+const char* mqtt_server = "mqtt_server"; // Replace with your Home Assistant MQTT broker IP
 const char* mqtt_user = "mqtt_user";       // Replace with your MQTT username
 const char* mqtt_password = "mqqt_password";   // Replace with your MQTT password
 const char* mqtt_client_id = "wordclock";  // Unique client ID for the Word Clock
