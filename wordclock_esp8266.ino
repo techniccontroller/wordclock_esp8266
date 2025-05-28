@@ -1294,7 +1294,7 @@ void showStaticBackgroundPattern(){
   uint8_t red = 0; // red color value (0-255)
   uint8_t green = 255; // green color value (0-255)
   uint8_t blue = 0;  // blue color value (0-255)
-  uint8_t patternBrightness = 0.9 * brightness; // brightness of the pattern (0-255) // Nessi 0.7 entspricht 70%
+  uint8_t patternBrightness = 255; // brightness of the pattern (0-255) -> will be scaled by global brightness, example: brightness = 128 and patternBrightness = 180 -> resulting brightness = 90 (256 * 128/256 * 180/256)
 
   if(patternBrightness < 10) patternBrightness = 10;
   if(patternBrightness > 255) patternBrightness = 255;
@@ -1322,7 +1322,7 @@ void showStaticBackgroundPattern2(){
   uint8_t red = 0; // red color value (0-255)
   uint8_t green = 0; // green color value (0-255)
   uint8_t blue = 255;  // blue color value (0-255)
-  uint8_t patternBrightness = 0.9 * brightness; // brightness of the pattern (0-255) // Nessi 0.7 entspricht 70%
+  uint8_t patternBrightness = 255; // brightness of the pattern (0-255) -> will be scaled by global brightness, example: brightness = 128 and patternBrightness = 180 -> resulting brightness = 90 (256 * 128/256 * 180/256)
 
   if(patternBrightness < 10) patternBrightness = 10;
   if(patternBrightness > 255) patternBrightness = 255;
