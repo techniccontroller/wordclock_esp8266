@@ -5,6 +5,7 @@ A modern Wi-Fi Word Clock powered by the ESP8266 and synchronized via NTP (Netwo
 Displays time in words with support for multiple languages and colorful NeoPixel LED effects.
 Additional gaming modes, such as PONG, SNAKE, and TETRIS, can be played via an interactive Web UI.
 
+
 **Project Details and Guide:**
 
 Full tutorial and build instructions on https://techniccontroller.com/word-clock-with-wifi-and-neopixel/ 

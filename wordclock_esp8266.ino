@@ -48,7 +48,7 @@
 //                                        CONSTANTS
 // ----------------------------------------------------------------------------------
 
-#define EEPROM_SIZE 30      // size of EEPROM to save persistent variables
+#define EEPROM_SIZE 32      // size of EEPROM to save persistent variables
 #define ADR_NM_START_H 0
 #define ADR_NM_END_H 4
 #define ADR_NM_START_M 8
@@ -61,6 +61,7 @@
 #define ADR_NM_ACTIVATED 27
 #define ADR_COLSHIFTSPEED 28
 #define ADR_COLSHIFTACTIVE 29
+#define ADR_HOURANIMATION 30
 
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
@@ -160,7 +161,7 @@ const uint32_t colors24bit[NUM_COLORS] = {
   LEDMatrix::Color24bit(0, 0, 255) };
 
 uint8_t brightness = 40;            // current brightness of leds
-bool sprialDir = false;
+bool animationDir = false;
 
 // timestamp variables
 long lastheartbeat = millis();      // time of last heartbeat sending
@@ -170,7 +171,8 @@ long lastStateChange = millis();    // time of last state change
 long lastNTPUpdate = millis() - (PERIOD_NTPUPDATE-3000);  // time of last NTP update
 long lastAnimationStep = millis();  // time of last Matrix update
 long lastNightmodeCheck = millis()  - (PERIOD_NIGHTMODECHECK-3000); // time of last nightmode check
-long buttonPressStart = 0;          // time of push button press start 
+long buttonPressStart = 0;          // time of push button press start
+long hourAnimationStart = 0;        // time of hour animation start 
 uint16_t behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE; // holdes the period in which the behavior should be updated
 
 // Create necessary global objects
@@ -194,6 +196,8 @@ bool apmode = false;                          // stores if WiFi AP mode is activ
 bool dynColorShiftActive = false;              // stores if dynamic color shift is active
 uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
 uint8_t dynColorShiftSpeed = 1;               // stores the speed of the dynamic color shift -> used to calc update period
+bool hourAnimation = false;                   // stores if the hour animation is active
+uint32_t hourAnimationDuration = 18000;           // stores the duration of the hour animation in seconds
 
 // nightmode settings
 uint8_t nightModeStartHour = 22;
@@ -360,6 +364,7 @@ void setup() {
   loadNightmodeSettingsFromEEPROM();
   loadBrightnessSettingsFromEEPROM();
   loadColorShiftStateFromEEPROM();
+  loadHourAnimationSettingsFromEEPROM();
   
   if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // test quickly each LED
@@ -422,6 +427,25 @@ void loop() {
       ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
       ledmatrix.drawOnMatrixInstant();
       delay(1000);
+    }
+  }
+  if(hourAnimation){
+    // Show word animation allows from XX:00:00 till XX:00:12 (for 12 seconds every hour)
+    // start
+    static uint8_t lastMinutes = 0;
+    uint8_t minutes = ntp.getMinutes();
+    if(lastMinutes == 59 && minutes == 0 && currentState == st_clock){
+      logger.logString("Start hour animation");
+      logger.logString("Time: " +  ntp.getFormattedTime());
+      stateChange(st_spiral, false);
+      hourAnimationStart = millis();
+    }
+    lastMinutes = minutes;
+
+    // end
+    if((millis() - hourAnimationStart) >= hourAnimationDuration && currentState == st_spiral && hourAnimationStart != 0){
+      stateChange(st_clock, false);
+      hourAnimationStart = 0;
     }
   }
 
@@ -558,18 +582,18 @@ void updateStateBehavior(uint8_t state){
     // state spiral
     case st_spiral:
       {
-        int res = spiral(false, sprialDir, WIDTH-6);
-        if(res && sprialDir == 0){
-          // change spiral direction to closing (draw empty leds)
-          sprialDir = 1;
-          // init spiral with new spiral direction
-          spiral(true, sprialDir, WIDTH-6);
+        int res = word_animation(false, animationDir);
+        if(res && animationDir == 0){
+          // change animation direction to closing (draw empty leds)
+          animationDir = 1;
+          // init animation with new animation direction
+          word_animation(true, animationDir);
           
-        }else if(res && sprialDir == 1){
-          // reset spiral direction to normal drawing leds
-          sprialDir = 0;
-          // init spiral with new spiral direction
-          spiral(true, sprialDir, WIDTH-6);
+        }else if(res && animationDir == 1){
+          // reset animation direction to normal drawing leds
+          animationDir = 0;
+          // init animation with new animation direction
+          word_animation(true, animationDir);
         }
       }
       break;
@@ -657,8 +681,8 @@ void entryAction(uint8_t state){
       behaviorUpdatePeriod = PERIOD_ANIMATION;
       ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
       // Init spiral with normal drawing mode
-      sprialDir = 0;
-      spiral(true, sprialDir, WIDTH-6);
+      animationDir = 0;
+      word_animation(true, animationDir);
       break;
     case st_tetris:
       ledmatrix.setDynamicColorShiftPhase(-1); // disable dyn. color shift
@@ -898,6 +922,17 @@ void loadColorShiftStateFromEEPROM()
 }
 
 /**
+ * @brief load the hour animation setting from EEPROM
+ * 
+ */
+void loadHourAnimationSettingsFromEEPROM()
+{
+  hourAnimation = EEPROM.read(ADR_HOURANIMATION);
+  logger.logString("HourAnimation: " + String(hourAnimation));
+}
+
+
+/**
  * @brief Handler for handling commands sent to "/cmd" url
  * 
  */
@@ -1080,6 +1115,14 @@ void handleCommand() {
     EEPROM.write(ADR_COLSHIFTACTIVE, dynColorShiftActive);
     EEPROM.commit();
   }
+  else if(server.argName(0) == "houranimation"){
+    Serial.println("HourAnimation change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") hourAnimation = true;
+    else hourAnimation = false;
+    EEPROM.write(ADR_HOURANIMATION, hourAnimation);
+    EEPROM.commit();
+  }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
@@ -1142,6 +1185,8 @@ void handleDataRequest() {
       message += "\"colorshift\":\"" + String(dynColorShiftActive) + "\"";
       message += ",";
       message += "\"colorshiftspeed\":\"" + String(dynColorShiftSpeed) + "\"";
+      message += ",";
+      message += "\"houranimation\":\"" + String(hourAnimation) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
