@@ -252,6 +252,10 @@ void setup() {
 
   // set a custom hostname
   wifiManager.setHostname(hostname);
+
+  // set timeout of config portal to 10min, continue even if not connected, 
+  // clock will show wrong time, but eventually restart after watchdog counter is 0 (after ~5min)
+  wifiManager.setConfigPortalTimeout(600);
   
   // fetches ssid and pass from eeprom and tries to connect
   // if it does not connect it starts an access point with the specified name
