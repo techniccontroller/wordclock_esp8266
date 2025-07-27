@@ -1,44 +1,59 @@
 # Wordclock 2.0
 ![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=main)
 
-Wordclock 2.0 with ESP8266 and NTP time
+A modern Wi-Fi Word Clock powered by the ESP8266 and synchronized via NTP (Network Time Protocol). 
+Displays time in words with support for multiple languages and colorful NeoPixel LED effects.
+Additional gaming modes, such as PONG, SNAKE, and TETRIS, can be played via an interactive Web UI.
 
-More details on my website: https://techniccontroller.com/word-clock-with-wifi-and-neopixel/
+**Project Details and Guide:**
 
+Full tutorial and build instructions on https://techniccontroller.com/word-clock-with-wifi-and-neopixel/ 
 
-**Languages**
+## Features
+- 6 modes
+  - Word Clock
+  - Digital Clock
+  - SPIRAL animation
+  - TETRIS (playable via web interface)
+  - SNAKE (playable via web interface)
+  - PONG (playable via web interface)
+- Interactive Web-Based Games: Control PONG, TETRIS, and SNAKE directly through the built-in web UI
+- Real-time clock synchronized over Wi-Fi using NTP
+- Automatic daylight saving time (summer/winter) switching
+- Automatic timezone detection
+- Easy Wi-Fi setup with WiFiManager
+- Configurable color themes
+- Customizable night mode (start/end time)
+- Adjustable brightness settings
+- Automatic mode rotation
+- Web interface for configuration and control
+- Physical button for quick mode change or night mode toggle
+- Intelligent current limiting of LEDs
+- Dynamic color shifting mode 
 
-The Wordclock is available in **German**, **English**, **Italian**, **French** and **Javanese** language. By default the language is German. 
-To use other languages like English or Italian please replace the file *wordclockfunctions.ino* with *wordclockfunctions.ino_english* or *wordclockfunctions.ino_italian*.
-The code compiles only with one file named *wordclockfunctions.ino*. So please rename the file you want to use to *wordclockfunctions.ino* and replace the existing file.
+## Supported Languages
+
+The WordClock currently supports the following languages:
+- **German (default)**
+- **English**
+- **Italian**
+- **French**
+- **Swiss German**
+- **Javanese**
+
+**How to Change the Language**
+
+To switch to another language:
+1. Go to the `wordclockfunctions.ino_<language>` file (e.g., `wordclockfunctions.ino_english`)
+2. Rename it to `wordclockfunctions.ino`
+3. Replace the existing `wordclockfunctions.ino` file
+4. Compile and upload the code to your ESP8266
+
+Only one language file should be named wordclockfunctions.ino at any time for successful compilation.
 
 Thank you to everyone who provided feedback on adding new languages and testing their accuracy — your efforts have been invaluable in making this project truly inclusive and reliable!
 
-**Special Branches**
 
-We've got some interesting branches in this repo inspired by user feedback. These branches explore unique features and experimental ideas. Some will stay updated with the main branch's features.
-
-- [**hour_animation**](https://github.com/techniccontroller/wordclock_esp8266/tree/hour_animation): This branch replaces the spiral animation with some custom pattern animation defined as x/y coordinate pattern including custom color for each letter. Also, this animation is show ones per hour.
-- [**mode_seconds**](https://github.com/techniccontroller/wordclock_esp8266/tree/mode_seconds): This branch adds one additional mode to show the seconds as numbers on the clock. Thanks to [@Bram](https://github.com/BramWerbrouck)
-- [**rgbw_leds**](https://github.com/techniccontroller/wordclock_esp8266/tree/rgbw_leds): This branch uses RGBW LEDs instead of RGB LEDs.
-- [**static_background_pattern**](https://github.com/techniccontroller/wordclock_esp8266/tree/static_background_pattern): This branch allows to light up specific letters always during clock mode. E.G., to display some special words in another color.
-
-
-
-## Features
-- 6 modes (Clock, Digital Clock, SPIRAL animation, TETRIS, SNAKE, PONG)
-- time update via NTP server
-- automatic summer/wintertime change
-- automatic timezone selection
-- easy WIFI setup with WifiManager
-- configurable color
-- configurable night mode (start and end time)
-- configurable brightness
-- automatic mode change
-- webserver interface for configuration and control
-- physical button to change mode or enable night mode without webserver
-- automatic current limiting of LEDs
-- dynamic color shift mode 
 
 ## Pictures of clock
 ![modes_images2](https://user-images.githubusercontent.com/36072504/156947689-dd90874d-a887-4254-bede-4947152d85c1.png)
@@ -63,6 +78,19 @@ We've got some interesting branches in this repo inspired by user feedback. Thes
 
 
 <img src="https://techniccontroller.com/wp-content/uploads/filemanager1-1.png" height="300px" /> <img src="https://techniccontroller.com/wp-content/uploads/filemanager2-1.png" height="300px" /> <img src="https://techniccontroller.com/wp-content/uploads/filemanager3-1.png" height="300px" />
+
+## Special Branches 
+
+We've got some interesting branches in this repo inspired by user feedback. These branches explore unique features and experimental ideas. Some will stay updated with the main branch's features.
+
+- [**hour_animation**](https://github.com/techniccontroller/wordclock_esp8266/tree/hour_animation): This branch replaces the spiral animation with some custom pattern animation defined as x/y coordinate pattern including custom color for each letter. Also, this animation is show ones per hour.  
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=hour_animation)
+- [**mode_seconds**](https://github.com/techniccontroller/wordclock_esp8266/tree/mode_seconds): This branch adds one additional mode to show the seconds as numbers on the clock. Thanks to [@Bram](https://github.com/BramWerbrouck)
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=mode_seconds)
+- [**rgbw_leds**](https://github.com/techniccontroller/wordclock_esp8266/tree/rgbw_leds): This branch uses RGBW LEDs instead of RGB LEDs.  
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=rgbw_leds)
+- [**static_background_pattern**](https://github.com/techniccontroller/wordclock_esp8266/tree/static_background_pattern): This branch allows to light up specific letters always during clock mode. E.G., to display some special words in another color.  
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=static_background_pattern)
 
 ## Install needed Libraries
 

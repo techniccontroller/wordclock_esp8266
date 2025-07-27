@@ -1,5 +1,5 @@
-// HINT: I replaced the special Italian letters (E' and L') in the following strings with = and # 
-const String clockStringItalian =  "SONORLEBORE=R#UNASDUEZTREOTTONOVEDIECIUNDICIDODICISETTEQUATTROCSEICINQUEAMENOECUNOQUARTOVENTICINQUELVETENAWOCLDIECIPMEZZA";
+// Thanks to Sandro for providing this swiss german version
+const String clockStringSwiss =  "ESPESCHAFUFVIERTUBFZAAZWANZGSIVORABOHWORTUHRHAUBIANESSIEISZWOISDRUVIERIYFUFIOSACHSISEBNIACHTINUNIELZANIERBEUFIZWOUFINAGSI";
 
 /**
  * @brief control the four minute indicator LEDs
@@ -9,8 +9,7 @@ const String clockStringItalian =  "SONORLEBORE=R#UNASDUEZTREOTTONOVEDIECIUNDICI
  */
 void drawMinuteIndicator(uint8_t minutes, uint32_t color){
   //separate LEDs for minutes in an additional row
-  {
-  switch (minutes%5)
+    switch (minutes%5)
     { 
       case 0:
         break;
@@ -31,7 +30,6 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
         ledmatrix.setMinIndicator(0b1111, color);
         break;
     }
-  }
 }
 
 /**
@@ -60,7 +58,7 @@ int showStringOnClock(String message, uint32_t color){
       
       if(word.length() > 0){
         // find word in clock string
-        positionOfWord = clockStringItalian.indexOf(word, lastLetterClock);
+        positionOfWord = clockStringSwiss.indexOf(word, lastLetterClock);
         
         if(positionOfWord >= 0){
           // word found on clock -> enable leds in targetgrid
@@ -93,18 +91,63 @@ int showStringOnClock(String message, uint32_t color){
  * @param minutes minutes of the time value
  * @return String time as sentence
  */
-String timeToString(uint8_t hours,uint8_t minutes){
+String timeToString(uint8_t hours, uint8_t minutes){
   
-  //IT IS
-  String message = "";
+  //ES IST
+  String message = "ES ESCH ";
+  
+  //show minutes
+  if(minutes >= 5 && minutes < 10)
+  {
+    message += "FUF AB ";
+  }
+  else if(minutes >= 10 && minutes < 15)
+  {
+    message += "ZAA AB ";
+  }
+  else if(minutes >= 15 && minutes < 20)
+  {
+    message += "VIERTU AB ";
+  }
+  else if(minutes >= 20 && minutes < 25)
+  {
+    message += "ZWANZG AB "; //Sandro
+  }
+  else if(minutes >= 25 && minutes < 30)
+  {
+    message += "FUF VOR HAUBI ";
+  }
+  else if(minutes >= 30 && minutes < 35)
+  {
+    message += "HAUBI ";
+  }
+  else if(minutes >= 35 && minutes < 40)
+  {
+    message += "FUF AB HAUBI ";
+  }
+  else if(minutes >= 40 && minutes < 45)
+  {
+    message += "ZWANZG VOR "; //Sandro
+  }
+  else if(minutes >= 45 && minutes < 50)
+  {
+    message += "VIERTU VOR ";
+  }
+  else if(minutes >= 50 && minutes < 55)
+  {
+    message += "ZAA VOR ";
+  }
+  else if(minutes >= 55 && minutes < 60)
+  {
+    message += "FUF VOR ";
+  }
 
-  
   //convert hours to 12h format
   if(hours >= 12)
   {
       hours -= 12;
   }
-  if(minutes >= 35)
+  if(minutes >= 25) //Sandro 20
   {
       hours++;
   }
@@ -112,104 +155,55 @@ String timeToString(uint8_t hours,uint8_t minutes){
   {
       hours = 0;
   }
-  
-  //SONO LE
-  if(hours == 1)
-  {
-    message += "= # "; //E' L' -> = is for E' and # is for L'
-  }
-  else
-  {
-    message += "SONO LE ";
-  }
 
   // show hours
   switch(hours)
   {
   case 0:
-    message += "DODICI ";
+    message += "ZWOUFI ";
     break;
   case 1:
-    message += "UNA ";
+    message += "EIS ";
+    // //EIN(S) 
+    // if(minutes > 4){  // Sandro
+    //   message += "S";
+    // }
+    // message += " ";
     break;
   case 2:
-    message += "DUE ";
+    message += "ZWOI ";
     break;
   case 3:
-    message += "TRE ";
+    message += "DRU ";
     break;
   case 4:
-    message += "QUATTRO ";
+    message += "VIERI ";
     break;
   case 5:
-    message += "CINQUE ";
+    message += "FUFI ";
     break;
   case 6:
-    message += "SEI ";
+    message += "SACHSI ";
     break;
   case 7:
-    message += "SETTE ";
+    message += "SEBNI ";
     break;
   case 8:
-    message += "OTTO ";
+    message += "ACHTI ";
     break;
   case 9:
-    message += "NOVE ";
+    message += "NUNI ";
     break;
   case 10:
-    message += "DIECI ";
+    message += "ZANI ";
     break;
   case 11:
-    message += "UNDICI ";
+    message += "EUFI ";
     break;
   }
-
-
-  
-  //show minutes
-  if(minutes >= 5 && minutes < 10)
+  if(minutes < 5)
   {
-    message += "E CINQUE ";
-  }
-  else if(minutes >= 10 && minutes < 15)
-  {
-    message += "E DIECI ";
-  }
-  else if(minutes >= 15 && minutes < 20)
-  {
-    message += "E UN QUARTO ";
-  }
-  else if(minutes >= 20 && minutes < 25)
-  {
-    message += "E VENTI "; 
-  }
-  else if(minutes >= 25 && minutes < 30)
-  {
-    message += "E VENTICINQUE ";
-  }
-  else if(minutes >= 30 && minutes < 35)
-  {
-    message += "E MEZZA ";
-  }
-  else if(minutes >= 35 && minutes < 40)
-  {
-    message += "MENO VENTICINQUE ";
-  }
-  else if(minutes >= 40 && minutes < 45)
-  {
-    message += "MENO VENTI ";
-  }
-  else if(minutes >= 45 && minutes < 50)
-  {
-    message += "MENO UN QUARTO ";
-  }
-  else if(minutes >= 50 && minutes < 55)
-  {
-    message += "MENO DIECI ";
-  }
-  else if(minutes >= 55 && minutes < 60)
-  {
-    message += "MENO CINQUE ";
+    message += "GSI ";
   }
 
   logger.logString("time as String: " + String(message));
