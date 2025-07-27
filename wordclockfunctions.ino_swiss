@@ -9,7 +9,6 @@ const String clockStringSwiss =  "ESPESCHAFUFVIERTUBFZAAZWANZGSIVORABOHWORTUHRHA
  */
 void drawMinuteIndicator(uint8_t minutes, uint32_t color){
   //separate LEDs for minutes in an additional row
-  {
     switch (minutes%5)
     { 
       case 0:
@@ -31,7 +30,6 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
         ledmatrix.setMinIndicator(0b1111, color);
         break;
     }
-  }
 }
 
 /**
@@ -93,20 +91,10 @@ int showStringOnClock(String message, uint32_t color){
  * @param minutes minutes of the time value
  * @return String time as sentence
  */
-String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
+String timeToString(uint8_t hours, uint8_t minutes){
   
   //ES IST
-  String message = "";
-
-  if(puristModeActive){
-    message = "";
-    if(minutes < 5 || (minutes >=30 && minutes < 35)){
-      message = "ES ESCH ";
-    }
-  }
-  else{
-    message = "ES ESCH ";
-  }
+  String message = "ES ESCH ";
   
   //show minutes
   if(minutes >= 5 && minutes < 10)
