@@ -241,17 +241,17 @@ void setup() {
   uint8_t storedVersion = EEPROM.read(ADR_EEPROM_VERSION);
   if (storedVersion != EEPROM_VERSION_CODE) {
     // Set new defaults
-    EEPROM.write(ADR_EEPROM_VERSION, EEPROM_VERSION_CODE);
-    EEPROM.write(ADR_NM_START_H, DEFAULT_NM_START_HOUR);
-    EEPROM.write(ADR_NM_START_M, DEFAULT_NM_START_MIN);
-    EEPROM.write(ADR_NM_END_H, DEFAULT_NM_END_HOUR);
-    EEPROM.write(ADR_NM_END_M, DEFAULT_NM_END_MIN);
-    EEPROM.write(ADR_BRIGHTNESS, DEFAULT_BRIGHTNESS);
+    EEPROM.update(ADR_EEPROM_VERSION, EEPROM_VERSION_CODE);
+    EEPROM.update(ADR_NM_START_H, DEFAULT_NM_START_HOUR);
+    EEPROM.update(ADR_NM_START_M, DEFAULT_NM_START_MIN);
+    EEPROM.update(ADR_NM_END_H, DEFAULT_NM_END_HOUR);
+    EEPROM.update(ADR_NM_END_M, DEFAULT_NM_END_MIN);
+    EEPROM.update(ADR_BRIGHTNESS, DEFAULT_BRIGHTNESS);
     setMainColor(DEFAULT_MC_RED, DEFAULT_MC_GREEN, DEFAULT_MC_BLUE);
-    EEPROM.write(ADR_STATE, st_clock);
-    EEPROM.write(ADR_NM_ACTIVATED, DEFAULT_NM_ACTIVATED);
-    EEPROM.write(ADR_COLSHIFTSPEED, DEFAULT_COLSHIFT_SPEED);
-    EEPROM.write(ADR_COLSHIFTACTIVE, DEFAULT_COLSHIFT_ACTIVE);
+    EEPROM.update(ADR_STATE, st_clock);
+    EEPROM.update(ADR_NM_ACTIVATED, DEFAULT_NM_ACTIVATED);
+    EEPROM.update(ADR_COLSHIFTSPEED, DEFAULT_COLSHIFT_SPEED);
+    EEPROM.update(ADR_COLSHIFTACTIVE, DEFAULT_COLSHIFT_ACTIVE);
     EEPROM.commit();
   }
 
@@ -750,7 +750,7 @@ void stateChange(uint8_t newState, bool persistant){
   logger.logString("State change to: " + stateNames[currentState]);
   if(persistant){
     // save state to EEPROM
-    EEPROM.write(ADR_STATE, currentState);
+    EEPROM.update(ADR_STATE, currentState);
     EEPROM.commit();
   }
 }
@@ -881,7 +881,7 @@ void loadCurrentStateFromEEPROM(){
   currentState = EEPROM.read(ADR_STATE);
   if(currentState >= NUM_STATES){
     currentState = st_clock;
-    EEPROM.write(ADR_STATE, currentState);
+    EEPROM.update(ADR_STATE, currentState);
     EEPROM.commit();
   }
 }
@@ -990,7 +990,7 @@ void handleCommand() {
     logger.logString("nightModeActivated change via Webserver to: " + modestr);
     if(modestr == "1") nightModeActivated = true;
     else nightModeActivated = false;
-    EEPROM.write(ADR_NM_ACTIVATED, nightModeActivated);
+    EEPROM.update(ADR_NM_ACTIVATED, nightModeActivated);
     EEPROM.commit();
     checkNightmode();
   }
@@ -1009,12 +1009,12 @@ void handleCommand() {
     if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
     if(brightness < 10) brightness = 10;
     if(dynColorShiftSpeed == 0) dynColorShiftSpeed = 1;
-    EEPROM.write(ADR_NM_START_H, nightModeStartHour);
-    EEPROM.write(ADR_NM_START_M, nightModeStartMin);
-    EEPROM.write(ADR_NM_END_H, nightModeEndHour);
-    EEPROM.write(ADR_NM_END_M, nightModeEndMin);
-    EEPROM.write(ADR_BRIGHTNESS, brightness);
-    EEPROM.write(ADR_COLSHIFTSPEED, dynColorShiftSpeed);
+    EEPROM.update(ADR_NM_START_H, nightModeStartHour);
+    EEPROM.update(ADR_NM_START_M, nightModeStartMin);
+    EEPROM.update(ADR_NM_END_H, nightModeEndHour);
+    EEPROM.update(ADR_NM_END_M, nightModeEndMin);
+    EEPROM.update(ADR_BRIGHTNESS, brightness);
+    EEPROM.update(ADR_COLSHIFTSPEED, dynColorShiftSpeed);
     EEPROM.commit();
     logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
     logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
@@ -1111,7 +1111,7 @@ void handleCommand() {
     String str = server.arg(0);
     if(str == "1") dynColorShiftActive = true;
     else dynColorShiftActive = false;
-    EEPROM.write(ADR_COLSHIFTACTIVE, dynColorShiftActive);
+    EEPROM.update(ADR_COLSHIFTACTIVE, dynColorShiftActive);
     EEPROM.commit();
   }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
