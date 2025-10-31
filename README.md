@@ -1,6 +1,19 @@
 # Wordclock 2.0
 ![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=main)
 
+Special branch for Nicole: only 10 rows. 
+
+Export combined bin file to be flashed with [NodeMCU-pyflasher](https://github.com/marcelstoer/nodemcu-pyflasher/releases/latest):
+
+1. Compile with Arduino IDE 1.8.X -> this will create `wordclock_esp8266.ino.bin`
+2. Install [ESP8266LittleFS Uploader Plugin](https://github.com/earlephilhower/arduino-esp8266littlefs-plugin) and run `Tools`->`ESP8266 LittleFS Data Upload` -> this will create `wordclock_esp8266.mklittlefs.bin`
+3. Combine both files with following command (install esptool with `pip install esptool`):
+
+```bash
+esptool --chip esp8266 merge_bin -o wordclock_esp8266_combined.bin --flash_size 4MB 0x00000 wordclock_esp8266.ino.bin 0x200000 wordclock_esp8266.mklittlefs.bin
+```
+
+
 A modern Wi-Fi Word Clock powered by the ESP8266 and synchronized via NTP (Network Time Protocol). 
 Displays time in words with support for multiple languages and colorful NeoPixel LED effects.
 Additional gaming modes, such as PONG, SNAKE, and TETRIS, can be played via an interactive Web UI.
