@@ -97,7 +97,7 @@ int showStringOnClock(String message, uint32_t color){
 String timeToString(uint8_t hours,uint8_t minutes){
   
   //ES IST
-  String message = "ES IST ";
+  String message = "";
 
   
   //show minutes
@@ -115,7 +115,7 @@ String timeToString(uint8_t hours,uint8_t minutes){
   }
   else if(minutes >= 20 && minutes < 25)
   {
-    message += "ZEHN VOR HALB "; 
+    message += "ZWANZIG NACH "; 
   }
   else if(minutes >= 25 && minutes < 30)
   {
@@ -131,7 +131,7 @@ String timeToString(uint8_t hours,uint8_t minutes){
   }
   else if(minutes >= 40 && minutes < 45)
   {
-    message += "ZEHN NACH HALB ";
+    message += "ZWANZIG VOR ";
   }
   else if(minutes >= 45 && minutes < 50)
   {
@@ -151,7 +151,7 @@ String timeToString(uint8_t hours,uint8_t minutes){
   {
       hours -= 12;
   }
-  if(minutes >= 20)
+  if(minutes >= 25)
   {
       hours++;
   }
