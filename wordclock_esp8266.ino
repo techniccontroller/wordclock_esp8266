@@ -2,13 +2,22 @@
  * Wordclock 2.0 - Wordclock with ESP8266 and NTP time update
  * 
  * created by techniccontroller 04.12.2021
- * 
- * components:
+ *
+ * Sandro Nessenzia Anpassungen:
+ * 04.12.2024 Version 1.0 Nachgebaut mit Deutsches Layout
+ * 14.03.2025 Version 1.1 Erste Versuche mit Schweizerdeutsch
+ * 20.03.2025 Version 1.2 Diverse korrekturen mit ünterstützung von Edgar
+ * 24.04.2025 Version 2.0 WORTUHR NESSI und ES ESCH ein.- und ausschaltbar gemacht
+ * 06.05.2025 Version 3.0 Einbau Hintergrundbeleuchtung inkl. HTML mit ünterstützung von Edgar
+ * 02.06.2025 Version 3.1 Kleinere anpassungen
+ * 03.12.2025 Version 3.1 Anpassung "HAPPY DAY" und "TO YOU"
+ *
+ * Components:
  * - ESP8266
  * - Neopixelstrip
  * 
  * Board settings:
- * - Board: NodeMCU 1.0 (ESP-12E Module)
+ * - Board: ESP8266 NodeMCU 1.0 (ESP-12E Module)
  * - Flash Size: 4MB (FS:2MB OTA:~1019KB)
  * - Upload Speed: 115200
  *  
@@ -230,7 +239,7 @@ uint8_t dynColorShiftPhase = 0;                       // stores the phase of the
 uint8_t dynColorShiftSpeed = DEFAULT_COLSHIFT_SPEED;  // stores the speed of the dynamic color shift -> used to calc update period
 bool puristModeActive = false;                // stores if purist mode is active
 bool staticBackgroundActive = false;          // stores if static background is active
-bool staticBackground2Active = false;          // stores if static background is active
+bool staticBackground2Active = false;          // stores if static background2 is active
 bool frameLightActive = false;                // stores if frame light is active
 bool frameSecondsActive = false;              // stores if frame light should be active for seconds
 bool frameSecondsSingle = false;              // stores if frame light should be active for seconds in single mode (false == increment mode)
@@ -312,11 +321,11 @@ void setup() {
 
   // set a custom hostname
   wifiManager.setHostname(hostname);
-
-  // set timeout of config portal to 10min, continue even if not connected, 
-  // clock will show wrong time, but eventually restart after watchdog counter is 0 (after ~5min)
-  wifiManager.setConfigPortalTimeout(600);
   
+  // Timeout des Konfigurationsportals auf 10 Minuten einstellen, auch ohne Verbindung fortfahren,
+  // Die Uhr zeigt die falsche Zeit an, startet aber ggf. neu, nachdem der Watchdog-Zähler 0 ist (nach ca. 5 Minuten).
+  wifiManager.setConfigPortalTimeout(600); // NESSI event problem Guido behoben
+
   // fetches ssid and pass from eeprom and tries to connect
   // if it does not connect it starts an access point with the specified name
   // here "wordclockAP"
@@ -449,7 +458,7 @@ void setup() {
     ledmatrix.printNumber(4, 6, (address/10)%10, maincolor_clock);
     ledmatrix.printNumber(8, 6, address%10, maincolor_clock);
     ledmatrix.drawOnMatrixInstant();
-    delay(2000);
+    delay(3000); // Nessi IP verzögerung
 
     // clear matrix
     ledmatrix.gridFlush();
@@ -1332,13 +1341,20 @@ void showStaticBackgroundPattern(){
   // define the coordinates of the background pattern to light up
   // top left corner is (0,0)
   uint8_t coordinatesX[] = {4, 5, 6, 7, 8, 9, 10}; // Nessi (WORTUHR)
-  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3}; // Nessi (NESSI)
+  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3}; 
 
   uint8_t red = 0; // red color value (0-255)
   uint8_t green = 255; // green color value (0-255)
   uint8_t blue = 0;  // blue color value (0-255)
-  uint8_t patternBrightness = 255; // brightness of the pattern (0-255) -> will be scaled by global brightness, example: brightness = 128 and patternBrightness = 180 -> resulting brightness = 90 (256 * 128/256 * 180/256)
 
+  // Nessi anpassung Heligkeit
+  // in % (ALT)
+  // uint8_t patternBrightness = 0.9 * brightness; // brightness of the pattern (0-255) // Nessi 0.7 entspricht 70%
+
+  // wie Uhr (NEU)
+  uint8_t patternBrightness = 180; // Helligkeit des Musters (0-255) -> wird mit der globalen Helligkeit skaliert, Beispiel: Helligkeit = 128 und Musterhelligkeit = 180 -> resultierende Helligkeit = 90 (256 * 128/256 * 180/256)
+  // Nessi anpassung Heligkeit
+ 
   if(patternBrightness < 10) patternBrightness = 10;
   if(patternBrightness > 255) patternBrightness = 255;
   float factor = patternBrightness / 255.0;
@@ -1350,7 +1366,7 @@ void showStaticBackgroundPattern(){
 }
 
 /**
- * @brief Show a second static background pattern on the matrix
+ * @brief Show a second static background2 pattern on the matrix
  * 
  * You can define which leds should be lit up by changing the coordinatesX and coordinatesY arrays.
  * You can define the color by changing the color variable.
@@ -1359,17 +1375,24 @@ void showStaticBackgroundPattern(){
 void showStaticBackgroundPattern2(){
   // define the coordinates of the background pattern to light up
   // top left corner is (0,0)
-  uint8_t coordinatesX[] = { 6, 7, 8, 9, 10}; // Nessi (WORTUHR)
-  uint8_t coordinatesY[] = { 4, 4, 4, 4,  4}; // Nessi (NESSI)
+  uint8_t coordinatesX[] = {6, 7, 8, 9, 10}; // Nessi (NESSI)
+  uint8_t coordinatesY[] = {4, 4, 4, 4, 4}; 
 
   uint8_t red = 0; // red color value (0-255)
-  uint8_t green = 0; // green color value (0-255)
-  uint8_t blue = 255;  // blue color value (0-255)
-  uint8_t patternBrightness = 255; // brightness of the pattern (0-255) -> will be scaled by global brightness, example: brightness = 128 and patternBrightness = 180 -> resulting brightness = 90 (256 * 128/256 * 180/256)
+  uint8_t green = 255; // green color value (0-255)
+  uint8_t blue = 0;  // blue color value (0-255)
+
+  // Nessi anpassung Heligkeit
+  // in % (ALT)
+  // uint8_t patternBrightness = 0.9 * brightness; // brightness of the pattern (0-255) // Nessi 0.7 entspricht 70%
+
+  // wie Uhr (NEU)
+  uint8_t patternBrightness = 180; // Helligkeit des Musters (0-255) -> wird mit der globalen Helligkeit skaliert, Beispiel: Helligkeit = 128 und Musterhelligkeit = 180 -> resultierende Helligkeit = 90 (256 * 128/256 * 180/256)
+  // Nessi anpassung Heligkeit
 
   if(patternBrightness < 10) patternBrightness = 10;
   if(patternBrightness > 255) patternBrightness = 255;
-  float factor = patternBrightness / 255.0;
+  float factor = patternBrightness / 255.0; 
   uint32_t color = LEDMatrix::Color24bit(red * factor, green * factor, blue * factor);
   ledmatrix.setDynamicColorShiftPhase(-1);
   for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {

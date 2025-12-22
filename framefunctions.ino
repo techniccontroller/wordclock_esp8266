@@ -1,5 +1,5 @@
 #define MILLIS_PER_MINUTE 60000
-#define NUM_LED_PER_SECOND 2
+#define NUM_LED_PER_SECOND 1  // Nessi 2 LED pro Sekunde
 
 #include "ledring.h"
 

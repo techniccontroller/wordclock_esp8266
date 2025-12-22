@@ -2,7 +2,7 @@
 
 // Angepasst am 01.04.2025 Sandro Nessenzia (NESSI)
 
-const String clockStringSwiss =  "ESPESCHAFUFVIERTUBFZAAZWANZGSIVORABOHOPPOHCDHAUBIAEVZILEISZWOISDRUVIERIYFUFIOSACHSISEBNIACHTINUNIELZANIEREUFIBZWOUFINAGSI";
+const String clockStringSwiss =  "ESPESCHAFUFVIERTUBFZAAZWANZGSIVORABOHWORTUHRHAUBIANESSIEISZWOISDRUVIERIYFUFIOSACHSISEBNIACHTINUNIELZANIEREUFIBZWOUFINAGSI";
 
 /**
  * @brief control the four minute indicator LEDs
@@ -16,41 +16,33 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
   switch (minutes%5)
     { 
       case 0:
-        if(staticBackgroundActive){         // Nessi show static background pattern every 5 minutes for 1 minute
-          showStaticBackgroundPattern();    // Nessi 
-        }                                   // Nessi
-        if(staticBackground2Active){      // Nessi show static background pattern every 5 minutes for 1 minute
-          showStaticBackgroundPattern2();    // Nessi 
-        }                                   // Nessi
+       if(staticBackgroundActive){        // Nessi Anzeige "WORTUHR" Ein.- Aus
+        showStaticBackgroundPattern();    // Nessi 
+        }  
+        if(staticBackground2Active){      // Nessi Anzeige "NESSI" Ein.- Aus
+        showStaticBackgroundPattern2();   // Nessi 
+        }  
         break;
           
       case 1:
         ledmatrix.setMinIndicator(0b1000, color);
-        // if(staticBackgroundActive){     // Nessi show static background pattern every 1 minutes for 1 minute
-        // showStaticBackgroundPattern();  // Nessi
-        // }                               // Nessi
+
         break;
 
       case 2:
-        ledmatrix.setMinIndicator(0b1100, color);
-        // if(staticBackgroundActive){     // Nessi show static background pattern every 2 minutes for 1 minute
-        // showStaticBackgroundPattern();  // Nessi
-        // }                               // Nessi
+      ledmatrix.setMinIndicator(0b1100, color);
+
         break;
 
       case 3:
         ledmatrix.setMinIndicator(0b1110, color);
-        // if(staticBackgroundActive){     // Nessi show static background pattern every 3 minutes for 1 minute
-        // showStaticBackgroundPattern();  // Nessi
-        // }                               // Nessi
+
         break;
 
       case 4:
-        ledmatrix.setMinIndicator(0b1111, color);
-        // if(staticBackgroundActive){     // Nessi show static background pattern every 4 minutes for 1 minute
-        // showStaticBackgroundPattern();  // Nessi
-        // }                               // Nessi
-        break;
+      ledmatrix.setMinIndicator(0b1111, color);
+
+        break; 
     }
   }
 }

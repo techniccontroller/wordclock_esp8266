@@ -4,8 +4,8 @@
 #include <Adafruit_NeoPixel.h>          // NeoPixel library used to run the NeoPixel LEDs:
 #include "udplogger.h"
 
-#define RING_LED_COUNT 60       // number of LEDs in the ring
-#define RING_CURRENT_LIMIT 1000 // limit the total current sonsumed by LEDs (mA)
+#define RING_LED_COUNT 56       // number of LEDs in the ring
+#define RING_CURRENT_LIMIT 2500 // limit the total current sonsumed by LEDs (mA)
 
 class LEDRing {
     public:

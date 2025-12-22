@@ -289,14 +289,14 @@
 	}
   
 	</style>
-	<title>WORTUHR NESSI 3.0</title>
+	<title>WORTUHR</title>
 	<link rel="icon" type="image/svg" href="./icons/clock.svg">
 	</head>
 
 	<body oncontextmenu="return false"> <!-- prevent opening of contextmenu --> 
 		<div class="setting-button" onclick="toggleSettings()"><img src = "./icons/settings.svg" style="height:20px; filter: invert(100%);"/></div>
 		
-		<h1 id="headline">WORTUHR NESSI 3.0</h1>
+		<h1 id="headline">WORTUHR NESSI 3.1</h1>
 		
 		<div id="settings-container" class="settings-container">
 			<div class="number-container">
@@ -332,23 +332,34 @@
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="StaticBackgroundPattern" style="align-self: flex-start">"HOPP HCD" (jede 5. Min.): Aus/Ein </label> 
+				<label for="StaticBackgroundPattern" style="align-self: flex-start">"WORTUHR" Aus/Ein </label> 
 				<div>
 					<input name= "StaticBackgroundPattern" id="StaticBackgroundPattern" type="checkbox" class="toggle">
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="StaticBackgroundPattern2" style="align-self: flex-start">"EVZ" (jede 5. Min.): Aus/Ein </label> 
+				<label for="StaticBackgroundPattern2" style="align-self: flex-start">"NESSI" Aus/Ein </label> 
 				<div>
 					<input name= "StaticBackgroundPattern2" id="StaticBackgroundPattern2" type="checkbox" class="toggle">
 				</div>
 			</div>
-			<div class="checkbox-containerNessi">
-				<label for="ResetWifi" style="align-self: flex-start">WLAN Anmeldedaten zurücksetzen! </label> 
-				<div>
-					<input name= "ResetWifi" id="ResetWifi" type="checkbox" class="toggle">
-				</div>
-			</div>
+<div class="checkbox-containerNessi">
+	<label for="ResetWifi" style="align-self: flex-start">WLAN Anmeldedaten zurücksetzen! </label> 
+	<div>
+		<input name="ResetWifi" id="ResetWifi" type="checkbox" class="toggle" onchange="confirmReset(this)">
+	</div>
+</div>
+
+<script>
+	function confirmReset(checkbox) {
+		if (checkbox.checked) {
+			const confirmed = confirm("Sind Sie sicher, dass Sie die WLAN-Anmeldedaten zurücksetzen möchten?");
+			if (!confirmed) {
+				checkbox.checked = false; // Rückgängig machen, wenn abgebrochen
+			}
+		}
+	}
+</script>
 			<div class="buttonClass save-button" onclick="saveSettings()">SAVE</div>
 		</div>
 
