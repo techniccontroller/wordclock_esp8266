@@ -407,7 +407,7 @@
 				</div>
 			</div>
 			<div class="checkbox-container">
-				<label for="calendarActive" style="align-self: flex-start">Kalender LED: Ein/Aus </label> 
+				<label for="calendarActive" style="align-self: flex-start">Kalender LED: Aus/Ein </label> 
 				<div>
 					<input name= "calendarActive" id="calendarActive" type="checkbox" class="toggle">
 				</div>
@@ -772,21 +772,21 @@
 					});
 
 					var ckb_calendarActive = document.querySelector('input[id="calendarActive"]');
-					if(myVar.calendar == "1") {
-						console.log("calendar == 1");
+					if(myVar.calendar == "0") {
+						console.log("calendar == 0");
 						ckb_calendarActive.checked = false;
 					}
 					else {
-						console.log("calendar == 0");
+						console.log("calendar == 1");
 						ckb_calendarActive.checked = true;
 					}
 					ckb_calendarActive.addEventListener('change', () => {
 						if(ckb_calendarActive.checked) {
 							document.getElementById("calendarcolorcontainer").classList.remove("hidden");
-							sendCommand("./cmd?calendar=0");
+							sendCommand("./cmd?calendar=1");
 						} else {
 							document.getElementById("calendarcolorcontainer").classList.add("hidden");
-							sendCommand("./cmd?calendar=1");
+							sendCommand("./cmd?calendar=0");
 						}
 					});
 					
