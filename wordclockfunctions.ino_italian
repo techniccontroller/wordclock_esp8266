@@ -114,11 +114,7 @@ String timeToString(uint8_t hours,uint8_t minutes){
   }
   
   //SONO LE
-  if(hours == 1 && minutes < 35)
-  {
-    message += "= # "; //E' L' -> = is for E' and # is for L'
-  }
-  else if (hours == 0 && minutes >= 35)
+  if(hours == 1)
   {
     message += "= # "; //E' L' -> = is for E' and # is for L'
   }
