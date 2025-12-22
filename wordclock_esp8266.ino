@@ -49,6 +49,7 @@
 #include "ntp_client_plus.h"
 #include "ledmatrix.h"
 #include "ledring.h"
+#include "ledcalendar.h"
 #include "tetris.h"
 #include "snake.h"
 #include "pong.h"
@@ -59,10 +60,10 @@
 // ----------------------------------------------------------------------------------
 
 
-#define EEPROM_VERSION_CODE   2  // Change this value when defaults settings change
+#define EEPROM_VERSION_CODE   3  // Change this value when defaults settings change
 
 // EEPROM address map (all uint8_t, 1 byte each)
-#define EEPROM_SIZE          25  // size of EEPROM to save persistent variables
+#define EEPROM_SIZE          34  // size of EEPROM to save persistent variables
 #define ADR_EEPROM_VERSION    0  // uint8_t
 #define ADR_NM_START_H        1  // uint8_t
 #define ADR_NM_END_H          2  // uint8_t
@@ -84,6 +85,16 @@
 #define ADR_FRAMELIGHTSECONDSSINGLE 18 // uint8_t
 #define ADR_FRAMELIGHTSECONDSINCDECCYCLE 19 // uint8_t
 #define ADR_STATICBACKGROUND2       20 // uint8_t
+#define ADR_CAL_DOW_RED      21 // uint8_t day of week color red
+#define ADR_CAL_DOW_GREEN    22 // uint8_t day of week color green
+#define ADR_CAL_DOW_BLUE     23 // uint8_t day of week color blue
+#define ADR_CAL_DOM_RED      24 // uint8_t day of month color red
+#define ADR_CAL_DOM_GREEN    25 // uint8_t day of month color green
+#define ADR_CAL_DOM_BLUE     26 // uint8_t day of month color blue
+#define ADR_CAL_MONTH_RED    27 // uint8_t month color red
+#define ADR_CAL_MONTH_GREEN  28 // uint8_t month color green
+#define ADR_CAL_MONTH_BLUE   29 // uint8_t month color blue
+#define ADR_CAL_ACTIVE       30 // uint8_t calendar active
 
 // DEFAULT SETTINGS (if one changes this, also increment the EEPROM_VERSION_CODE, to ensure that the EEPROM is updated with the new defaults)
 #define DEFAULT_NM_START_HOUR 22 // default start hour of nightmode (0-23)
@@ -98,10 +109,21 @@
 #define DEFAULT_COLSHIFT_SPEED 1 // needs to be between larger than 0 (1 = slowest, 255 = fastest)
 #define DEFAULT_COLSHIFT_ACTIVE 0 // if dynamic color shift is active (0 = deactivated, 1 = activated)
 #define DEFAULT_BRIGHTNESSFRAME 40 // default brightness of Frame LEDs (0-255)
+#define DEFAULT_CAL_DOW_RED 0      // default day of week color red
+#define DEFAULT_CAL_DOW_GREEN 200  // default day of week color green
+#define DEFAULT_CAL_DOW_BLUE 200   // default day of week color blue
+#define DEFAULT_CAL_DOM_RED 200    // default day of month color red
+#define DEFAULT_CAL_DOM_GREEN 0    // default day of month color green
+#define DEFAULT_CAL_DOM_BLUE 200   // default day of month color blue
+#define DEFAULT_CAL_MONTH_RED 200  // default month color red
+#define DEFAULT_CAL_MONTH_GREEN 100// default month color green
+#define DEFAULT_CAL_MONTH_BLUE 0   // default month color blue
+#define DEFAULT_CAL_ACTIVE 1       // if calendar is active (0 = deactivated, 1 = activated)
 
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
 #define NEOPIXELPIN_FRAME 4 // pin to which the NeoPixels for the frame light are attached
+#define NEOPIXELPIN_DATE 3  // pin to which the NeoPixels for the date are attached
 #define BUTTONPIN 14        // pin to which the button is attached
 #define LEFT 1
 #define RIGHT 2
@@ -187,6 +209,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, HEIGHT+1, NEOPIXELPIN,
   NEO_GRB            + NEO_KHZ800);
 
 Adafruit_NeoPixel frameLEDStrip = Adafruit_NeoPixel(RING_LED_COUNT, NEOPIXELPIN_FRAME, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel dateLEDStrip = Adafruit_NeoPixel(CAL_LED_COUNT, NEOPIXELPIN_DATE, NEO_GRB + NEO_KHZ800);
 
 // seven predefined colors24bit (green, red, yellow, purple, orange, lightgreen, blue) 
 const uint32_t colors24bit[NUM_COLORS] = {
@@ -221,6 +244,7 @@ WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", utcOffset, true);
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
 LEDRing frameLED = LEDRing(&frameLEDStrip, &logger);
+LEDCalendar dateLED = LEDCalendar(&dateLEDStrip, &logger);
 Tetris mytetris = Tetris(&ledmatrix, &logger);
 Snake mysnake = Snake(&ledmatrix, &logger);
 Pong mypong = Pong(&ledmatrix, &logger);
@@ -244,6 +268,10 @@ bool frameLightActive = false;                // stores if frame light is active
 bool frameSecondsActive = false;              // stores if frame light should be active for seconds
 bool frameSecondsSingle = false;              // stores if frame light should be active for seconds in single mode (false == increment mode)
 bool frameSecondsIncDecCycle = false;         // stores if frame light should be active for seconds in increment+decrement mode
+bool calendarActive = DEFAULT_CAL_ACTIVE;     // stores if calendar is active
+uint32_t calendar_color_dow = LEDCalendar::Color24bit(DEFAULT_CAL_DOW_RED, DEFAULT_CAL_DOW_GREEN, DEFAULT_CAL_DOW_BLUE);   // color for day of week
+uint32_t calendar_color_dom = LEDCalendar::Color24bit(DEFAULT_CAL_DOM_RED, DEFAULT_CAL_DOM_GREEN, DEFAULT_CAL_DOM_BLUE);   // color for day of month
+uint32_t calendar_color_month = LEDCalendar::Color24bit(DEFAULT_CAL_MONTH_RED, DEFAULT_CAL_MONTH_GREEN, DEFAULT_CAL_MONTH_BLUE); // color for month
 
 
 // nightmode settings
@@ -287,6 +315,16 @@ void setup() {
     EEPROM.write(ADR_NM_ACTIVATED, DEFAULT_NM_ACTIVATED);
     EEPROM.write(ADR_COLSHIFTSPEED, DEFAULT_COLSHIFT_SPEED);
     EEPROM.write(ADR_COLSHIFTACTIVE, DEFAULT_COLSHIFT_ACTIVE);
+    EEPROM.write(ADR_CAL_DOW_RED, DEFAULT_CAL_DOW_RED);
+    EEPROM.write(ADR_CAL_DOW_GREEN, DEFAULT_CAL_DOW_GREEN);
+    EEPROM.write(ADR_CAL_DOW_BLUE, DEFAULT_CAL_DOW_BLUE);
+    EEPROM.write(ADR_CAL_DOM_RED, DEFAULT_CAL_DOM_RED);
+    EEPROM.write(ADR_CAL_DOM_GREEN, DEFAULT_CAL_DOM_GREEN);
+    EEPROM.write(ADR_CAL_DOM_BLUE, DEFAULT_CAL_DOM_BLUE);
+    EEPROM.write(ADR_CAL_MONTH_RED, DEFAULT_CAL_MONTH_RED);
+    EEPROM.write(ADR_CAL_MONTH_GREEN, DEFAULT_CAL_MONTH_GREEN);
+    EEPROM.write(ADR_CAL_MONTH_BLUE, DEFAULT_CAL_MONTH_BLUE);
+    EEPROM.write(ADR_CAL_ACTIVE, DEFAULT_CAL_ACTIVE);
     EEPROM.commit();
   }
 
@@ -296,6 +334,10 @@ void setup() {
   // init background LED strip
   frameLED.setupRing();
   frameLED.setBrightness(brightnessFrame);
+
+  // init calendar LED strip
+  dateLED.setupCalendar();
+  dateLED.setBrightness(brightnessFrame);
 
   // setup Matrix LED functions
   ledmatrix.setupMatrix();
@@ -433,6 +475,7 @@ void setup() {
   loadNightmodeSettingsFromEEPROM();
   loadBrightnessSettingsFromEEPROM();
   loadColorShiftStateFromEEPROM();
+  loadCalendarSettingsFromEEPROM();
   
   if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
     // test quickly each LED
@@ -513,6 +556,7 @@ void loop() {
   if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     ledmatrix.drawOnMatrixSmooth(filterFactor);
     updateFrame();
+    updateCalendar();
     lastAnimationStep = millis();
   }
 
@@ -1231,6 +1275,47 @@ void handleCommand() {
     EEPROM.write(ADR_FRAMELIGHTSECONDSINCDECCYCLE, frameSecondsIncDecCycle);
     EEPROM.commit();
   }
+  else if(server.argName(0) == "calendar"){
+    Serial.println("Calendar change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") calendarActive = true;
+    else calendarActive = false;
+    EEPROM.write(ADR_CAL_ACTIVE, calendarActive);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "caldow"){
+    String colorstr = server.arg(0) + "-";
+    String redstr = split(colorstr, '-', 0);
+    String greenstr= split(colorstr, '-', 1);
+    String bluestr = split(colorstr, '-', 2);
+    calendar_color_dow = LEDCalendar::Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
+    EEPROM.write(ADR_CAL_DOW_RED, redstr.toInt());
+    EEPROM.write(ADR_CAL_DOW_GREEN, greenstr.toInt());
+    EEPROM.write(ADR_CAL_DOW_BLUE, bluestr.toInt());
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "caldom"){
+    String colorstr = server.arg(0) + "-";
+    String redstr = split(colorstr, '-', 0);
+    String greenstr= split(colorstr, '-', 1);
+    String bluestr = split(colorstr, '-', 2);
+    calendar_color_dom = LEDCalendar::Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
+    EEPROM.write(ADR_CAL_DOM_RED, redstr.toInt());
+    EEPROM.write(ADR_CAL_DOM_GREEN, greenstr.toInt());
+    EEPROM.write(ADR_CAL_DOM_BLUE, bluestr.toInt());
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "calmonth"){
+    String colorstr = server.arg(0) + "-";
+    String redstr = split(colorstr, '-', 0);
+    String greenstr= split(colorstr, '-', 1);
+    String bluestr = split(colorstr, '-', 2);
+    calendar_color_month = LEDCalendar::Color24bit(redstr.toInt(), greenstr.toInt(), bluestr.toInt());
+    EEPROM.write(ADR_CAL_MONTH_RED, redstr.toInt());
+    EEPROM.write(ADR_CAL_MONTH_GREEN, greenstr.toInt());
+    EEPROM.write(ADR_CAL_MONTH_BLUE, bluestr.toInt());
+    EEPROM.commit();
+  }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
@@ -1309,6 +1394,23 @@ void handleDataRequest() {
       message += "\"frameSecondsSingle\":\"" + String(frameSecondsSingle) + "\"";
       message += ",";
       message += "\"frameSecondsIncDecCycle\":\"" + String(frameSecondsIncDecCycle) + "\"";
+      message += ",";
+      message += "\"calendar\":\"" + String(calendarActive) + "\"";
+      message += ",";
+      uint8_t cal_dow_r = (calendar_color_dow >> 16) & 0xFF;
+      uint8_t cal_dow_g = (calendar_color_dow >> 8) & 0xFF;
+      uint8_t cal_dow_b = calendar_color_dow & 0xFF;
+      message += "\"caldow\":\"" + String(cal_dow_r) + "-" + String(cal_dow_g) + "-" + String(cal_dow_b) + "\"";
+      message += ",";
+      uint8_t cal_dom_r = (calendar_color_dom >> 16) & 0xFF;
+      uint8_t cal_dom_g = (calendar_color_dom >> 8) & 0xFF;
+      uint8_t cal_dom_b = calendar_color_dom & 0xFF;
+      message += "\"caldom\":\"" + String(cal_dom_r) + "-" + String(cal_dom_g) + "-" + String(cal_dom_b) + "\"";
+      message += ",";
+      uint8_t cal_month_r = (calendar_color_month >> 16) & 0xFF;
+      uint8_t cal_month_g = (calendar_color_month >> 8) & 0xFF;
+      uint8_t cal_month_b = calendar_color_month & 0xFF;
+      message += "\"calmonth\":\"" + String(cal_month_r) + "-" + String(cal_month_g) + "-" + String(cal_month_b) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);

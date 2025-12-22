@@ -406,6 +406,12 @@
 					<input name= "frameSecondsIncDecCycle" id="frameSecondsIncDecCycle" type="checkbox" class="toggle">
 				</div>
 			</div>
+			<div class="checkbox-container">
+				<label for="calendarActive" style="align-self: flex-start">Kalender LED: Ein/Aus </label> 
+				<div>
+					<input name= "calendarActive" id="calendarActive" type="checkbox" class="toggle">
+				</div>
+			</div>
 		<div class="checkbox-container">
 			<label for="AutoChange" style="align-self: flex-start">Modus automatisch wechseln: Aus/Ein </label>
 			<div>
@@ -443,6 +449,29 @@
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=152-245-255')" class="buttonClass" style="background:rgb(152,245,255);"></a></span></div>
 					<div class="grid-item"><span class="dot"><a onclick="sendCommand('./cmd?led=255-193-193')" class="buttonClass" style="background:rgb(255,193,193);"></a></span></div>
 				</div>
+			</div>
+		</div>
+
+		<div class="main-container hidden" id="calendarcolorcontainer">
+			<div class="verticalline">
+			</div>
+			<div class="headline">
+				KALENDER FARBEN
+			</div>
+			<div class="control-container">
+				<div class="number-container">
+					<label for="caldowcolor">Wochentag Farbe</label>
+					<input type="color" id="caldowcolor" name="caldowcolor">
+				</div>
+				<div class="number-container">
+					<label for="caldomcolor">Monatstag Farbe</label>
+					<input type="color" id="caldomcolor" name="caldomcolor">
+				</div>
+				<div class="number-container">
+					<label for="calmonthcolor">Monat Farbe</label>
+					<input type="color" id="calmonthcolor" name="calmonthcolor">
+				</div>
+				<div class="buttonClass save-button" onclick="saveCalendarColors()">SAVE</div>
 			</div>
 		</div>
 
@@ -741,12 +770,39 @@
 							sendCommand("./cmd?frameSecondsIncDecCycle=0");
 						}
 					});
+
+					var ckb_calendarActive = document.querySelector('input[id="calendarActive"]');
+					if(myVar.calendar == "1") {
+						console.log("calendar == 1");
+						ckb_calendarActive.checked = false;
+					}
+					else {
+						console.log("calendar == 0");
+						ckb_calendarActive.checked = true;
+					}
+					ckb_calendarActive.addEventListener('change', () => {
+						if(ckb_calendarActive.checked) {
+							document.getElementById("calendarcolorcontainer").classList.remove("hidden");
+							sendCommand("./cmd?calendar=0");
+						} else {
+							document.getElementById("calendarcolorcontainer").classList.add("hidden");
+							sendCommand("./cmd?calendar=1");
+						}
+					});
 					
 					document.getElementById("nm_start").value = myVar.nightModeStart.replace("-", ":");
 					document.getElementById("nm_end").value = myVar.nightModeEnd.replace("-", ":");
 					document.getElementById("brightness").value = parseInt(myVar.brightness);
 					document.getElementById("brightnessFrame").value = parseInt(myVar.brightnessFrame);
 					document.getElementById("colorshiftspeed").value = parseInt(myVar.colorshiftspeed);
+
+					// Load calendar colors
+					var caldow = myVar.caldow.split("-");
+					var caldom = myVar.caldom.split("-");
+					var calmonth = myVar.calmonth.split("-");
+					document.getElementById("caldowcolor").value = rgbToHex(parseInt(caldow[0]), parseInt(caldow[1]), parseInt(caldow[2]));
+					document.getElementById("caldomcolor").value = rgbToHex(parseInt(caldom[0]), parseInt(caldom[1]), parseInt(caldom[2]));
+					document.getElementById("calmonthcolor").value = rgbToHex(parseInt(calmonth[0]), parseInt(calmonth[1]), parseInt(calmonth[2]));
 
 					updateDisplay(parseInt(myVar.modeid));
 					console.log(myVar);
@@ -810,6 +866,33 @@
 				var xmlhttp = new XMLHttpRequest();
 				xmlhttp.open("GET", command, true);
 				xmlhttp.send();
+			}
+
+			function rgbToHex(r, g, b) {
+				return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+			}
+
+			function hexToRgb(hex) {
+				var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+				return result ? {
+					r: parseInt(result[1], 16),
+					g: parseInt(result[2], 16),
+					b: parseInt(result[3], 16)
+				} : null;
+			}
+
+			function saveCalendarColors(){
+				var caldowcolor = document.getElementById("caldowcolor").value;
+				var caldomcolor = document.getElementById("caldomcolor").value;
+				var calmonthcolor = document.getElementById("calmonthcolor").value;
+
+				var dow = hexToRgb(caldowcolor);
+				var dom = hexToRgb(caldomcolor);
+				var month = hexToRgb(calmonthcolor);
+
+				sendCommand("./cmd?caldow=" + dow.r + "-" + dow.g + "-" + dow.b);
+				sendCommand("./cmd?caldom=" + dom.r + "-" + dom.g + "-" + dom.b);
+				sendCommand("./cmd?calmonth=" + month.r + "-" + month.g + "-" + month.b);
 			}
 
 			function saveSettings(){
