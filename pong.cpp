@@ -277,13 +277,13 @@ void Pong::toggleLed(uint8_t x, uint8_t y, uint8_t type)
 
     switch(type) {
         case LED_TYPE_PADDLE:
-            color = LEDMatrix::Color24bit(0, 80, 80);
+            color = LEDMatrix::Color24bit(0, 255, 255);
             break;
         case LED_TYPE_BALL_RED:
-            color = LEDMatrix::Color24bit(120, 0, 0);
+            color = LEDMatrix::Color24bit(255, 0, 0);
             break;
         case LED_TYPE_BALL:
-            color = LEDMatrix::Color24bit(0, 100, 0);
+            color = LEDMatrix::Color24bit(0, 255, 0);
             break;
         case LED_TYPE_OFF:
             color = LEDMatrix::Color24bit(0, 0, 0);

@@ -1,5 +1,8 @@
 
-const String clockStringGerman =  "ESPISTAFUNFVIERTELZEHNZWANZIGUVORTECHNICNACHHALBMELFUNFXCONTROLLEREINSEAWZWEIDREITUMVIERSECHSQYACHTSIEBENZWOLFZEHNEUNJUHR";
+
+// Angepasst am 01.04.2025 Sandro Nessenzia (NESSI)
+
+const String clockStringSwiss =  "ESPESCHAFUFVIERTUBFZAAZWANZGSIVORABOHOPPOHCDHAUBIAEVZILEISZWOISDRUVIERIYFUFIOSACHSISEBNIACHTINUNIELZANIEREUFIBZWOUFINAGSI";
 
 /**
  * @brief control the four minute indicator LEDs
@@ -13,22 +16,40 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
   switch (minutes%5)
     { 
       case 0:
+        if(staticBackgroundActive){         // Nessi show static background pattern every 5 minutes for 1 minute
+          showStaticBackgroundPattern();    // Nessi 
+        }                                   // Nessi
+        if(staticBackground2Active){      // Nessi show static background pattern every 5 minutes for 1 minute
+          showStaticBackgroundPattern2();    // Nessi 
+        }                                   // Nessi
         break;
           
       case 1:
         ledmatrix.setMinIndicator(0b1000, color);
+        // if(staticBackgroundActive){     // Nessi show static background pattern every 1 minutes for 1 minute
+        // showStaticBackgroundPattern();  // Nessi
+        // }                               // Nessi
         break;
 
       case 2:
         ledmatrix.setMinIndicator(0b1100, color);
+        // if(staticBackgroundActive){     // Nessi show static background pattern every 2 minutes for 1 minute
+        // showStaticBackgroundPattern();  // Nessi
+        // }                               // Nessi
         break;
 
       case 3:
         ledmatrix.setMinIndicator(0b1110, color);
+        // if(staticBackgroundActive){     // Nessi show static background pattern every 3 minutes for 1 minute
+        // showStaticBackgroundPattern();  // Nessi
+        // }                               // Nessi
         break;
 
       case 4:
         ledmatrix.setMinIndicator(0b1111, color);
+        // if(staticBackgroundActive){     // Nessi show static background pattern every 4 minutes for 1 minute
+        // showStaticBackgroundPattern();  // Nessi
+        // }                               // Nessi
         break;
     }
   }
@@ -60,7 +81,7 @@ int showStringOnClock(String message, uint32_t color){
       
       if(word.length() > 0){
         // find word in clock string
-        positionOfWord = clockStringGerman.indexOf(word, lastLetterClock);
+        positionOfWord = clockStringSwiss.indexOf(word, lastLetterClock);
         
         if(positionOfWord >= 0){
           // word found on clock -> enable leds in targetgrid
@@ -93,56 +114,65 @@ int showStringOnClock(String message, uint32_t color){
  * @param minutes minutes of the time value
  * @return String time as sentence
  */
-String timeToString(uint8_t hours,uint8_t minutes){
+String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
   
   //ES IST
-  String message = "ES IST ";
+  String message = "";
 
+  if(puristModeActive){
+    message = "";
+    if(minutes < 5 || (minutes >=30 && minutes < 35)){
+      message = "ES ESCH ";
+    }
+  }
+  else{
+    message = "ES ESCH ";
+  }
   
   //show minutes
   if(minutes >= 5 && minutes < 10)
   {
-    message += "FUNF NACH ";
+    message += "FUF AB ";
   }
   else if(minutes >= 10 && minutes < 15)
   {
-    message += "ZEHN NACH ";
+    message += "ZAA AB ";
   }
   else if(minutes >= 15 && minutes < 20)
   {
-    message += "VIERTEL NACH ";
+    message += "VIERTU AB ";
   }
   else if(minutes >= 20 && minutes < 25)
   {
-    message += "ZEHN VOR HALB "; 
+    message += "ZWANZG AB "; // Nessi
   }
   else if(minutes >= 25 && minutes < 30)
   {
-    message += "FUNF VOR HALB ";
+    message += "FUF VOR HAUBI ";
   }
   else if(minutes >= 30 && minutes < 35)
   {
-    message += "HALB ";
+    message += "HAUBI ";
   }
   else if(minutes >= 35 && minutes < 40)
   {
-    message += "FUNF NACH HALB ";
+    message += "FUF AB HAUBI ";
   }
   else if(minutes >= 40 && minutes < 45)
   {
-    message += "ZEHN NACH HALB ";
+    message += "ZWANZG VOR "; // Nessi
   }
   else if(minutes >= 45 && minutes < 50)
   {
-    message += "VIERTEL VOR ";
+    message += "VIERTU VOR ";
   }
   else if(minutes >= 50 && minutes < 55)
   {
-    message += "ZEHN VOR ";
+    message += "ZAA VOR ";
   }
   else if(minutes >= 55 && minutes < 60)
   {
-    message += "FUNF VOR ";
+    message += "FUF VOR ";
   }
 
   //convert hours to 12h format
@@ -150,7 +180,7 @@ String timeToString(uint8_t hours,uint8_t minutes){
   {
       hours -= 12;
   }
-  if(minutes >= 20)
+  if(minutes >= 25) // Nessi >= 20
   {
       hours++;
   }
@@ -163,50 +193,50 @@ String timeToString(uint8_t hours,uint8_t minutes){
   switch(hours)
   {
   case 0:
-    message += "ZWOLF ";
+    message += "ZWOUFI ";
     break;
   case 1:
-    message += "EIN";
-    //EIN(S)
-    if(minutes > 4){
-      message += "S";
-    }
-    message += " ";
+    message += "EIS ";
+    // //EIN(S)       // Nessi
+    // if(minutes > 4){  
+    //   message += "S";
+    // }
+    // message += " ";
     break;
   case 2:
-    message += "ZWEI ";
+    message += "ZWOI ";
     break;
   case 3:
-    message += "DREI ";
+    message += "DRU ";
     break;
   case 4:
-    message += "VIER ";
+    message += "VIERI ";
     break;
   case 5:
-    message += "FUNF ";
+    message += "FUFI ";
     break;
   case 6:
-    message += "SECHS ";
+    message += "SACHSI ";
     break;
   case 7:
-    message += "SIEBEN ";
+    message += "SEBNI ";
     break;
   case 8:
-    message += "ACHT ";
+    message += "ACHTI ";
     break;
   case 9:
-    message += "NEUN ";
+    message += "NUNI ";
     break;
   case 10:
-    message += "ZEHN ";
+    message += "ZANI ";
     break;
   case 11:
-    message += "ELF ";
+    message += "EUFI ";
     break;
   }
   if(minutes < 5)
   {
-    message += "UHR ";
+    message += "GSI ";
   }
 
   logger.logString("time as String: " + String(message));

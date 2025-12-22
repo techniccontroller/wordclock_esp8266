@@ -1,5 +1,5 @@
-// Thanks to Sandro for providing this swiss german version
-const String clockStringSwiss =  "ESPESCHAFUFVIERTUBFZAAZWANZGSIVORABOHWORTUHRHAUBIANESSIEISZWOISDRUVIERIYFUFIOSACHSISEBNIACHTINUNIELZANIERBEUFIZWOUFINAGSI";
+
+const String clockStringGerman =  "ESPISTAFUNFVIERTELZEHNZWANZIGUVORTECHNICNACHHALBMELFUNFXCONTROLLEREINSEAWZWEIDREITUMVIERSECHSQYACHTSIEBENZWOLFZEHNEUNJUHR";
 
 /**
  * @brief control the four minute indicator LEDs
@@ -13,37 +13,22 @@ void drawMinuteIndicator(uint8_t minutes, uint32_t color){
   switch (minutes%5)
     { 
       case 0:
-       if(staticBackgroundActive){
-       showStaticBackgroundPattern();
-       }
         break;
           
       case 1:
         ledmatrix.setMinIndicator(0b1000, color);
-        // if(staticBackgroundActive){ // Sandro
-        // showStaticBackgroundPattern();
-        // }
         break;
 
       case 2:
         ledmatrix.setMinIndicator(0b1100, color);
-        // if(staticBackgroundActive){
-        // showStaticBackgroundPattern();
-        // }
         break;
 
       case 3:
         ledmatrix.setMinIndicator(0b1110, color);
-        // if(staticBackgroundActive){
-        // showStaticBackgroundPattern();
-        // }
         break;
 
       case 4:
         ledmatrix.setMinIndicator(0b1111, color);
-        // if(staticBackgroundActive){
-        // showStaticBackgroundPattern();
-        // }
         break;
     }
   }
@@ -75,7 +60,7 @@ int showStringOnClock(String message, uint32_t color){
       
       if(word.length() > 0){
         // find word in clock string
-        positionOfWord = clockStringSwiss.indexOf(word, lastLetterClock);
+        positionOfWord = clockStringGerman.indexOf(word, lastLetterClock);
         
         if(positionOfWord >= 0){
           // word found on clock -> enable leds in targetgrid
@@ -116,57 +101,57 @@ String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
   if(puristModeActive){
     message = "";
     if(minutes < 5 || (minutes >=30 && minutes < 35)){
-      message = "ES ESCH ";
+      message = "ES IST ";
     }
   }
   else{
-    message = "ES ESCH ";
+    message = "ES IST ";
   }
   
   //show minutes
   if(minutes >= 5 && minutes < 10)
   {
-    message += "FUF AB ";
+    message += "FUNF NACH ";
   }
   else if(minutes >= 10 && minutes < 15)
   {
-    message += "ZAA AB ";
+    message += "ZEHN NACH ";
   }
   else if(minutes >= 15 && minutes < 20)
   {
-    message += "VIERTU AB ";
+    message += "VIERTEL NACH ";
   }
   else if(minutes >= 20 && minutes < 25)
   {
-    message += "ZWANZG AB "; //Sandro
+    message += "ZEHN VOR HALB "; 
   }
   else if(minutes >= 25 && minutes < 30)
   {
-    message += "FUF VOR HAUBI ";
+    message += "FUNF VOR HALB ";
   }
   else if(minutes >= 30 && minutes < 35)
   {
-    message += "HAUBI ";
+    message += "HALB ";
   }
   else if(minutes >= 35 && minutes < 40)
   {
-    message += "FUF AB HAUBI ";
+    message += "FUNF NACH HALB ";
   }
   else if(minutes >= 40 && minutes < 45)
   {
-    message += "ZWANZG VOR "; //Sandro
+    message += "ZEHN NACH HALB ";
   }
   else if(minutes >= 45 && minutes < 50)
   {
-    message += "VIERTU VOR ";
+    message += "VIERTEL VOR ";
   }
   else if(minutes >= 50 && minutes < 55)
   {
-    message += "ZAA VOR ";
+    message += "ZEHN VOR ";
   }
   else if(minutes >= 55 && minutes < 60)
   {
-    message += "FUF VOR ";
+    message += "FUNF VOR ";
   }
 
   //convert hours to 12h format
@@ -174,7 +159,7 @@ String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
   {
       hours -= 12;
   }
-  if(minutes >= 25) //Sandro 20
+  if(minutes >= 20)
   {
       hours++;
   }
@@ -187,50 +172,50 @@ String timeToString(uint8_t hours, uint8_t minutes, bool puristModeActive){
   switch(hours)
   {
   case 0:
-    message += "ZWOUFI ";
+    message += "ZWOLF ";
     break;
   case 1:
-    message += "EIS ";
-    // //EIN(S) 
-    // if(minutes > 4){  // Sandro
-    //   message += "S";
-    // }
-    // message += " ";
+    message += "EIN";
+    //EIN(S)
+    if(minutes > 4){
+      message += "S";
+    }
+    message += " ";
     break;
   case 2:
-    message += "ZWOI ";
+    message += "ZWEI ";
     break;
   case 3:
-    message += "DRU ";
+    message += "DREI ";
     break;
   case 4:
-    message += "VIERI ";
+    message += "VIER ";
     break;
   case 5:
-    message += "FUFI ";
+    message += "FUNF ";
     break;
   case 6:
-    message += "SACHSI ";
+    message += "SECHS ";
     break;
   case 7:
-    message += "SEBNI ";
+    message += "SIEBEN ";
     break;
   case 8:
-    message += "ACHTI ";
+    message += "ACHT ";
     break;
   case 9:
-    message += "NUNI ";
+    message += "NEUN ";
     break;
   case 10:
-    message += "ZANI ";
+    message += "ZEHN ";
     break;
   case 11:
-    message += "EUFI ";
+    message += "ELF ";
     break;
   }
   if(minutes < 5)
   {
-    message += "GSI ";
+    message += "UHR ";
   }
 
   logger.logString("time as String: " + String(message));

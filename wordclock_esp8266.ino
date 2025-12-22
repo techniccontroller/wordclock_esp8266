@@ -39,6 +39,7 @@
 #include "udplogger.h"
 #include "ntp_client_plus.h"
 #include "ledmatrix.h"
+#include "ledring.h"
 #include "tetris.h"
 #include "snake.h"
 #include "pong.h"
@@ -48,10 +49,11 @@
 //                                        CONSTANTS
 // ----------------------------------------------------------------------------------
 
+
 #define EEPROM_VERSION_CODE   2  // Change this value when defaults settings change
 
 // EEPROM address map (all uint8_t, 1 byte each)
-#define EEPROM_SIZE          13  // size of EEPROM to save persistent variables
+#define EEPROM_SIZE          25  // size of EEPROM to save persistent variables
 #define ADR_EEPROM_VERSION    0  // uint8_t
 #define ADR_NM_START_H        1  // uint8_t
 #define ADR_NM_END_H          2  // uint8_t
@@ -65,6 +67,14 @@
 #define ADR_NM_ACTIVATED     10  // uint8_t
 #define ADR_COLSHIFTSPEED    11  // uint8_t
 #define ADR_COLSHIFTACTIVE   12  // uint8_t
+#define ADR_PURIST_MODE_ACTIVE      13 // uint8_t
+#define ADR_STATICBACKGROUND        14 // uint8_t
+#define ADR_BRIGHTNESS_FRAME        15 // uint8_t
+#define ADR_FRAMELIGHTACTIVE        16 // uint8_t
+#define ADR_FRAMELIGHTSECONDSACTIVE 17 // uint8_t
+#define ADR_FRAMELIGHTSECONDSSINGLE 18 // uint8_t
+#define ADR_FRAMELIGHTSECONDSINCDECCYCLE 19 // uint8_t
+#define ADR_STATICBACKGROUND2       20 // uint8_t
 
 // DEFAULT SETTINGS (if one changes this, also increment the EEPROM_VERSION_CODE, to ensure that the EEPROM is updated with the new defaults)
 #define DEFAULT_NM_START_HOUR 22 // default start hour of nightmode (0-23)
@@ -78,8 +88,11 @@
 #define DEFAULT_NM_ACTIVATED 1   // if function nightmode is activated (0 = deactivated, 1 = activated)
 #define DEFAULT_COLSHIFT_SPEED 1 // needs to be between larger than 0 (1 = slowest, 255 = fastest)
 #define DEFAULT_COLSHIFT_ACTIVE 0 // if dynamic color shift is active (0 = deactivated, 1 = activated)
+#define DEFAULT_BRIGHTNESSFRAME 40 // default brightness of Frame LEDs (0-255)
+
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
+#define NEOPIXELPIN_FRAME 4 // pin to which the NeoPixels for the frame light are attached
 #define BUTTONPIN 14        // pin to which the button is attached
 #define LEFT 1
 #define RIGHT 2
@@ -101,7 +114,7 @@
 #define SHORTPRESS 100
 #define LONGPRESS 2000
 
-#define CURRENT_LIMIT_LED 2500 // limit the total current sonsumed by LEDs (mA)
+#define CURRENT_LIMIT_LED 3000 // limit the total current sonsumed by LEDs (mA)
 
 #define DEFAULT_SMOOTHING_FACTOR 0.5
 
@@ -164,6 +177,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(WIDTH, HEIGHT+1, NEOPIXELPIN,
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
 
+Adafruit_NeoPixel frameLEDStrip = Adafruit_NeoPixel(RING_LED_COUNT, NEOPIXELPIN_FRAME, NEO_GRB + NEO_KHZ800);
 
 // seven predefined colors24bit (green, red, yellow, purple, orange, lightgreen, blue) 
 const uint32_t colors24bit[NUM_COLORS] = {
@@ -175,7 +189,10 @@ const uint32_t colors24bit[NUM_COLORS] = {
   LEDMatrix::Color24bit(0, 128, 0), 
   LEDMatrix::Color24bit(0, 0, 255) };
 
+
 uint8_t brightness = DEFAULT_BRIGHTNESS;            // current brightness of leds
+uint8_t brightnessFrame = DEFAULT_BRIGHTNESSFRAME;  // current brightness of frame leds
+
 bool sprialDir = false;
 
 // timestamp variables
@@ -194,6 +211,7 @@ UDPLogger logger;
 WiFiUDP NTPUDP;
 NTPClientPlus ntp = NTPClientPlus(NTPUDP, "pool.ntp.org", utcOffset, true);
 LEDMatrix ledmatrix = LEDMatrix(&matrix, brightness, &logger);
+LEDRing frameLED = LEDRing(&frameLEDStrip, &logger);
 Tetris mytetris = Tetris(&ledmatrix, &logger);
 Snake mysnake = Snake(&ledmatrix, &logger);
 Pong mypong = Pong(&ledmatrix, &logger);
@@ -210,6 +228,14 @@ bool apmode = false;                                  // stores if WiFi AP mode 
 bool dynColorShiftActive = DEFAULT_COLSHIFT_ACTIVE;   // stores if dynamic color shift is active
 uint8_t dynColorShiftPhase = 0;                       // stores the phase of the dynamic color shift
 uint8_t dynColorShiftSpeed = DEFAULT_COLSHIFT_SPEED;  // stores the speed of the dynamic color shift -> used to calc update period
+bool puristModeActive = false;                // stores if purist mode is active
+bool staticBackgroundActive = false;          // stores if static background is active
+bool staticBackground2Active = false;          // stores if static background is active
+bool frameLightActive = false;                // stores if frame light is active
+bool frameSecondsActive = false;              // stores if frame light should be active for seconds
+bool frameSecondsSingle = false;              // stores if frame light should be active for seconds in single mode (false == increment mode)
+bool frameSecondsIncDecCycle = false;         // stores if frame light should be active for seconds in increment+decrement mode
+
 
 // nightmode settings
 uint8_t nightModeStartHour = DEFAULT_NM_START_HOUR;
@@ -257,6 +283,10 @@ void setup() {
 
   // configure button pin as input
   pinMode(BUTTONPIN, INPUT_PULLUP);
+
+  // init background LED strip
+  frameLED.setupRing();
+  frameLED.setBrightness(brightnessFrame);
 
   // setup Matrix LED functions
   ledmatrix.setupMatrix();
@@ -455,7 +485,7 @@ void loop() {
       Serial.println("connection lost");
       ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
       ledmatrix.drawOnMatrixInstant();
-      delay(1000);
+      delay(2000); // Nessi (1000)
     }
   }
 
@@ -473,6 +503,7 @@ void loop() {
   // periodically write colors to matrix
   if(millis() - lastAnimationStep > PERIOD_MATRIXUPDATE && !waitForTimeAfterReboot && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     ledmatrix.drawOnMatrixSmooth(filterFactor);
+    updateFrame();
     lastAnimationStep = millis();
   }
 
@@ -572,15 +603,18 @@ void updateStateBehavior(uint8_t state){
         uint8_t hours = ntp.getHours24();
         uint8_t minutes = ntp.getMinutes();
         static uint8_t lastMinutes = 0;
+        static bool lastPuristModeActive = false;
         static String timeAsString = "";
-        if(lastMinutes != minutes){
-          timeAsString = timeToString(hours, minutes);
+        if(lastMinutes != minutes || lastPuristModeActive != puristModeActive){
+          timeAsString = timeToString(hours, minutes, puristModeActive);
           lastMinutes = minutes;
+          lastPuristModeActive = puristModeActive;
         }
         showStringOnClock(timeAsString, maincolor_clock);
         drawMinuteIndicator(minutes, maincolor_clock);
       }
       break;
+
     // state diclock
     case st_diclock:
       {
@@ -592,7 +626,7 @@ void updateStateBehavior(uint8_t state){
     // state spiral
     case st_spiral:
       {
-        int res = spiral(false, sprialDir, WIDTH-6);
+        int res = spiral(false, sprialDir, WIDTH-0); // Nessi WIDTH-6);
         if(res && sprialDir == 0){
           // change spiral direction to closing (draw empty leds)
           sprialDir = 1;
@@ -838,7 +872,8 @@ void handleButton(){
       if(ledOff){
         ledOff = false;
       }else{
-        stateChange((currentState + 1) % NUM_STATES, true);
+        // stateChange((currentState + 1) % NUM_STATES, true);  // Nessi, umschalten 6 Modi
+        stateChange((currentState + 1) % 2, true); // Nessi, umschalten nur Uhr und Digi
       }
       
     }
@@ -884,6 +919,14 @@ void loadCurrentStateFromEEPROM(){
     EEPROM.write(ADR_STATE, currentState);
     EEPROM.commit();
   }
+
+  puristModeActive = EEPROM.read(ADR_PURIST_MODE_ACTIVE);
+  staticBackgroundActive = EEPROM.read(ADR_STATICBACKGROUND);
+  staticBackground2Active = EEPROM.read(ADR_STATICBACKGROUND2);
+  frameLightActive = EEPROM.read(ADR_FRAMELIGHTACTIVE);
+  frameSecondsActive = EEPROM.read(ADR_FRAMELIGHTSECONDSACTIVE);
+  frameSecondsSingle = EEPROM.read(ADR_FRAMELIGHTSECONDSSINGLE);
+  frameSecondsIncDecCycle = EEPROM.read(ADR_FRAMELIGHTSECONDSINCDECCYCLE);
 }
 
 /**
@@ -913,9 +956,13 @@ void loadNightmodeSettingsFromEEPROM()
 void loadBrightnessSettingsFromEEPROM()
 {
   brightness = EEPROM.read(ADR_BRIGHTNESS);
+  brightnessFrame = EEPROM.read(ADR_BRIGHTNESS_FRAME);
   if(brightness < 10) brightness = 10;
+  if(brightnessFrame < 10) brightnessFrame = 10;
   logger.logString("Brightness: " + String(brightness));
+  logger.logString("Brightness Frame: " + String(brightnessFrame));
   ledmatrix.setBrightness(brightness);
+  frameLED.setBrightness(brightnessFrame);
 }
 
 /**
@@ -1003,24 +1050,29 @@ void handleCommand() {
     nightModeEndMin = split(timestr, '-', 3).toInt();
     brightness = split(timestr, '-', 4).toInt();
     dynColorShiftSpeed = split(timestr, '-', 5).toInt();
+    brightnessFrame = split(timestr, '-', 6).toInt();
     if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
     if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
     if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
     if(nightModeEndMin < 0 || nightModeEndMin > 59) nightModeEndMin = 0;
     if(brightness < 10) brightness = 10;
+    if(brightnessFrame < 10) brightnessFrame = 10;
     if(dynColorShiftSpeed == 0) dynColorShiftSpeed = 1;
     EEPROM.write(ADR_NM_START_H, nightModeStartHour);
     EEPROM.write(ADR_NM_START_M, nightModeStartMin);
     EEPROM.write(ADR_NM_END_H, nightModeEndHour);
     EEPROM.write(ADR_NM_END_M, nightModeEndMin);
     EEPROM.write(ADR_BRIGHTNESS, brightness);
+    EEPROM.write(ADR_BRIGHTNESS_FRAME, brightnessFrame);
     EEPROM.write(ADR_COLSHIFTSPEED, dynColorShiftSpeed);
     EEPROM.commit();
     logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
     logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
     logger.logString("Brightness: " + String(brightness));
+    logger.logString("Brightness Frame: " + String(brightnessFrame));
     logger.logString("ColorShiftSpeed: " + String(dynColorShiftSpeed));
     ledmatrix.setBrightness(brightness);
+    frameLED.setBrightness(brightnessFrame);
     lastNightmodeCheck = millis()  - PERIOD_NIGHTMODECHECK;
   }
   else if (server.argName(0) == "resetwifi"){
@@ -1114,6 +1166,62 @@ void handleCommand() {
     EEPROM.write(ADR_COLSHIFTACTIVE, dynColorShiftActive);
     EEPROM.commit();
   }
+  else if(server.argName(0) == "puristmode"){
+    Serial.println("PuristMode change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") puristModeActive = true;
+    else puristModeActive = false;
+    EEPROM.write(ADR_PURIST_MODE_ACTIVE, puristModeActive);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "staticbackground"){
+    Serial.println("StaticBackground change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") staticBackgroundActive = true;
+    else staticBackgroundActive = false;
+    EEPROM.write(ADR_STATICBACKGROUND, staticBackgroundActive);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "staticbackground2"){
+    Serial.println("StaticBackground2 change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") staticBackground2Active = true;
+    else staticBackground2Active = false;
+    EEPROM.write(ADR_STATICBACKGROUND2, staticBackground2Active);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "frameLight"){
+    Serial.println("FrameLight change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") frameLightActive = true;
+    else frameLightActive = false;
+    EEPROM.write(ADR_FRAMELIGHTACTIVE, frameLightActive);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "frameSecondsActive"){
+    Serial.println("FrameSecondsActive change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") frameSecondsActive = true;
+    else frameSecondsActive = false;
+    EEPROM.write(ADR_FRAMELIGHTSECONDSACTIVE, frameSecondsActive);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "frameSecondsSingle"){
+    Serial.println("FrameSecondsSingle change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") frameSecondsSingle = false;
+    else frameSecondsSingle = true;
+    EEPROM.write(ADR_FRAMELIGHTSECONDSSINGLE, frameSecondsSingle);
+    EEPROM.commit();
+  }
+  else if(server.argName(0) == "frameSecondsIncDecCycle"){
+    Serial.println("FrameSecondsIncDecCycle change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") frameSecondsIncDecCycle = true;
+    else frameSecondsIncDecCycle = false;
+    EEPROM.write(ADR_FRAMELIGHTSECONDSINCDECCYCLE, frameSecondsIncDecCycle);
+    EEPROM.commit();
+  }
   server.send(204, "text/plain", "No Content"); // this page doesn't send back content --> 204
 }
 
@@ -1173,9 +1281,25 @@ void handleDataRequest() {
       message += ",";
       message += "\"brightness\":\"" + String(brightness) + "\"";
       message += ",";
+      message += "\"brightnessFrame\":\"" + String(brightnessFrame) + "\"";
+      message += ",";
       message += "\"colorshift\":\"" + String(dynColorShiftActive) + "\"";
       message += ",";
       message += "\"colorshiftspeed\":\"" + String(dynColorShiftSpeed) + "\"";
+      message += ",";
+      message += "\"puristmode\":\"" + String(puristModeActive) + "\"";
+      message += ",";
+      message += "\"staticbackground\":\"" + String(staticBackgroundActive) + "\"";
+      message += ",";
+      message += "\"staticbackground2\":\"" + String(staticBackground2Active) + "\"";
+      message += ",";
+      message += "\"frameLight\":\"" + String(frameLightActive) + "\"";
+      message += ",";
+      message += "\"frameSecondsActive\":\"" + String(frameSecondsActive) + "\"";
+      message += ",";
+      message += "\"frameSecondsSingle\":\"" + String(frameSecondsSingle) + "\"";
+      message += ",";
+      message += "\"frameSecondsIncDecCycle\":\"" + String(frameSecondsIncDecCycle) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
@@ -1195,4 +1319,60 @@ String leadingZero2Digit(int value){
   }
   msg += String(value);
   return msg;
+}
+
+/**
+ * @brief Show a static background pattern on the matrix
+ * 
+ * You can define which leds should be lit up by changing the coordinatesX and coordinatesY arrays.
+ * You can define the color by changing the color variable.
+ * 
+ */
+void showStaticBackgroundPattern(){
+  // define the coordinates of the background pattern to light up
+  // top left corner is (0,0)
+  uint8_t coordinatesX[] = {4, 5, 6, 7, 8, 9, 10}; // Nessi (WORTUHR)
+  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3}; // Nessi (NESSI)
+
+  uint8_t red = 0; // red color value (0-255)
+  uint8_t green = 255; // green color value (0-255)
+  uint8_t blue = 0;  // blue color value (0-255)
+  uint8_t patternBrightness = 255; // brightness of the pattern (0-255) -> will be scaled by global brightness, example: brightness = 128 and patternBrightness = 180 -> resulting brightness = 90 (256 * 128/256 * 180/256)
+
+  if(patternBrightness < 10) patternBrightness = 10;
+  if(patternBrightness > 255) patternBrightness = 255;
+  float factor = patternBrightness / 255.0;
+  uint32_t color = LEDMatrix::Color24bit(red * factor, green * factor, blue * factor);
+  ledmatrix.setDynamicColorShiftPhase(-1);
+  for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
+    ledmatrix.gridAddPixel(coordinatesX[i], coordinatesY[i], color);
+  }
+}
+
+/**
+ * @brief Show a second static background pattern on the matrix
+ * 
+ * You can define which leds should be lit up by changing the coordinatesX and coordinatesY arrays.
+ * You can define the color by changing the color variable.
+ * 
+ */
+void showStaticBackgroundPattern2(){
+  // define the coordinates of the background pattern to light up
+  // top left corner is (0,0)
+  uint8_t coordinatesX[] = { 6, 7, 8, 9, 10}; // Nessi (WORTUHR)
+  uint8_t coordinatesY[] = { 4, 4, 4, 4,  4}; // Nessi (NESSI)
+
+  uint8_t red = 0; // red color value (0-255)
+  uint8_t green = 0; // green color value (0-255)
+  uint8_t blue = 255;  // blue color value (0-255)
+  uint8_t patternBrightness = 255; // brightness of the pattern (0-255) -> will be scaled by global brightness, example: brightness = 128 and patternBrightness = 180 -> resulting brightness = 90 (256 * 128/256 * 180/256)
+
+  if(patternBrightness < 10) patternBrightness = 10;
+  if(patternBrightness > 255) patternBrightness = 255;
+  float factor = patternBrightness / 255.0;
+  uint32_t color = LEDMatrix::Color24bit(red * factor, green * factor, blue * factor);
+  ledmatrix.setDynamicColorShiftPhase(-1);
+  for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
+    ledmatrix.gridAddPixel(coordinatesX[i], coordinatesY[i], color);
+  }
 }
