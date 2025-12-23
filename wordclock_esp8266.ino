@@ -493,6 +493,28 @@ void setup() {
     matrix.show();
     delay(200);
 
+    for(int i = 0; i < RING_LED_COUNT; i++){
+      frameLEDStrip.setPixelColor(i, colors24bit[4]);
+      frameLEDStrip.show();
+      delay(10);
+    }
+    
+    // clear frame leds
+    frameLEDStrip.fill(0);
+    frameLEDStrip.show();
+    delay(200);
+
+    for(int i = 0; i < CAL_LED_COUNT; i++){
+      dateLEDStrip.setPixelColor(i, colors24bit[5]);
+      dateLEDStrip.show();
+      delay(10);
+    }
+    
+    // clear date leds
+    dateLEDStrip.fill(0);
+    dateLEDStrip.show();
+    delay(200);
+
     // display IP
     uint8_t address = WiFi.localIP()[3];
     ledmatrix.printChar(1, 0, 'I', maincolor_clock);
