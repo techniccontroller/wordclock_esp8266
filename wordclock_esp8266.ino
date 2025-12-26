@@ -573,6 +573,8 @@ void loop() {
   // Turn off LEDs if ledOff is true or nightmode is active
   if((ledOff || nightMode) && !waitForTimeAfterReboot){
     ledmatrix.gridFlush();
+    frameLED.flushRing();
+    dateLED.flushCalendar();
   }
 
   // periodically write colors to matrix
