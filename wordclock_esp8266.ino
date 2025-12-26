@@ -337,10 +337,11 @@ void setup() {
 
   // init calendar LED strip
   dateLED.setupCalendar();
-  dateLED.setBrightness(brightnessFrame);
+  dateLED.setBrightness(brightness);
 
   // setup Matrix LED functions
   ledmatrix.setupMatrix();
+  ledmatrix.setBrightness(brightness);
   ledmatrix.setCurrentLimit(CURRENT_LIMIT_LED);
 
   if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
@@ -1038,6 +1039,7 @@ void loadBrightnessSettingsFromEEPROM()
   logger.logString("Brightness Frame: " + String(brightnessFrame));
   ledmatrix.setBrightness(brightness);
   frameLED.setBrightness(brightnessFrame);
+  dateLED.setBrightness(brightness);
 }
 
 /**
@@ -1148,6 +1150,7 @@ void handleCommand() {
     logger.logString("ColorShiftSpeed: " + String(dynColorShiftSpeed));
     ledmatrix.setBrightness(brightness);
     frameLED.setBrightness(brightnessFrame);
+    dateLED.setBrightness(brightness);
     lastNightmodeCheck = millis()  - PERIOD_NIGHTMODECHECK;
   }
   else if (server.argName(0) == "resetwifi"){
