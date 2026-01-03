@@ -315,6 +315,26 @@ unsigned int NTPClientPlus::getDayOfWeek()
 }
 
 /**
+ * @brief Getter for day of the month
+ * 
+ * @return unsigned int 
+ */
+unsigned int NTPClientPlus::getDayOfMonth()
+{
+    return this->_dateDay;
+}
+
+/**
+ * @brief Getter for the month number
+ * 
+ * @return unsigned int 
+ */
+unsigned int NTPClientPlus::getMonthNumber()
+{
+    return this->_dateMonth;
+}
+
+/**
  * @brief Function to calc current year
  * 
  * @return unsigned int 
