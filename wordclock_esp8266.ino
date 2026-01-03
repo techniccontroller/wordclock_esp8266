@@ -107,6 +107,12 @@
 
 #define DEFAULT_SMOOTHING_FACTOR 0.5
 
+// Animation date
+#define WORD_ANIMATION_DAY 3
+#define WORD_ANIMATION_MONTH 1
+#define PERIOD_WORD_ANIMATION 100
+#define WORD_ANIMATION_MODE 1 // 0: predefined colors, 1: rainbow colors, 2: rainbow flowing colors
+
 // number of colors in colors array
 #define NUM_COLORS 7
 
@@ -592,6 +598,18 @@ void updateStateBehavior(uint8_t state){
         }
         showStringOnClock(timeAsString, maincolor_clock);
         drawMinuteIndicator(minutes, maincolor_clock);
+        
+        uint8_t day = ntp.getDayOfMonth();
+        uint8_t month = ntp.getMonthNumber();
+        if(day == WORD_ANIMATION_DAY && month == WORD_ANIMATION_MONTH){
+          // New Year Animation
+          static uint32_t lastWordAnimation = millis();
+          if(millis() - lastWordAnimation > PERIOD_WORD_ANIMATION){
+            word_animation(WORD_ANIMATION_MODE);
+            lastWordAnimation = millis();
+          }
+          behaviorUpdatePeriod = PERIOD_WORD_ANIMATION;
+        }
       }
       break;
     // state diclock

@@ -361,3 +361,71 @@ int randomtetris(bool init){
   return 0; 
 }
 
+/**
+ * @brief Function to perform animation of an/multiple words on the matrix 
+ * 
+ * @param mode there are three different animation modes:
+ * 
+ *    - 0: prefined colors per pixel, animation build up and build down.
+ * 
+ *    - 1: rainbow colors per pixel, animation build up and build down.
+ * 
+ *    - 2: rainbow colors per pixel, animation is a dynamic flowing animation.
+ */
+void word_animation(int mode){
+
+  // colors for the different words, mapping via colorPerCoordinate array
+  uint32_t colors[] = { LEDMatrix::Color24bit(0, 255, 0),   // -> 0
+                        LEDMatrix::Color24bit(255, 0, 0),   // -> 1
+                        LEDMatrix::Color24bit(200, 200, 0), // -> 2
+                        LEDMatrix::Color24bit(255, 0, 200), // -> 3
+                        LEDMatrix::Color24bit(0, 0, 255),   // -> 4
+                      };
+  // coordinate of the letters to light up after each other top left LED = (0, 0)
+  uint8_t coordinatesX[] =        {8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 5, 5, 5, 0, 1, 2, 3, 4, 6, 6, 6, 6, 6};
+  uint8_t coordinatesY[] =        {5, 5,  5, 3, 3, 3, 3, 3, 3, 3, 6, 7, 8, 5, 5, 5, 5, 5, 4, 5, 6, 7, 8};
+  uint8_t colorPerCoordinate[] =  {0, 0,  0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4};
+  uint8_t numLEDs = sizeof(coordinatesX)/sizeof(uint8_t);
+
+  static int counter1 = 0;
+  static bool drawEmpty = false;
+  for(int i = 0; i < numLEDs; i++){
+    uint32_t color = 0;
+    switch(mode){
+      case 0:
+        // predefined colors per pixel, do nothing here
+        if((!drawEmpty && i <= counter1) || (drawEmpty && i > counter1)){
+          color = colors[colorPerCoordinate[i]];
+        } else {
+          color = 0;
+        }
+        break;
+      case 1:
+        // rainbow colors per pixel
+        if((!drawEmpty && i <= counter1) || (drawEmpty && i > counter1)){
+          color = LEDMatrix::Wheel((i*255/numLEDs));
+        } else {
+          color = 0;
+        }
+        break;
+      case 2:
+        // rainbow flowing animation
+        color = LEDMatrix::Wheel(((counter1 + i)*255/numLEDs));
+        break;
+      default:
+        // invalid mode, do nothing
+        break;
+    }
+
+    uint8_t x = coordinatesX[i];
+    uint8_t y = coordinatesY[i];
+    ledmatrix.gridAddPixel(x, y, color);
+  }
+  counter1++;
+
+  if (counter1 >= numLEDs){
+    // End reached toggle empty flag
+    drawEmpty = !drawEmpty;
+    counter1 = 0;
+  }
+}
