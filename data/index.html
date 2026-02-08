@@ -281,6 +281,10 @@
 				<input type="range" id="colorshiftspeed" name="volume" min="0" max="50">
 			</div>
 			<div class="number-container">
+				<label for="nm_brightness">Nightmode brightness:</label>
+				<input type="range" id="nm_brightness" name="volume" min="0" max="100">
+			</div>
+			<div class="number-container">
 				<label for="nm_start" style="align-self: flex-start">Nightmode start time: </label> 
 				<input type="time" id="nm_start" name="nm_start" min="00:00" max="23:59">
 			</div>
@@ -586,6 +590,7 @@
 					document.getElementById("nm_start").value = myVar.nightModeStart.replace("-", ":");
 					document.getElementById("nm_end").value = myVar.nightModeEnd.replace("-", ":");
 					document.getElementById("brightness").value = parseInt(myVar.brightness);
+					document.getElementById("nm_brightness").value = parseInt(myVar.nightModeBrightness);
 					document.getElementById("brightnessFrame").value = parseInt(myVar.brightnessFrame);
 					document.getElementById("colorshiftspeed").value = parseInt(myVar.colorshiftspeed);
 
@@ -663,6 +668,7 @@
 				var nmStart = document.getElementById("nm_start");
 				var nmEnd = document.getElementById("nm_end");
 				var sld_brightness = document.getElementById("brightness");
+				var sld_nm_brightness = document.getElementById("nm_brightness");
 				var sld_brightnessFrame = document.getElementById("brightnessFrame");
 				var sld_colorshiftspeed = document.getElementById("colorshiftspeed");
 				var ckb_resetWifi = document.querySelector('input[id="ResetWifi"]');
@@ -674,6 +680,8 @@
 				cmdstr += sld_brightness.value;
 				cmdstr += "-";
 				cmdstr += sld_colorshiftspeed.value;
+				cmdstr += "-";
+				cmdstr += sld_nm_brightness.value;
 				cmdstr += "-";
 				cmdstr += sld_brightnessFrame.value;
 				console.log(cmdstr);
