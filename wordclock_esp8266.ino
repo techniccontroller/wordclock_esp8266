@@ -51,7 +51,7 @@
 #define EEPROM_VERSION_CODE   3  // Change this value when defaults settings change
 
 // EEPROM address map (all uint8_t, 1 byte each)
-#define EEPROM_SIZE          14  // size of EEPROM to save persistent variables
+#define EEPROM_SIZE          17  // size of EEPROM to save persistent variables
 #define ADR_EEPROM_VERSION    0  // uint8_t
 #define ADR_NM_START_H        1  // uint8_t
 #define ADR_NM_END_H          2  // uint8_t
