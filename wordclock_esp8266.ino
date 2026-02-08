@@ -48,21 +48,39 @@
 //                                        CONSTANTS
 // ----------------------------------------------------------------------------------
 
-#define EEPROM_SIZE 32      // size of EEPROM to save persistent variables
-#define ADR_NM_START_H 0
-#define ADR_NM_END_H 4
-#define ADR_NM_START_M 8
-#define ADR_NM_END_M 12
-#define ADR_BRIGHTNESS 16
-#define ADR_MC_RED 20
-#define ADR_MC_GREEN 22
-#define ADR_MC_BLUE 24
-#define ADR_STATE 26
-#define ADR_NM_ACTIVATED 27
-#define ADR_COLSHIFTSPEED 28
-#define ADR_COLSHIFTACTIVE 29
-#define ADR_HOURANIMATION 30
+#define EEPROM_VERSION_CODE   3  // Change this value when defaults settings change
 
+// EEPROM address map (all uint8_t, 1 byte each)
+#define EEPROM_SIZE          15  // size of EEPROM to save persistent variables
+#define ADR_EEPROM_VERSION    0  // uint8_t
+#define ADR_NM_START_H        1  // uint8_t
+#define ADR_NM_END_H          2  // uint8_t
+#define ADR_NM_START_M        3  // uint8_t
+#define ADR_NM_END_M          4  // uint8_t
+#define ADR_BRIGHTNESS        5  // uint8_t
+#define ADR_MC_RED            6  // uint8_t
+#define ADR_MC_GREEN          7  // uint8_t
+#define ADR_MC_BLUE           8  // uint8_t
+#define ADR_STATE             9  // uint8_t
+#define ADR_NM_ACTIVATED     10  // uint8_t
+#define ADR_COLSHIFTSPEED    11  // uint8_t
+#define ADR_COLSHIFTACTIVE   12  // uint8_t
+#define ADR_NM_BRIGHTNESS    13  // uint8_t
+#define ADR_HOURANIMATION    14  // uint8_t
+
+// DEFAULT SETTINGS (if one changes this, also increment the EEPROM_VERSION_CODE, to ensure that the EEPROM is updated with the new defaults)
+#define DEFAULT_NM_START_HOUR 22 // default start hour of nightmode (0-23)
+#define DEFAULT_NM_START_MIN 5   // default start minute of nightmode (0-59)
+#define DEFAULT_NM_END_HOUR 7    // default end hour of nightmode (0-23)
+#define DEFAULT_NM_END_MIN 0     // default end minute of nightmode (0-59)
+#define DEFAULT_BRIGHTNESS 40    // default brightness of LEDs (10-255)
+#define DEFAULT_MC_RED 200       // default main color red value
+#define DEFAULT_MC_GREEN 200     // default main color green value
+#define DEFAULT_MC_BLUE 0        // default main color blue value
+#define DEFAULT_NM_ACTIVATED 1   // if function nightmode is activated (0 = deactivated, 1 = activated)
+#define DEFAULT_NM_BRIGHTNESS 0 // default brightness during night mode (0-255)
+#define DEFAULT_COLSHIFT_SPEED 1 // needs to be between larger than 0 (1 = slowest, 255 = fastest)
+#define DEFAULT_COLSHIFT_ACTIVE 0 // if dynamic color shift is active (0 = deactivated, 1 = activated)
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
 #define BUTTONPIN 14        // pin to which the button is attached
@@ -160,7 +178,7 @@ const uint32_t colors24bit[NUM_COLORS] = {
   LEDMatrix::Color24bit(0, 128, 0), 
   LEDMatrix::Color24bit(0, 0, 255) };
 
-uint8_t brightness = 40;            // current brightness of leds
+uint8_t brightness = DEFAULT_BRIGHTNESS;            // current brightness of leds
 bool animationDir = false;
 
 // timestamp variables
@@ -184,26 +202,27 @@ Tetris mytetris = Tetris(&ledmatrix, &logger);
 Snake mysnake = Snake(&ledmatrix, &logger);
 Pong mypong = Pong(&ledmatrix, &logger);
 
-float filterFactor = DEFAULT_SMOOTHING_FACTOR;// stores smoothing factor for led transition
-uint8_t currentState = st_clock;              // stores current state
-bool stateAutoChange = false;                 // stores state of automatic state change
-bool nightMode = false;                       // stores state of nightmode
-bool nightModeActivated = true;               // stores if the function nightmode is activated (its not the state of nightmode)
-bool ledOff = false;                          // stores state of led off
-uint32_t maincolor_clock = colors24bit[2];    // color of the clock and digital clock
-uint32_t maincolor_snake = colors24bit[1];    // color of the random snake animation
-bool apmode = false;                          // stores if WiFi AP mode is active
-bool dynColorShiftActive = false;              // stores if dynamic color shift is active
-uint8_t dynColorShiftPhase = 0;               // stores the phase of the dynamic color shift
-uint8_t dynColorShiftSpeed = 1;               // stores the speed of the dynamic color shift -> used to calc update period
+float filterFactor = DEFAULT_SMOOTHING_FACTOR;        // stores smoothing factor for led transition
+uint8_t currentState = st_clock;                      // stores current state
+bool stateAutoChange = false;                         // stores state of automatic state change
+bool nightMode = false;                               // stores state of nightmode
+bool nightModeActivated = DEFAULT_NM_ACTIVATED;       // stores if the function nightmode is activated (its not the state of nightmode)
+bool ledOff = false;                                  // stores state of led off
+uint32_t maincolor_clock = colors24bit[2];            // color of the clock and digital clock
+uint32_t maincolor_snake = colors24bit[1];            // color of the random snake animation
+bool apmode = false;                                  // stores if WiFi AP mode is active
+bool dynColorShiftActive = DEFAULT_COLSHIFT_ACTIVE;   // stores if dynamic color shift is active
+uint8_t dynColorShiftPhase = 0;                       // stores the phase of the dynamic color shift
+uint8_t dynColorShiftSpeed = DEFAULT_COLSHIFT_SPEED;  // stores the speed of the dynamic color shift -> used to calc update period
 bool hourAnimation = false;                   // stores if the hour animation is active
 uint32_t hourAnimationDuration = 18000;           // stores the duration of the hour animation in seconds
 
 // nightmode settings
-uint8_t nightModeStartHour = 22;
-uint8_t nightModeStartMin = 0;
-uint8_t nightModeEndHour = 7;
-uint8_t nightModeEndMin = 0;
+uint8_t nightModeStartHour = DEFAULT_NM_START_HOUR;
+uint8_t nightModeStartMin = DEFAULT_NM_START_MIN;
+uint8_t nightModeEndHour = DEFAULT_NM_END_HOUR;
+uint8_t nightModeEndMin = DEFAULT_NM_END_MIN;
+uint8_t nightModeBrightness = DEFAULT_NM_BRIGHTNESS;
 
 // Watchdog counter to trigger restart if NTP update was not possible 30 times in a row (5min)
 int watchdogCounter = 30;
@@ -224,6 +243,25 @@ void setup() {
 
   //Init EEPROM
   EEPROM.begin(EEPROM_SIZE);
+
+  // Check EEPROM version code
+  uint8_t storedVersion = EEPROM.read(ADR_EEPROM_VERSION);
+  if (storedVersion != EEPROM_VERSION_CODE) {
+    // Set new defaults
+    EEPROM.write(ADR_EEPROM_VERSION, EEPROM_VERSION_CODE);
+    EEPROM.write(ADR_NM_START_H, DEFAULT_NM_START_HOUR);
+    EEPROM.write(ADR_NM_START_M, DEFAULT_NM_START_MIN);
+    EEPROM.write(ADR_NM_END_H, DEFAULT_NM_END_HOUR);
+    EEPROM.write(ADR_NM_END_M, DEFAULT_NM_END_MIN);
+    EEPROM.write(ADR_BRIGHTNESS, DEFAULT_BRIGHTNESS);
+    setMainColor(DEFAULT_MC_RED, DEFAULT_MC_GREEN, DEFAULT_MC_BLUE);
+    EEPROM.write(ADR_STATE, st_clock);
+    EEPROM.write(ADR_NM_ACTIVATED, DEFAULT_NM_ACTIVATED);
+    EEPROM.write(ADR_COLSHIFTSPEED, DEFAULT_COLSHIFT_SPEED);
+    EEPROM.write(ADR_COLSHIFTACTIVE, DEFAULT_COLSHIFT_ACTIVE);
+    EEPROM.write(ADR_NM_BRIGHTNESS, DEFAULT_NM_BRIGHTNESS);
+    EEPROM.commit();
+  }
 
   // configure button pin as input
   pinMode(BUTTONPIN, INPUT_PULLUP);
@@ -364,6 +402,7 @@ void setup() {
   loadNightmodeSettingsFromEEPROM();
   loadBrightnessSettingsFromEEPROM();
   loadColorShiftStateFromEEPROM();
+  loadNightmodeBrightnessFromEEPROM();
   loadHourAnimationSettingsFromEEPROM();
   
   if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
@@ -450,14 +489,22 @@ void loop() {
   }
 
   // handle state behaviours (trigger loopCycles of different states depending on current state)
-  if(!nightMode && !ledOff && (millis() - lastStep > behaviorUpdatePeriod) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
+  if(!ledOff && (millis() - lastStep > behaviorUpdatePeriod) && (millis() - lastLEDdirect > TIMEOUT_LEDDIRECT)){
     updateStateBehavior(currentState);    
     lastStep = millis();
   }
 
-  // Turn off LEDs if ledOff is true or nightmode is active
-  if((ledOff || nightMode) && !waitForTimeAfterReboot){
+  // Turn off LEDs if ledOff is true
+  if(ledOff && !waitForTimeAfterReboot){
     ledmatrix.gridFlush();
+  }
+  
+  // Apply night mode brightness
+  if(nightMode && !ledOff && !waitForTimeAfterReboot){
+    ledmatrix.setBrightness(nightModeBrightness);
+  }
+  else if(!nightMode && !ledOff && !waitForTimeAfterReboot){
+    ledmatrix.setBrightness(brightness);
   }
 
   // periodically write colors to matrix
@@ -470,7 +517,7 @@ void loop() {
   handleButton();
 
   // handle state changes
-  if(stateAutoChange && (millis() - lastStateChange > PERIOD_STATECHANGE) && !nightMode && !ledOff){
+  if(stateAutoChange && (millis() - lastStateChange > PERIOD_STATECHANGE) && !ledOff){
     // increment state variable and trigger state change
     stateChange((currentState + 1) % NUM_STATES, false);
     
@@ -922,6 +969,16 @@ void loadColorShiftStateFromEEPROM()
 }
 
 /**
+ * @brief Load the night mode brightness from EEPROM
+ *
+ */
+void loadNightmodeBrightnessFromEEPROM()
+{
+  nightModeBrightness = EEPROM.read(ADR_NM_BRIGHTNESS);
+  logger.logString("Night mode brightness: " + String(nightModeBrightness));
+}
+
+/**
  * @brief load the hour animation setting from EEPROM
  * 
  */
@@ -1004,6 +1061,7 @@ void handleCommand() {
     nightModeEndMin = split(timestr, '-', 3).toInt();
     brightness = split(timestr, '-', 4).toInt();
     dynColorShiftSpeed = split(timestr, '-', 5).toInt();
+    nightModeBrightness = split(timestr, '-', 6).toInt();
     if(nightModeStartHour < 0 || nightModeStartHour > 23) nightModeStartHour = 22;
     if(nightModeStartMin < 0 || nightModeStartMin > 59) nightModeStartMin = 0;
     if(nightModeEndHour < 0 || nightModeEndHour > 23) nightModeEndHour = 7;
@@ -1016,11 +1074,13 @@ void handleCommand() {
     EEPROM.write(ADR_NM_END_M, nightModeEndMin);
     EEPROM.write(ADR_BRIGHTNESS, brightness);
     EEPROM.write(ADR_COLSHIFTSPEED, dynColorShiftSpeed);
+    EEPROM.write(ADR_NM_BRIGHTNESS, nightModeBrightness);
     EEPROM.commit();
     logger.logString("Nightmode starts at: " + String(nightModeStartHour) + ":" + String(nightModeStartMin));
     logger.logString("Nightmode ends at: " + String(nightModeEndHour) + ":" + String(nightModeEndMin));
     logger.logString("Brightness: " + String(brightness));
     logger.logString("ColorShiftSpeed: " + String(dynColorShiftSpeed));
+    logger.logString("Night mode brightness: " + String(nightModeBrightness));
     ledmatrix.setBrightness(brightness);
     lastNightmodeCheck = millis()  - PERIOD_NIGHTMODECHECK;
   }
@@ -1181,6 +1241,8 @@ void handleDataRequest() {
       message += "\"nightModeEnd\":\"" + leadingZero2Digit(nightModeEndHour) + "-" + leadingZero2Digit(nightModeEndMin) + "\"";
       message += ",";
       message += "\"brightness\":\"" + String(brightness) + "\"";
+      message += ",";
+      message += "\"nightModeBrightness\":\"" + String(nightModeBrightness) + "\"";
       message += ",";
       message += "\"colorshift\":\"" + String(dynColorShiftActive) + "\"";
       message += ",";

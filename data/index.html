@@ -243,7 +243,7 @@
 	}
 
 	.show{
-		height: 280px;
+		height: 320px;
 		transition: height 1s;
 	}
 
@@ -279,6 +279,10 @@
 			<div class="number-container">
 				<label for="colorshiftspeed">Color shift speed:</label>
 				<input type="range" id="colorshiftspeed" name="volume" min="0" max="50">
+			</div>
+			<div class="number-container">
+				<label for="nm_brightness">Nightmode brightness:</label>
+				<input type="range" id="nm_brightness" name="volume" min="0" max="100">
 			</div>
 			<div class="number-container">
 				<label for="nm_start" style="align-self: flex-start">Nightmode start time: </label> 
@@ -559,6 +563,7 @@
 					document.getElementById("nm_start").value = myVar.nightModeStart.replace("-", ":");
 					document.getElementById("nm_end").value = myVar.nightModeEnd.replace("-", ":");
 					document.getElementById("brightness").value = parseInt(myVar.brightness);
+					document.getElementById("nm_brightness").value = parseInt(myVar.nightModeBrightness);
 					document.getElementById("colorshiftspeed").value = parseInt(myVar.colorshiftspeed);
 
 					updateDisplay(parseInt(myVar.modeid));
@@ -635,6 +640,7 @@
 				var nmStart = document.getElementById("nm_start");
 				var nmEnd = document.getElementById("nm_end");
 				var sld_brightness = document.getElementById("brightness");
+				var sld_nm_brightness = document.getElementById("nm_brightness");
 				var sld_colorshiftspeed = document.getElementById("colorshiftspeed");
 				var ckb_resetWifi = document.querySelector('input[id="ResetWifi"]');
 				var cmdstr = "./cmd?setting=";
@@ -645,6 +651,8 @@
 				cmdstr += sld_brightness.value;
 				cmdstr += "-";
 				cmdstr += sld_colorshiftspeed.value;
+				cmdstr += "-";
+				cmdstr += sld_nm_brightness.value;
 				console.log(cmdstr);
 				sendCommand(cmdstr);
 				if(ckb_resetWifi.checked) {

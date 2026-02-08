@@ -92,6 +92,8 @@ We've got some interesting branches in this repo inspired by user feedback. Thes
 ![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=rgbw_leds)
 - [**static_background_pattern**](https://github.com/techniccontroller/wordclock_esp8266/tree/static_background_pattern): This branch allows to light up specific letters always during clock mode. E.G., to display some special words in another color.  
 ![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=static_background_pattern)
+- [**frame_light**](https://github.com/techniccontroller/wordclock_esp8266/tree/frame_light): This branch allows to add an additional LEDs around the clock, as background/frame light it has the same color as the clock. Thanks to Sandro for the idea. 
+![compile esp8266 workflow](https://github.com/techniccontroller/wordclock_esp8266/actions/workflows/compile_esp8266.yml/badge.svg?branch=frame_light)
 
 ## Install needed Libraries
 
