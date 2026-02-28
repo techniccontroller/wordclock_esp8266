@@ -51,7 +51,7 @@
 #define EEPROM_VERSION_CODE   3  // Change this value when defaults settings change
 
 // EEPROM address map (all uint8_t, 1 byte each)
-#define EEPROM_SIZE          17  // size of EEPROM to save persistent variables
+#define EEPROM_SIZE          18  // size of EEPROM to save persistent variables
 #define ADR_EEPROM_VERSION    0  // uint8_t
 #define ADR_NM_START_H        1  // uint8_t
 #define ADR_NM_END_H          2  // uint8_t
@@ -66,9 +66,10 @@
 #define ADR_COLSHIFTSPEED    11  // uint8_t
 #define ADR_COLSHIFTACTIVE   12  // uint8_t
 #define ADR_NM_BRIGHTNESS    13  // uint8_t
-#define ADR_HOURANIMATION    14  // uint8_t
-#define ADR_BRIGHTNESS_FRAME 15  // uint8_t
-#define ADR_FRAMELIGHTACTIVE 16  // uint8_t
+#define ADR_BGPATTERN_ACTIVE 14  // uint8_t
+#define ADR_HOURANIMATION    15  // uint8_t
+#define ADR_BRIGHTNESS_FRAME 16  // uint8_t
+#define ADR_FRAMELIGHTACTIVE 17  // uint8_t
 
 // DEFAULT SETTINGS (if one changes this, also increment the EEPROM_VERSION_CODE, to ensure that the EEPROM is updated with the new defaults)
 #define DEFAULT_NM_START_HOUR 22 // default start hour of nightmode (0-23)
@@ -83,6 +84,7 @@
 #define DEFAULT_NM_BRIGHTNESS 0 // default brightness during night mode (0-255)
 #define DEFAULT_COLSHIFT_SPEED 1 // needs to be between larger than 0 (1 = slowest, 255 = fastest)
 #define DEFAULT_COLSHIFT_ACTIVE 0 // if dynamic color shift is active (0 = deactivated, 1 = activated)
+#define DEFAULT_BGPATTERN_ACTIVE 0 // if static background pattern is active (0 = deactivated, 1 = activated)
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
 #define NEOPIXELPIN_FRAME 4 // pin to which the NeoPixels for the frame light are attached
@@ -221,6 +223,7 @@ bool apmode = false;                                  // stores if WiFi AP mode 
 bool dynColorShiftActive = DEFAULT_COLSHIFT_ACTIVE;   // stores if dynamic color shift is active
 uint8_t dynColorShiftPhase = 0;                       // stores the phase of the dynamic color shift
 uint8_t dynColorShiftSpeed = DEFAULT_COLSHIFT_SPEED;  // stores the speed of the dynamic color shift -> used to calc update period
+bool bgPatternActive = DEFAULT_BGPATTERN_ACTIVE;      // stores if static background pattern is active
 bool hourAnimation = false;                   // stores if the hour animation is active
 uint32_t hourAnimationDuration = 18000;           // stores the duration of the hour animation in seconds
 bool frameLightActive = false;                // stores if frame light is active
@@ -268,6 +271,7 @@ void setup() {
     EEPROM.write(ADR_COLSHIFTSPEED, DEFAULT_COLSHIFT_SPEED);
     EEPROM.write(ADR_COLSHIFTACTIVE, DEFAULT_COLSHIFT_ACTIVE);
     EEPROM.write(ADR_NM_BRIGHTNESS, DEFAULT_NM_BRIGHTNESS);
+    EEPROM.write(ADR_BGPATTERN_ACTIVE, DEFAULT_BGPATTERN_ACTIVE);
     EEPROM.commit();
   }
 
@@ -414,6 +418,7 @@ void setup() {
   loadBrightnessSettingsFromEEPROM();
   loadColorShiftStateFromEEPROM();
   loadNightmodeBrightnessFromEEPROM();
+  loadBackgroundPatternFromEEPROM();
   loadHourAnimationSettingsFromEEPROM();
   
   if(ESP.getResetReason().equals("Power On") || ESP.getResetReason().equals("External System")){
@@ -629,6 +634,9 @@ void updateStateBehavior(uint8_t state){
         }
         showStringOnClock(timeAsString, maincolor_clock);
         drawMinuteIndicator(minutes, maincolor_clock);
+        if(bgPatternActive){
+          showStaticBackgroundPattern();
+        }
       }
       break;
     // state diclock
@@ -998,6 +1006,16 @@ void loadNightmodeBrightnessFromEEPROM()
 }
 
 /**
+ * @brief Load the background pattern active state from EEPROM
+ *
+ */
+void loadBackgroundPatternFromEEPROM()
+{
+  bgPatternActive = EEPROM.read(ADR_BGPATTERN_ACTIVE);
+  logger.logString("Background pattern active: " + String(bgPatternActive));
+}
+
+/**
  * @brief load the hour animation setting from EEPROM
  * 
  */
@@ -1199,6 +1217,15 @@ void handleCommand() {
     EEPROM.write(ADR_COLSHIFTACTIVE, dynColorShiftActive);
     EEPROM.commit();
   }
+  else if(server.argName(0) == "bgpattern"){
+    Serial.println("Background pattern change via Webserver");
+    String str = server.arg(0);
+    if(str == "1") bgPatternActive = true;
+    else bgPatternActive = false;
+    EEPROM.write(ADR_BGPATTERN_ACTIVE, bgPatternActive);
+    EEPROM.commit();
+    logger.logString("Background pattern active: " + String(bgPatternActive));
+  }
   else if(server.argName(0) == "houranimation"){
     Serial.println("HourAnimation change via Webserver");
     String str = server.arg(0);
@@ -1282,6 +1309,8 @@ void handleDataRequest() {
       message += ",";
       message += "\"colorshiftspeed\":\"" + String(dynColorShiftSpeed) + "\"";
       message += ",";
+      message += "\"bgpattern\":\"" + String(bgPatternActive) + "\"";
+      message += ",";
       message += "\"houranimation\":\"" + String(hourAnimation) + "\"";
       message += ",";
       message += "\"frameLight\":\"" + String(frameLightActive) + "\"";
@@ -1323,4 +1352,25 @@ void turnOnFrameLight(uint32_t color){
 void turnOffFrameLight(){
   backgroundLEDStrip.clear();
   backgroundLEDStrip.show();
+}
+
+/**
+ * @brief Show a static background pattern on the matrix
+ * 
+ * You can define which leds should be lit up by changing the coordinatesX and coordinatesY arrays.
+ * You can define the color by changing the color variable.
+ * 
+ */
+void showStaticBackgroundPattern(){
+  // define the coordinates of the background pattern to light up
+  // top left corner is (0,0)
+  uint8_t coordinatesX[] = {0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  uint8_t coordinatesY[] = {3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5,  5};
+  uint32_t color = LEDMatrix::Color24bit(255, 0, 0);
+
+  ledmatrix.setDynamicColorShiftPhase(-1);
+  for (uint8_t i = 0; i < sizeof(coordinatesX); i++) {
+    ledmatrix.gridAddPixel(coordinatesX[i], coordinatesY[i], color);
+  }
+
 }
