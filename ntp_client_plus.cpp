@@ -589,10 +589,16 @@ bool NTPClientPlus::updateSWChange()
     // EU rule: DST starts on last Sunday in March at 02:00 (standard time),
     // and ends on last Sunday in October at 03:00 local summer time
     // (== 02:00 standard time).
-    unsigned long secsSince1900NoDST = this->_utcx * this->secondperminute +
-                                       this->_secsSince1900 +
-                                       ((millis() - this->_lastUpdate) / 1000);
-    unsigned int hourNoDST = (secsSince1900NoDST % this->secondperday) / this->secondperhour;
+    int64_t currentUtcSeconds = static_cast<int64_t>(this->_secsSince1900) +
+                                static_cast<int64_t>((millis() - this->_lastUpdate) / 1000);
+    int64_t secsSince1900NoDST = currentUtcSeconds +
+                                 (static_cast<int64_t>(this->_utcx) * this->secondperminute);
+    int64_t secondsIntoDay = secsSince1900NoDST % this->secondperday;
+    if (secondsIntoDay < 0)
+    {
+        secondsIntoDay += this->secondperday;
+    }
+    unsigned int hourNoDST = static_cast<unsigned int>(secondsIntoDay / this->secondperhour);
 
     bool summertimeActive = false;
     
