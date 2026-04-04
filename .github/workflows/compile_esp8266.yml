@@ -36,6 +36,7 @@ jobs:
           arduino-cli lib install "Adafruit NeoPixel"
           arduino-cli lib install "WiFiManager"
           arduino-cli lib install "Adafruit BusIO"
+          arduino-cli lib install "PubSubClient"
 
       - name: Compile Sketch
         run: |
