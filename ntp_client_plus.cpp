@@ -585,6 +585,15 @@ bool NTPClientPlus::updateSWChange()
     unsigned int dateDay = this->_dateDay; 
     unsigned int dateMonth = this->_dateMonth;
 
+    // Calculate local STANDARD time (without DST) for exact switch-hour handling.
+    // EU rule: DST starts on last Sunday in March at 02:00 (standard time),
+    // and ends on last Sunday in October at 03:00 local summer time
+    // (== 02:00 standard time).
+    unsigned long secsSince1900NoDST = this->_utcx * this->secondperminute +
+                                       this->_secsSince1900 +
+                                       ((millis() - this->_lastUpdate) / 1000);
+    unsigned int hourNoDST = (secsSince1900NoDST % this->secondperday) / this->secondperhour;
+
     bool summertimeActive = false;
     
     if (this->_swChange)
@@ -607,10 +616,19 @@ bool NTPClientPlus::updateSWChange()
                 //Calculation: 31 - 30 = 1; 1 + 2 = 3;
                 //Result: Last day in March is a Wednesday. Changeover to summer time already done => set summer time
 
-                // If today is Sunday (dayOfWeek == 7) then this is already the last sunday in march -> set summer time
+                // If today is Sunday (dayOfWeek == 7) then this is the last Sunday in March.
+                // Switch to summer time at 02:00 standard time (clock jumps to 03:00).
                 if(dayOfWeek == 7){
-                    this->setSummertime(1);
-                    summertimeActive = true;
+                    if (hourNoDST >= 2)
+                    {
+                        this->setSummertime(1);
+                        summertimeActive = true;
+                    }
+                    else
+                    {
+                        this->setSummertime(0);
+                        summertimeActive = false;
+                    }
                 }
 
                 //There follows within the last week in March one more Sunday => set winter time
@@ -652,10 +670,20 @@ bool NTPClientPlus::updateSWChange()
                 //Calculation: 31 - 26 = 5; 5 + 2 = 7;
                 //Result: Last day in October is a Sunday. There follows another Sunday in October => set summer time
                 
-                // If today is Sunday (dayOfWeek == 7) then this is already the last sunday in october -> winter time
+                // If today is Sunday (dayOfWeek == 7) then this is the last Sunday in October.
+                // Switch back to winter time at 02:00 standard time
+                // (which corresponds to 03:00 local summer time).
                 if(dayOfWeek == 7){
-                    this->setSummertime(0);
-                    summertimeActive = false;
+                    if (hourNoDST >= 2)
+                    {
+                        this->setSummertime(0);
+                        summertimeActive = false;
+                    }
+                    else
+                    {
+                        this->setSummertime(1);
+                        summertimeActive = true;
+                    }
                 }
 
                 // There follows within the last week in October one more Sunday => summer time
