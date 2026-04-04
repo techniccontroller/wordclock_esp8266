@@ -128,11 +128,12 @@ void NTPClientPlus::setPoolServerName(const char *poolServerName)
  * @return unsigned long seconds since 1. Jan. 1900
  */
 unsigned long NTPClientPlus::getSecsSince1900() const
-{
-    return this->_utcx * this->secondperminute +            // UTC offset
-            this->_summertime * this->secondperhour +       // Summer time offset
-            this->_secsSince1900 +                          // seconds returned by the NTP server
-            ((millis() - this->_lastUpdate) / 1000);        // Time since last update
+{    
+    int64_t secsSince1900WithDST =  static_cast<int64_t>(this->_secsSince1900) +                    // seconds returned by the NTP server
+                                    static_cast<int64_t>((millis() - this->_lastUpdate) / 1000) +   // Time since last update
+                                    this->_summertime * this->secondperhour +                       // Summer time offset
+                                    (static_cast<int64_t>(this->_utcx) * this->secondperminute);    // UTC offset
+    return static_cast<unsigned long>(secsSince1900WithDST);
 }
 
 /**
