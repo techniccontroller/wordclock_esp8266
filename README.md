@@ -103,6 +103,7 @@ Please download all these libraries as ZIP from GitHub, and extract them in the 
 - https://github.com/adafruit/Adafruit_NeoPixel
 - https://github.com/tzapu/WiFiManager
 - https://github.com/adafruit/Adafruit_BusIO
+- https://github.com/knolleary/pubsubclient
 
 You can als install these libraries via the library manager in the Arduino IDE.
 
@@ -117,6 +118,7 @@ MySketchbookLocation
 │   └───Adafruit_NeoPixel
 │   └───WiFiManager
 │   └───Adafruit_BusIO
+│   └───PubSubClient
 │   
 └───wordclock_esp8266
     │   wordclock_esp8266.ino
@@ -129,6 +131,94 @@ MySketchbookLocation
         └───icons 
 ```
 
+## Integrate with Home Assistant
+
+### STEP1: Setup in Home Assistant
+Within Home Assistant, install the MQTT integration including the Mosquitto broker following [these steps](https://www.home-assistant.io/integrations/mqtt/).
+
+Within the [Mosquitto broker addon](https://github.com/home-assistant/addons/blob/master/mosquitto/DOCS.md), navigate to 'Configuration' and add a new user.
+
+```yaml
+logins:
+  - username: user
+    password: passwd
+```
+
+Then head to your `configuration.yaml` and add the following code:
+
+```yaml
+mqtt:
+  switch:
+    - name: "Word Clock LED"
+      state_topic: "wordclock/led"
+      command_topic: "wordclock/led"
+      payload_on: "on"
+      payload_off: "off"
+    - name: "Word Clock Night Mode"
+      state_topic: "wordclock/nightmode/activated"
+      command_topic: "wordclock/nightmode/activated"
+      payload_on: "1"
+      payload_off: "0"
+    - name: "Word Clock Color Shift Active"
+      state_topic: "wordclock/colorshift/active"
+      command_topic: "wordclock/colorshift/active"
+      payload_on: "1"
+      payload_off: "0"
+    - name: "Word Clock Auto State Change"
+      state_topic: "wordclock/state/autochange"
+      command_topic: "wordclock/state/autochange"
+      payload_on: "1"
+      payload_off: "0"
+  select:
+    - name: "Word Clock Mode"
+      state_topic: "wordclock/mode/state"
+      command_topic: "wordclock/mode"
+      options:
+        - "clock"
+        - "diclock"
+        - "spiral"
+        - "tetris"
+        - "snake"
+        - "pingpong"
+  number:
+    - name: "Word Clock Brightness"
+      state_topic: "wordclock/brightness"
+      command_topic: "wordclock/brightness"
+      min: 10
+      max: 255
+      step: 1
+    - name: "Word Clock Color Shift Speed"
+      state_topic: "wordclock/colorshift/speed"
+      command_topic: "wordclock/colorshift/speed"
+      min: 1
+      max: 10
+      step: 1
+  sensor:
+    - name: "Word Clock Night Mode Start"
+      state_topic: "wordclock/nightmode/start"
+    - name: "Word Clock Night Mode End"
+      state_topic: "wordclock/nightmode/end"
+  light:
+    - name: "Word Clock Color"
+      command_topic: "wordclock/led/color"
+      rgb_command_template: "{{ red }},{{ green }},{{ blue }}"
+      brightness_command_topic: "wordclock/brightness"
+      brightness_scale: 255
+```
+
+### STEP2: Setup in Arduino IDE
+Within `wordclock_esp8266.ino` head to the section `// MQTT Configuration` and make the required changes.
+
+```C++
+// MQTT Configuration
+const char* mqtt_server = "192.168.1.170"; // Replace with your Home Assistant MQTT broker IP
+const char* mqtt_user = "user"; // Replace with your MQTT username
+const char* mqtt_password = "passwd"; // Replace with your MQTT password
+const char* mqtt_client_id = "wordclock"; // Unique client ID for the Word Clock
+
+``` 
+
+`mqtt_user` & `mqtt_password` will be the new user you added previously within Home Assistant. `mqtt_server` will be your Home Assistant server IP address.
 
 ## Upload program to ESP8266 with Arduino IDE
 
