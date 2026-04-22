@@ -453,9 +453,9 @@ void loop() {
     // Check wifi status (only if no apmode)
     if(!apmode && WiFi.status() != WL_CONNECTED){
       Serial.println("connection lost");
-      ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
-      ledmatrix.drawOnMatrixInstant();
-      delay(1000);
+      //ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
+      //ledmatrix.drawOnMatrixInstant();
+      //delay(1000);
     }
   }
 
