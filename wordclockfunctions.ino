@@ -97,7 +97,7 @@ int showStringOnClock(String message, uint32_t color){
 String timeToString(uint8_t hours,uint8_t minutes){
   
   //ES IST
-  String message = "";
+  String message = "ES IST ";
 
   
   //show minutes
