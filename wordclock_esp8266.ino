@@ -94,6 +94,7 @@
 #define PERIOD_SNAKE 50
 #define PERIOD_PONG 10
 #define TIMEOUT_LEDDIRECT 5000
+#define TIMEOUT_WIFI_DISCONNECTED 30000
 #define PERIOD_STATECHANGE 10000
 #define PERIOD_NTPUPDATE 30000
 #define PERIOD_TIMEVISUUPDATE 1000
@@ -189,6 +190,7 @@ long lastNTPUpdate = millis() - (PERIOD_NTPUPDATE-3000);  // time of last NTP up
 long lastAnimationStep = millis();  // time of last Matrix update
 long lastNightmodeCheck = millis()  - (PERIOD_NIGHTMODECHECK-3000); // time of last nightmode check
 long buttonPressStart = 0;          // time of push button press start 
+long wifiDisconnectedSince = 0;     // time since WiFi connection was lost (0 = connected)
 uint16_t behaviorUpdatePeriod = PERIOD_TIMEVISUUPDATE; // holdes the period in which the behavior should be updated
 
 // Create necessary global objects
@@ -456,11 +458,22 @@ void loop() {
     lastheartbeat = millis();
 
     // Check wifi status (only if no apmode)
-    if(!apmode && WiFi.status() != WL_CONNECTED){
-      Serial.println("connection lost");
-      ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
-      ledmatrix.drawOnMatrixInstant();
-      delay(1000);
+    if(!apmode){
+      if(WiFi.status() != WL_CONNECTED){
+        if(wifiDisconnectedSince == 0){
+          wifiDisconnectedSince = millis();
+          Serial.println("connection lost");
+        }
+
+        if(millis() - wifiDisconnectedSince >= TIMEOUT_WIFI_DISCONNECTED){
+          ledmatrix.gridAddPixel(0, 5, colors24bit[1]);
+          ledmatrix.drawOnMatrixInstant();
+          delay(1000);
+        }
+      }
+      else {
+        wifiDisconnectedSince = 0;
+      }
     }
   }
 
