@@ -33,6 +33,8 @@ class NTPClientPlus{
         String getFormattedDate();
         void calcDate();
         unsigned int getDayOfWeek();
+        unsigned int getDayOfMonth();
+        unsigned int getMonthNumber();
         unsigned int getYear();
         bool isLeapYear(unsigned int year);
         int getMonth(int dayOfYear);
