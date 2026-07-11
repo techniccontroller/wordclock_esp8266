@@ -16,15 +16,15 @@ void UDPLogger::setName(String name){
     _name = name;
 }
 
-void UDPLogger::logString(String logmessage){
-    // wait 5 milliseconds if last send was less than 5 milliseconds before 
+void UDPLogger::logString(const String& logmessage){
+    // 5 Millisekunden warten, falls die letzte Sendung weniger als 5 Millisekunden zurueckliegt
     if(millis() < (_lastSend + 5)){
         delay(5);
     }
-    logmessage = _name + ": " + logmessage;
-    Serial.println(logmessage);
+    // Fester Puffer statt String-Verkettung, um Heap-Fragmentierung zu vermeiden
+    snprintf(_packetBuffer, sizeof(_packetBuffer), "%s: %s", _name.c_str(), logmessage.c_str());
+    Serial.println(_packetBuffer);
     _Udp.beginPacketMulticast(_multicastAddr, _port, _interfaceAddr);
-    logmessage.toCharArray(_packetBuffer, 100);
     _Udp.print(_packetBuffer);
     _Udp.endPacket();
     _lastSend=millis();
