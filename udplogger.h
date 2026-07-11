@@ -22,7 +22,7 @@ class UDPLogger{
         UDPLogger();
         UDPLogger(IPAddress interfaceAddr, IPAddress multicastAddr, int port);
         void setName(String name);
-        void logString(String logmessage);
+        void logString(const String& logmessage);
         void logColor24bit(uint32_t color);
     private:
         String _name;

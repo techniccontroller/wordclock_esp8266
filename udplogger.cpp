@@ -21,8 +21,8 @@ void UDPLogger::logString(const String& logmessage){
     if(millis() < (_lastSend + 5)){
         delay(5);
     }
-    // Fester Puffer statt String-Verkettung, um Heap-Fragmentierung zu vermeiden
-    // (identisches Format und identische Kuerzung bei 100 Zeichen wie vorher)
+    // use fixed buffer instead of string concatenation to avoid heap fragmentation
+    // cut message to 100 characters of length (buffer size)
     snprintf(_packetBuffer, sizeof(_packetBuffer), "%s: %s", _name.c_str(), logmessage.c_str());
     Serial.println(_packetBuffer);
     _Udp.beginPacketMulticast(_multicastAddr, _port, _interfaceAddr);
