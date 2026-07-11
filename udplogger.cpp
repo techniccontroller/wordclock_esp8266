@@ -10,6 +10,7 @@ UDPLogger::UDPLogger(IPAddress interfaceAddr, IPAddress multicastAddr, int port)
     _interfaceAddr = interfaceAddr;
     _name = "Log";
     _Udp.beginMulticast(_interfaceAddr, _multicastAddr, _port);
+    _lastSend = 0;
 }
 
 void UDPLogger::setName(String name){
@@ -22,7 +23,7 @@ void UDPLogger::logString(const String& logmessage){
         delay(5);
     }
     // use fixed buffer instead of string concatenation to avoid heap fragmentation
-    // cut message to 100 characters of length (buffer size)
+    // message will be truncated to fit into _packetBuffer (99 chars + NUL)
     snprintf(_packetBuffer, sizeof(_packetBuffer), "%s: %s", _name.c_str(), logmessage.c_str());
     Serial.println(_packetBuffer);
     _Udp.beginPacketMulticast(_multicastAddr, _port, _interfaceAddr);
