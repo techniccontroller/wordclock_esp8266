@@ -200,15 +200,14 @@ int NTPClientPlus::getSeconds() const
 String NTPClientPlus::getFormattedTime() const {
   unsigned long rawTime = this->getEpochTime();
   unsigned long hours = (rawTime % 86400L) / 3600;
-  String hoursStr = hours < 10 ? "0" + String(hours) : String(hours);
-
   unsigned long minutes = (rawTime % 3600) / 60;
-  String minuteStr = minutes < 10 ? "0" + String(minutes) : String(minutes);
-
   unsigned long seconds = rawTime % 60;
-  String secondStr = seconds < 10 ? "0" + String(seconds) : String(seconds);
 
-  return hoursStr + ":" + minuteStr + ":" + secondStr;
+  // Fester Puffer statt mehrfacher String-Verkettung, um Heap-Fragmentierung zu vermeiden
+  // Format identisch zu vorher: hh:mm:ss (jeweils 2-stellig, mit fuehrender Null)
+  char buffer[9]; // "hh:mm:ss" + '\0'
+  snprintf(buffer, sizeof(buffer), "%02lu:%02lu:%02lu", hours, minutes, seconds);
+  return String(buffer);
 }
 
 /**
