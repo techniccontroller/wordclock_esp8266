@@ -10,21 +10,23 @@ UDPLogger::UDPLogger(IPAddress interfaceAddr, IPAddress multicastAddr, int port)
     _interfaceAddr = interfaceAddr;
     _name = "Log";
     _Udp.beginMulticast(_interfaceAddr, _multicastAddr, _port);
+    _lastSend = 0;
 }
 
 void UDPLogger::setName(String name){
     _name = name;
 }
 
-void UDPLogger::logString(String logmessage){
+void UDPLogger::logString(const String& logmessage){
     // wait 5 milliseconds if last send was less than 5 milliseconds before 
     if(millis() < (_lastSend + 5)){
         delay(5);
     }
-    logmessage = _name + ": " + logmessage;
-    Serial.println(logmessage);
+    // use fixed buffer instead of string concatenation to avoid heap fragmentation
+    // message will be truncated to fit into _packetBuffer (99 chars + NUL)
+    snprintf(_packetBuffer, sizeof(_packetBuffer), "%s: %s", _name.c_str(), logmessage.c_str());
+    Serial.println(_packetBuffer);
     _Udp.beginPacketMulticast(_multicastAddr, _port, _interfaceAddr);
-    logmessage.toCharArray(_packetBuffer, 100);
     _Udp.print(_packetBuffer);
     _Udp.endPacket();
     _lastSend=millis();
