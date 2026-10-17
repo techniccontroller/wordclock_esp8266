@@ -361,6 +361,15 @@
 			</div>
 		</div>
 		
+		<div class="checkbox-container" id="hour_chime_1">
+			<label for="HourlyChime1" style="align-self: flex-start">Hourly Chime 1</label>
+			<div><input name="HourlyChime1" id="HourlyChime1" type="checkbox" class="toggle"></div>
+		</div>
+		<div class="checkbox-container" id="hour_chime_2">
+			<label for="HourlyChime2" style="align-self: flex-start">Hourly Chime 2</label>
+			<div><input name="HourlyChime2" id="HourlyChime2" type="checkbox" class="toggle"></div>
+		</div>
+
 		<div class="main-container hidden" id="colorcontainer">
 			<div class="verticalline">
 			</div>
@@ -610,6 +619,15 @@
 						}
 					});
 					
+                    var chimeToggles = [document.getElementById("HourlyChime1"), document.getElementById("HourlyChime2")];
+                    chimeToggles.forEach((toggle, index) => {
+                        toggle.checked = myVar.hourlychime == String(index + 1);
+                        toggle.addEventListener('change', () => {
+                            if(toggle.checked) chimeToggles[1 - index].checked = false;
+                            sendCommand("./cmd?hourlychime=" + (toggle.checked ? index + 1 : 0));
+                        });
+                    });
+
 					document.getElementById("nm_start").value = myVar.nightModeStart.replace("-", ":");
 					document.getElementById("nm_end").value = myVar.nightModeEnd.replace("-", ":");
 					document.getElementById("brightness").value = parseInt(myVar.brightness);

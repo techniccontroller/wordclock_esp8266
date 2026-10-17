@@ -206,3 +206,24 @@ If this is not the case, there could be a problem with the network settings of t
 
 6. If special events (failed NTP update, reboot) occur, a section of the log is saved in a file called *log.txt*. 
 In principle, the events are not critical and will occur from time to time, but should not be too frequent.
+
+## Hourly chimes (sound branch)
+
+Below **Hourly animation**, **Hourly Chime 1** and **Hourly Chime 2** select
+one of two sound outputs. Enabling either toggle switches the other off; both
+can be off. The selection is saved across restarts and works independently of
+the hourly animation toggle and display mode.
+
+- Chime 1: `HOURPULSE_PIN`, GPIO12 (NodeMCU D6).
+- Chime 2: `HOURPULSE2_PIN`, GPIO13 (NodeMCU D7).
+
+Both outputs idle HIGH (3.3 V). At the transition from minute 59 to 00, the
+selected output goes LOW for one second and then returns HIGH. Pin assignments
+can be changed in `wordclock_esp8266.ino` to match the sound module wiring.
+
+Entering **spiral** manually also triggers the selected sound once. The animation
+keeps repeating, but the sound only plays again after leaving spiral and entering
+it again. Changing the chime selection or clicking spiral again while it is
+already selected does not trigger another demo pulse.
+
+Upload both the firmware and the updated `data/index.html` to the clock.

@@ -33,6 +33,7 @@
 #include "Base64.h"                    // copied from https://github.com/Xander-Electronics/Base64 
 #include <DNSServer.h>
 #include <WiFiManager.h>                //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
+#include <Ticker.h>                     // non-blocking one-second chime pulse
 #include <EEPROM.h>                     //from ESP8266 Arduino Core (automatically installed when ESP8266 was installed via Boardmanager)
 
 // own libraries
@@ -51,7 +52,7 @@
 #define EEPROM_VERSION_CODE   3  // Change this value when defaults settings change
 
 // EEPROM address map (all uint8_t, 1 byte each)
-#define EEPROM_SIZE          18  // size of EEPROM to save persistent variables
+#define EEPROM_SIZE          19  // size of EEPROM to save persistent variables
 #define ADR_EEPROM_VERSION    0  // uint8_t
 #define ADR_NM_START_H        1  // uint8_t
 #define ADR_NM_END_H          2  // uint8_t
@@ -70,6 +71,7 @@
 #define ADR_HOURANIMATION    15  // uint8_t
 #define ADR_BRIGHTNESS_FRAME 16  // uint8_t
 #define ADR_FRAMELIGHTACTIVE 17  // uint8_t
+#define ADR_HOURLYCHIME      18  // uint8_t: 0 = off, 1 or 2 = selected output
 
 // DEFAULT SETTINGS (if one changes this, also increment the EEPROM_VERSION_CODE, to ensure that the EEPROM is updated with the new defaults)
 #define DEFAULT_NM_START_HOUR 22 // default start hour of nightmode (0-23)
@@ -88,6 +90,8 @@
 
 #define NEOPIXELPIN 5       // pin to which the NeoPixels are attached
 #define NEOPIXELPIN_FRAME 4 // pin to which the NeoPixels for the frame light are attached
+#define HOURPULSE_PIN 12     // GPIO12 / D6: Hourly Chime 1 (idle HIGH, active LOW)
+#define HOURPULSE2_PIN 13    // GPIO13 / D7: Hourly Chime 2 (idle HIGH, active LOW)
 #define BUTTONPIN 14        // pin to which the button is attached
 #define LEFT 1
 #define RIGHT 2
@@ -227,8 +231,10 @@ uint8_t dynColorShiftPhase = 0;                       // stores the phase of the
 uint8_t dynColorShiftSpeed = DEFAULT_COLSHIFT_SPEED;  // stores the speed of the dynamic color shift -> used to calc update period
 bool bgPatternActive = DEFAULT_BGPATTERN_ACTIVE;      // stores if static background pattern is active
 bool hourAnimation = false;                   // stores if the hour animation is active
-uint32_t hourAnimationDuration = 18000;           // stores the duration of the hour animation in seconds
+uint32_t hourAnimationDuration = 18000;           // duration in milliseconds
 bool frameLightActive = false;                // stores if frame light is active
+uint8_t hourlyChime = 0;                         // mutually exclusive: off, chime 1, chime 2
+Ticker hourPulseTimer;
 
 // nightmode settings
 uint8_t nightModeStartHour = DEFAULT_NM_START_HOUR;
@@ -247,6 +253,12 @@ bool waitForTimeAfterReboot = false; // wait for time update after reboot
 // ----------------------------------------------------------------------------------
 
 void setup() {
+  // Set the idle level before enabling the outputs to avoid a startup pulse.
+  digitalWrite(HOURPULSE_PIN, HIGH);
+  digitalWrite(HOURPULSE2_PIN, HIGH);
+  pinMode(HOURPULSE_PIN, OUTPUT);
+  pinMode(HOURPULSE2_PIN, OUTPUT);
+
   // put your setup code here, to run once:
   Serial.begin(115200);
   delay(100);
@@ -274,6 +286,16 @@ void setup() {
     EEPROM.write(ADR_COLSHIFTACTIVE, DEFAULT_COLSHIFT_ACTIVE);
     EEPROM.write(ADR_NM_BRIGHTNESS, DEFAULT_NM_BRIGHTNESS);
     EEPROM.write(ADR_BGPATTERN_ACTIVE, DEFAULT_BGPATTERN_ACTIVE);
+    EEPROM.write(ADR_HOURANIMATION, 0);
+    EEPROM.write(ADR_HOURLYCHIME, 0);
+    EEPROM.commit();
+  }
+
+  // Migrate the extra byte without resetting existing version-3 settings.
+  hourlyChime = EEPROM.read(ADR_HOURLYCHIME);
+  if(hourlyChime > 2){
+    hourlyChime = 0;
+    EEPROM.write(ADR_HOURLYCHIME, hourlyChime);
     EEPROM.commit();
   }
 
@@ -497,24 +519,23 @@ void loop() {
       }
     }
   }
-  if(hourAnimation){
-    // Show word animation allows from XX:00:00 till XX:00:12 (for 12 seconds every hour)
-    // start
-    static uint8_t lastMinutes = 0;
-    uint8_t minutes = ntp.getMinutes();
-    if(lastMinutes == 59 && minutes == 0 && currentState == st_clock){
+  // Track the hour transition even when hourly animation/chimes are disabled.
+  static uint8_t lastMinutes = 60;
+  uint8_t minutes = ntp.getMinutes();
+  if(!waitForTimeAfterReboot && lastMinutes == 59 && minutes == 0){
+    startHourPulse();
+    if(hourAnimation && currentState == st_clock){
       logger.logString("Start hour animation");
-      logger.logString("Time: " +  ntp.getFormattedTime());
+      logger.logString("Time: " + ntp.getFormattedTime());
       stateChange(st_spiral, false);
       hourAnimationStart = millis();
     }
-    lastMinutes = minutes;
+  }
+  lastMinutes = waitForTimeAfterReboot ? 60 : minutes;
 
-    // end
-    if((millis() - hourAnimationStart) >= hourAnimationDuration && currentState == st_spiral && hourAnimationStart != 0){
-      stateChange(st_clock, false);
-      hourAnimationStart = 0;
-    }
+  if(hourAnimationStart != 0 && currentState == st_spiral &&
+     (millis() - hourAnimationStart) >= hourAnimationDuration){
+    stateChange(st_clock, false);
   }
 
   // handle state behaviours (trigger loopCycles of different states depending on current state)
@@ -743,6 +764,18 @@ void checkNightmode(){
   }
 }
 
+// Ticker restores both outputs even while network operations block the main loop.
+void stopHourPulse(){
+  digitalWrite(HOURPULSE_PIN, HIGH);
+  digitalWrite(HOURPULSE2_PIN, HIGH);
+}
+
+void startHourPulse(){
+  if(hourlyChime == 0 || hourPulseTimer.active()) return;
+  digitalWrite(hourlyChime == 1 ? HOURPULSE_PIN : HOURPULSE2_PIN, LOW);
+  hourPulseTimer.once_ms(1000, stopHourPulse);
+}
+
 /**
  * @brief call entry action of given state
  * 
@@ -810,6 +843,12 @@ void entryAction(uint8_t state){
  * @param persistant if true, the state will be saved to EEPROM
  */
 void stateChange(uint8_t newState, bool persistant){
+  // Only a manual entry into spiral plays the demo sound, never a repeated click
+  // or an animation cycle. Automatic hourly playback is triggered separately.
+  if(persistant && newState == st_spiral && currentState != st_spiral){
+    startHourPulse();
+  }
+  hourAnimationStart = 0;
   if(ledOff){
     ledOff = false;
   }
@@ -1239,6 +1278,16 @@ void handleCommand() {
     EEPROM.commit();
     logger.logString("Background pattern active: " + String(bgPatternActive));
   }
+  else if(server.argName(0) == "hourlychime"){
+    String value = server.arg(0);
+    if(value != "0" && value != "1" && value != "2"){
+      server.send(400, "text/plain", "Invalid hourly chime");
+      return;
+    }
+    hourlyChime = value.toInt();
+    EEPROM.write(ADR_HOURLYCHIME, hourlyChime);
+    EEPROM.commit();
+  }
   else if(server.argName(0) == "houranimation"){
     Serial.println("HourAnimation change via Webserver");
     String str = server.arg(0);
@@ -1327,6 +1376,8 @@ void handleDataRequest() {
       message += "\"houranimation\":\"" + String(hourAnimation) + "\"";
       message += ",";
       message += "\"frameLight\":\"" + String(frameLightActive) + "\"";
+      message += ",";
+      message += "\"hourlychime\":\"" + String(hourlyChime) + "\"";
     }
     message += "}";
     server.send(200, "application/json", message);
