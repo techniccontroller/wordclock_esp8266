@@ -245,11 +245,9 @@ bool waitForTimeAfterReboot = false; // wait for time update after reboot
 // ----------------------------------------------------------------------------------
 
 void setup() {
-  // Set the idle level before enabling the outputs to avoid a startup pulse.
-  digitalWrite(HOURPULSE_PIN, HIGH);
-  digitalWrite(HOURPULSE2_PIN, HIGH);
-  pinMode(HOURPULSE_PIN, OUTPUT);
-  pinMode(HOURPULSE2_PIN, OUTPUT);
+  // Set the pins to high-impedance during idle, no INPUT_PULLUP
+  pinMode(HOURPULSE_PIN, INPUT);
+  pinMode(HOURPULSE2_PIN, INPUT);
 
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -751,16 +749,18 @@ void checkNightmode(){
   }
 }
 
-// Ticker restores both outputs even while network operations block the main loop.
+// enable again high-impedance (release button)
 void stopHourPulse(){
-  digitalWrite(HOURPULSE_PIN, HIGH);
-  digitalWrite(HOURPULSE2_PIN, HIGH);
+  pinMode(HOURPULSE_PIN, INPUT);
+  pinMode(HOURPULSE2_PIN, INPUT);
 }
 
 void startHourPulse(){
   if(hourlyChime == 0 || hourPulseTimer.active()) return;
-  digitalWrite(hourlyChime == 1 ? HOURPULSE_PIN : HOURPULSE2_PIN, LOW);
-  hourPulseTimer.once_ms(1000, stopHourPulse);
+  int pin = hourlyChime == 1 ? HOURPULSE_PIN : HOURPULSE2_PIN;
+  digitalWrite(pin, LOW);   // First, set it to "LOW" to prevent a "HIGH" pulse from occurring
+  pinMode(pin, OUTPUT);     // Pull to GND now = "Button pressed"
+  hourPulseTimer.once_ms(100, stopHourPulse); // pulse duration
 }
 
 /**
