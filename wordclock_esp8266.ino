@@ -71,7 +71,7 @@
 #define ADR_HOURANIMATION    15  // uint8_t
 #define ADR_BRIGHTNESS_FRAME 16  // uint8_t
 #define ADR_FRAMELIGHTACTIVE 17  // uint8_t
-#define ADR_HOURLYCHIME      18  // uint8_t: 0 = off, 1 or 2 = selected output
+#define ADR_HOURLYCHIME      18  // uint8_t: 0 = off, 1 -3 = selected output
 
 // DEFAULT SETTINGS (if one changes this, also increment the EEPROM_VERSION_CODE, to ensure that the EEPROM is updated with the new defaults)
 #define DEFAULT_NM_START_HOUR 22 // default start hour of nightmode (0-23)
@@ -92,6 +92,7 @@
 #define NEOPIXELPIN_FRAME 4 // pin to which the NeoPixels for the frame light are attached
 #define HOURPULSE_PIN 12     // GPIO12 / D6: Hourly Chime 1 (idle HIGH, active LOW)
 #define HOURPULSE2_PIN 13    // GPIO13 / D7: Hourly Chime 2 (idle HIGH, active LOW)
+#define HOURPULSE3_PIN 2     // GPIO2 / D4: Hourly Chime 3 (idle HIGH, active LOW)
 #define BUTTONPIN 14        // pin to which the button is attached
 #define LEFT 1
 #define RIGHT 2
@@ -233,7 +234,7 @@ bool bgPatternActive = DEFAULT_BGPATTERN_ACTIVE;      // stores if static backgr
 bool hourAnimation = false;                   // stores if the hour animation is active
 uint32_t hourAnimationDuration = 18000;           // duration in milliseconds
 bool frameLightActive = false;                // stores if frame light is active
-uint8_t hourlyChime = 0;                         // mutually exclusive: off, chime 1, chime 2
+uint8_t hourlyChime = 0;                         // mutually exclusive: off, chime 1, chime 2, chime 3
 Ticker hourPulseTimer;
 
 // nightmode settings
@@ -256,6 +257,7 @@ void setup() {
   // Set the pins to high-impedance during idle, no INPUT_PULLUP
   pinMode(HOURPULSE_PIN, INPUT);
   pinMode(HOURPULSE2_PIN, INPUT);
+  pinMode(HOURPULSE3_PIN, INPUT);
 
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -291,7 +293,7 @@ void setup() {
 
   // Migrate the extra byte without resetting existing version-3 settings.
   hourlyChime = EEPROM.read(ADR_HOURLYCHIME);
-  if(hourlyChime > 2){
+  if(hourlyChime > 3){
     hourlyChime = 0;
     EEPROM.write(ADR_HOURLYCHIME, hourlyChime);
     EEPROM.commit();
@@ -766,11 +768,13 @@ void checkNightmode(){
 void stopHourPulse(){
   pinMode(HOURPULSE_PIN, INPUT);
   pinMode(HOURPULSE2_PIN, INPUT);
+  pinMode(HOURPULSE3_PIN, INPUT);
 }
 
 void startHourPulse(){
   if(hourlyChime == 0 || hourPulseTimer.active()) return;
-  int pin = hourlyChime == 1 ? HOURPULSE_PIN : HOURPULSE2_PIN;
+  int pin = hourlyChime == 1 ? HOURPULSE_PIN :
+            hourlyChime == 2 ? HOURPULSE2_PIN : HOURPULSE3_PIN;
   digitalWrite(pin, LOW);   // First, set it to "LOW" to prevent a "HIGH" pulse from occurring
   pinMode(pin, OUTPUT);     // Pull to GND now = "Button pressed"
   hourPulseTimer.once_ms(100, stopHourPulse); // pulse duration
@@ -1280,7 +1284,7 @@ void handleCommand() {
   }
   else if(server.argName(0) == "hourlychime"){
     String value = server.arg(0);
-    if(value != "0" && value != "1" && value != "2"){
+    if(value != "0" && value != "1" && value != "2" && value != "3"){
       server.send(400, "text/plain", "Invalid hourly chime");
       return;
     }

@@ -369,6 +369,10 @@
 			<label for="HourlyChime2" style="align-self: flex-start">Hourly Chime 2</label>
 			<div><input name="HourlyChime2" id="HourlyChime2" type="checkbox" class="toggle"></div>
 		</div>
+		<div class="checkbox-container" id="hour_chime_3">
+			<label for="HourlyChime3" style="align-self: flex-start">Hourly Chime 3</label>
+			<div><input name="HourlyChime3" id="HourlyChime3" type="checkbox" class="toggle"></div>
+		</div>
 
 		<div class="main-container hidden" id="colorcontainer">
 			<div class="verticalline">
@@ -619,11 +623,13 @@
 						}
 					});
 					
-                    var chimeToggles = [document.getElementById("HourlyChime1"), document.getElementById("HourlyChime2")];
+					var chimeToggles = [document.getElementById("HourlyChime1"), document.getElementById("HourlyChime2"), document.getElementById("HourlyChime3")];
                     chimeToggles.forEach((toggle, index) => {
                         toggle.checked = myVar.hourlychime == String(index + 1);
                         toggle.addEventListener('change', () => {
-                            if(toggle.checked) chimeToggles[1 - index].checked = false;
+							if(toggle.checked) chimeToggles.forEach((otherToggle, otherIndex) => {
+								if(otherIndex !== index) otherToggle.checked = false;
+							});
                             sendCommand("./cmd?hourlychime=" + (toggle.checked ? index + 1 : 0));
                         });
                     });
