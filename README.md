@@ -209,13 +209,14 @@ In principle, the events are not critical and will occur from time to time, but 
 
 ## Hourly chimes (sound branch)
 
-Below **Hourly animation**, **Hourly Chime 1** and **Hourly Chime 2** select
-one of two sound outputs. Enabling either toggle switches the other off; both
-can be off. The selection is saved across restarts and works independently of
-the hourly animation toggle and display mode.
+Below **Hourly animation**, **Hourly Chime 1**, **Hourly Chime 2**, and
+**Hourly Chime 3** select one of three sound outputs. Enabling a toggle switches
+the other two off; all can be off. The selection is saved across restarts and
+works independently of the hourly animation toggle and display mode.
 
 - Chime 1: `HOURPULSE_PIN`, GPIO12 (NodeMCU D6).
 - Chime 2: `HOURPULSE2_PIN`, GPIO13 (NodeMCU D7).
+- Chime 3: `HOURPULSE3_PIN`, GPIO4 (NodeMCU D2).
 
 Both outputs idle HIGH (3.3 V). At the transition from minute 59 to 00, the
 selected output goes LOW for one second and then returns HIGH. Pin assignments
